@@ -1,0 +1,10 @@
+{
+    "DataBase": {
+        "ExtubeDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2201.db",
+        "WeanDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespdataWean_2203.db"
+    },
+    "WaveData": {
+        "Extube": "C:\\Main\\Data\\_\\Baguan\\Records",
+        "Wean": "C:\\Main\\Data\\_\\Weaning\\Records"
+    }
+}
