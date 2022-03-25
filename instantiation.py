@@ -6,7 +6,7 @@ sys.path.append(str(Path.cwd()))
 
 from WaveDataProcess import BinImport
 from Classes.Domain import layer_0, layer_1, layer_2
-from Classes.Func.variability import IndCalculation
+from Classes.Func.variability import IndCalculation, VarAnalysis
 from Classes.Func.kit import PathVerify, LocatSimiTerms
 
 
@@ -109,25 +109,84 @@ class RecordPara(Basic):
 
 
 class RecordInfo(Basic):
-    def __init__(self, parent, id_):
+    def __init__(self, parent, t_, id_):
         super().__init__()
         self.__rec = layer_2.RidRec()
-        self.__rec.zif = PathVerify(parent) / (id_ + '.zif')
+        self.__rec.zif = PathVerify(parent) / (
+            str(t_.year) + str(t_.month).rjust(2, '0')) / id_ / (id_ + '.zif')
 
     @property
     def rec(self):
         return self.__rec
 
-    def ParametersInit(self, machine):
+    def ParametersInit(self):
         rec = self.__rec
-        p_ = BinImport.ParaData(self.__rec.zpx)
-        para = p_.ParaInfoGet()
+        p_ = BinImport.RidData(self.__rec.zif)
+        info = p_.RecordInfoGet()
+        # recs = p_.RecordListGet()
         try:
-            rec.u_ind = para['uiDataIndex']
-            rec.st_peep = para['st_PEEP']
-            rec.st_ps = para['st_P_SUPP']
-            rec.st_e_sens = para['st_E_SENS']
-            rec.st_mode = p_.VMInter(machine, slice(0, len(rec.u_ind)))
-            rec.st_sump = list(map(add, rec.st_peep, rec.st_ps))
+            rec.vm_n = info['m_n']
         except:
+            print('zif file error')
             rec = None
+
+
+class ResultStatistical(Basic):
+    def __init__(self, resp_list):
+        super().__init__()
+        self.__rec = layer_2.Result()
+        self.__resp_l = resp_list
+        self.__rec.td = layer_1.DomainTS()
+        self.__rec.fd = layer_1.DomainFS()
+        self.__rec.hra = layer_1.DomainHRA()
+        self.__rec.hrv = layer_1.DomainHRV()
+
+    @property
+    def rec(self):
+        return self.__rec
+
+    def __IndStat(self, func, method):
+        resp_l = self.__resp_l
+        ind_rs = layer_0.Target0()
+        ind_rs.rr = func([i.rr for i in resp_l], method)
+        ind_rs.v_t = func([i.v_t_i for i in resp_l], method)
+        ind_rs.ve = func([i.ve for i in resp_l], method)
+        ind_rs.wob = func([i.wob for i in resp_l], method)
+        ind_rs.rsbi = func([i.rsbi for i in resp_l], method)
+        ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], method)
+        ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], method)
+        ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], method)
+        ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
+        return ind_rs
+
+    def CountAggr(self, cate_l):
+        for cate in cate_l:
+            if cate == 'TD':
+                self.TDAggr()
+            elif cate == 'HRA':
+                self.HRAAggr()
+            elif cate == 'HRV':
+                self.HRVAggr()
+            else:
+                print('No match category !')
+                return
+
+    def TDAggr(self):
+        p_count = VarAnalysis().TimeSeries
+        self.__rec.td.ave = self.__IndStat(p_count, 'AVE')
+        self.__rec.td.med = self.__IndStat(p_count, 'MED')
+        self.__rec.td.std = self.__IndStat(p_count, 'STD')
+        self.__rec.td.cv = self.__IndStat(p_count, 'CV')
+        self.__rec.td.qua = self.__IndStat(p_count, 'QUA')
+        self.__rec.td.tqua = self.__IndStat(p_count, 'TQUA')
+
+    def HRAAggr(self):
+        p_count = VarAnalysis().HRA
+        self.__rec.hra.pi = self.__IndStat(p_count, 'PI')
+        self.__rec.hra.gi = self.__IndStat(p_count, 'GI')
+        self.__rec.hra.si = self.__IndStat(p_count, 'SI')
+
+    def HRVAggr(self):
+        p_count = VarAnalysis().HRV
+        self.__rec.hra.pi = self.__IndStat(p_count, 'SD1')
+        self.__rec.hra.gi = self.__IndStat(p_count, 'SD2')

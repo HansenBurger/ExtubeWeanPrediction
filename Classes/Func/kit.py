@@ -5,6 +5,7 @@ from time import time
 from pathlib import Path, PurePath
 from functools import wraps
 from datetime import datetime
+from copy import deepcopy
 
 
 def measure(func):
@@ -22,6 +23,19 @@ def measure(func):
             print(f"Total execution time: {end_ if end_ > 0 else 0} ms\n")
 
     return _time_it
+
+
+def FromkeysReid(dict_name):
+    '''
+    mainfunc: creat a dict by list and re_id each variable
+    '''
+
+    dict_ = dict.fromkeys(dict_name)
+    for i in dict_name:
+        tmp = []
+        dict_[i] = deepcopy(tmp)
+
+    return dict_
 
 
 def PathVerify(loc):

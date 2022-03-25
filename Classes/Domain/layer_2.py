@@ -9,8 +9,8 @@ class RidRec(func):
         self.__zif = ''
         self.__vm_n = ''
         self.__cls_t = None
-        self.__wave = None
-        self.__para = None
+        self.__wave = []
+        self.__para = []
 
     @property
     def zif(self):
@@ -56,26 +56,26 @@ class RidRec(func):
 class Result(func):
     def __init__(self):
         super().__init__()
-        self.__ts = None
-        self.__fs = None
+        self.__td = None
+        self.__fd = None
         self.__hra = None
         self.__hrv = None
 
     @property
-    def ts(self):
-        return self.__ts
+    def td(self):
+        return self.__td
 
-    @ts.setter
-    def ts(self, obj):
-        self.__ts = obj
+    @td.setter
+    def td(self, obj):
+        self.__td = obj
 
     @property
-    def fs(self):
-        return self.__fs
+    def fd(self):
+        return self.__fd
 
-    @fs.setter
-    def fs(self, obj):
-        self.__fs = obj
+    @fd.setter
+    def fd(self, obj):
+        self.__fd = obj
 
     @property
     def hra(self):
