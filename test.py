@@ -1,19 +1,24 @@
-from unittest import result
+import numpy as np
 import pandas as pd
-import instantiation as instan
-from datetime import datetime
 from pathlib import Path
 from Classes.Func import kit
+from datetime import datetime
+import instantiation as instan
 from operator import mul, sub, add
 
 
 def main():
     df = pd.read_csv('1.csv')
-    data_loc = Path(kit.ConfigRead('WaveData', 'Extube'))
+    df.endo_end = np.where(df.endo_end.str.contains('成功'), 0, 1)
     kit.TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
     gp = df.groupby('PID')
-    results_d = kit.FromkeysReid(['pid', 'end', 'var_rs'])
 
+    data_loc = Path(kit.ConfigRead('WaveData', 'Extube'))
+    sv_f_loc = Path(kit.ConfigRead('ResultSave', 'Form'))
+    sv_g_loc = Path(kit.ConfigRead('ResultSave', 'Graph'))
+    save_fold = kit.SaveGen(sv_f_loc, 'extube_sump12')
+
+    result_l = []
     for pid in df.PID.unique():
         t_s = datetime.now()
         df_tmp = PatientGp(gp, pid)
@@ -22,18 +27,13 @@ def main():
 
         if not resp_l:
             print('{0}\' has no valid data'.format(pid))
+            result_l.append(None)
             continue
         else:
             var_rs = VarRsGen(resp_l, ['TD', 'HRA', 'HRV'])
-
-            results_d['pid'].append(pid)
-            results_d['end'].append(0 if '成功' in
-                                    df_tmp.endo_end.unique()[0] else 1)
-            results_d['var_rs'].append(var_rs)
+            TensorStorage(df_tmp, var_rs, save_fold)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
-
-    a = 1
 
 
 def PatientGp(gp_in, pid):
@@ -70,8 +70,32 @@ def VarRsGen(resp_val_l, method_l):
     return res_p.rec
 
 
+def IndicatorTrends():
+
+    pass
+
+
+def TensorStorage(df_in, var_rs, save_P):
+    save_n = '{0}_{1}_{2}'.format(df_in.PID[0], df_in.endo_end[0],
+                                  df_in.Record_id[0])
+    var_sl = [var_rs.td, var_rs.hra, var_rs.hrv]
+    var_sl = [kit.GetObjectDict(i) for i in var_sl]
+    var_sd = {}
+    for i in var_sl:
+        var_sd.update(i)
+    var_save = []
+    for k, v in var_sd.items():
+        dict_ = {'method': k}
+        dict_.update(kit.GetObjectDict(v))
+        var_save.append(dict_)
+    df_out = pd.DataFrame(var_save).set_index(['method'])
+    pd.DataFrame.to_csv(df_out, save_P / (save_n + '.csv'))
+
+
 def SelectByTime(t_set, df_in, sample):
     resp_select = []
+
+    # data process
 
     v_still_t = 0
     wave_data = []
@@ -87,6 +111,8 @@ def SelectByTime(t_set, df_in, sample):
 
     if v_still_t < t_set:
         return None
+
+    # data splicing
 
     ut_s = []
     vm_l = []
