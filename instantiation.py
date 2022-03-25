@@ -171,6 +171,14 @@ class ResultStatistical(Basic):
                 print('No match category !')
                 return
 
+    def AttrToDictALL(self):
+        dict_ = {
+            'AVE': self.__rec.td.ave,
+            'MED': self.__rec.td.med,
+            'STD': self.__rec
+        }
+        pass
+
     def TDAggr(self):
         p_count = VarAnalysis().TimeSeries
         self.__rec.td.ave = self.__IndStat(p_count, 'AVE')
@@ -188,5 +196,5 @@ class ResultStatistical(Basic):
 
     def HRVAggr(self):
         p_count = VarAnalysis().HRV
-        self.__rec.hra.pi = self.__IndStat(p_count, 'SD1')
-        self.__rec.hra.gi = self.__IndStat(p_count, 'SD2')
+        self.__rec.hrv.sd1 = self.__IndStat(p_count, 'SD1')
+        self.__rec.hrv.sd2 = self.__IndStat(p_count, 'SD2')

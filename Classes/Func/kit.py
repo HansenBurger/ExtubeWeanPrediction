@@ -25,6 +25,19 @@ def measure(func):
     return _time_it
 
 
+def GetObjectDict(obj):
+    keys = []
+    vals = obj.__dict__.values()
+    for i in obj.__dict__.keys():
+        if not type(obj).__name__ in i:
+            key_ = i
+        else:
+            key_ = i.split('_' + type(obj).__name__ + '__')[1]
+        keys.append(key_)
+    dict_ = dict(zip(keys, vals))
+    return dict_
+
+
 def FromkeysReid(dict_name):
     '''
     mainfunc: creat a dict by list and re_id each variable

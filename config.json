@@ -6,5 +6,9 @@
     "WaveData": {
         "Extube": "C:\\Main\\Data\\_\\Baguan\\Records",
         "Wean": "C:\\Main\\Data\\_\\Weaning\\Records"
+    },
+    "ResultSave": {
+        "Form": "C:\\Main\\Data\\_\\Result\\Form",
+        "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
     }
 }
