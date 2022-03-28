@@ -38,14 +38,14 @@ def GetObjectDict(obj):
     return dict_
 
 
-def FromkeysReid(dict_name):
+def FromkeysReid(dict_name, type_=[]):
     '''
     mainfunc: creat a dict by list and re_id each variable
     '''
 
     dict_ = dict.fromkeys(dict_name)
     for i in dict_name:
-        tmp = []
+        tmp = type_
         dict_[i] = deepcopy(tmp)
 
     return dict_

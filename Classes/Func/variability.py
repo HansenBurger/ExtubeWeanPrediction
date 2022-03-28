@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.metrics import confusion_matrix
 
 
 class Basic():
@@ -239,3 +240,30 @@ class VarAnalysis(Basic):
             print('No match method')
 
         return result_
+
+
+class SenSpecCounter(Basic):
+    def __init__(self, value_depend, value_array):
+        super().__init__()
+        self.__val_a = value_array.copy()
+        self.__val_d = value_depend
+
+    def __SensSpec(self, true_a, pred_a):
+        confusion = confusion_matrix(true_a, pred_a)
+        TP = confusion[1, 1]  # true positive
+        TN = confusion[0, 0]  # true negatives
+        FP = confusion[0, 1]  # false positives
+        FN = confusion[1, 0]  # false negatives
+        sens = TP / (TP + FN)
+        spec = TN / (TN + FP)
+        return round(sens, 2), round(spec, 2)
+
+    def CutEndPos(self, true_a, d_type):
+        pred_a = (self.__val_a > self.__val_d).astype(d_type)
+        sens, spec = self.__SensSpec(true_a, pred_a)
+        return {'sep': self.__val_d, 'sens': sens, 'spec': spec}
+
+    def CutEndNeg(self, true_a, d_type):
+        pred_a = (self.__val_a < self.__val_d).astype(d_type)
+        sens, spec = self.__SensSpec(true_a, pred_a)
+        return {'sep': self.__val_d, 'sens': sens, 'spec': spec}
