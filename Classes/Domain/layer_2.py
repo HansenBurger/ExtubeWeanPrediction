@@ -9,8 +9,8 @@ class RidRec(func):
         self.__zif = ''
         self.__vm_n = ''
         self.__cls_t = None
-        self.__wave = []
-        self.__para = []
+        self.__waves = []
+        self.__paras = []
 
     @property
     def zif(self):
@@ -37,20 +37,20 @@ class RidRec(func):
         self.__cls_t = v
 
     @property
-    def wave(self):
-        return self.__wave
+    def waves(self):
+        return self.__waves
 
-    @wave.setter
-    def wave(self, obj):
-        self.__wave = obj
+    @waves.setter
+    def waves(self, obj):
+        self.__waves = obj
 
     @property
-    def para(self):
-        return self.__para
+    def paras(self):
+        return self.__paras
 
-    @para.setter
-    def para(self, obj):
-        self.__para = obj
+    @paras.setter
+    def paras(self, obj):
+        self.__paras = obj
 
 
 class Result(func):

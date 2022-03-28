@@ -5,9 +5,10 @@ from operator import add, mul
 sys.path.append(str(Path.cwd()))
 
 from WaveDataProcess import BinImport
-from Classes.Domain import layer_0, layer_1, layer_2
-from Classes.Func.CalculatePart import IndCalculation, VarAnalysis
-from Classes.Func.KitTools import PathVerify, LocatSimiTerms
+from Domain import layer_0, layer_1, layer_2
+from Func.KitTools import PathVerify, LocatSimiTerms
+from Func.CalculatePart import IndCalculation, VarAnalysis
+
 
 
 class Basic():

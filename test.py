@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-import instantiation as instan
 from operator import mul, sub, add
+import Classes.TypesInstant as instan
 from Classes.Func import DiagramsGen, KitTools
 
 mode_name = 'extube_sump12'
