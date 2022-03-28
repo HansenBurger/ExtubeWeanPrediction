@@ -6,8 +6,8 @@ sys.path.append(str(Path.cwd()))
 
 from WaveDataProcess import BinImport
 from Classes.Domain import layer_0, layer_1, layer_2
-from Classes.Func.variability import IndCalculation, VarAnalysis
-from Classes.Func.kit import PathVerify, LocatSimiTerms
+from Classes.Func.CalculatePart import IndCalculation, VarAnalysis
+from Classes.Func.KitTools import PathVerify, LocatSimiTerms
 
 
 class Basic():
@@ -123,9 +123,10 @@ class RecordInfo(Basic):
         rec = self.__rec
         p_ = BinImport.RidData(self.__rec.zif)
         info = p_.RecordInfoGet()
-        # recs = p_.RecordListGet()
+        recs = p_.RecordListGet()
         try:
             rec.vm_n = info['m_n']
+            rec.cls_t = max(recs['s_t'])
         except:
             print('zif file error')
             rec = None
@@ -170,14 +171,6 @@ class ResultStatistical(Basic):
             else:
                 print('No match category !')
                 return
-
-    def AttrToDictALL(self):
-        dict_ = {
-            'AVE': self.__rec.td.ave,
-            'MED': self.__rec.td.med,
-            'STD': self.__rec
-        }
-        pass
 
     def TDAggr(self):
         p_count = VarAnalysis().TimeSeries

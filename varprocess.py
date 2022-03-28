@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from Classes.Func import kit, diagrams, variability
+from Classes.Func import CalculatePart, DiagramsGen, KitTools
 from sklearn.metrics import roc_auc_score, roc_curve
 
 mode_name = 'wean_PSV'
@@ -9,13 +9,14 @@ mode_name = 'wean_PSV'
 
 def main():
     var_rs_f = r'C:\Main\Data\_\Result\Form\20220325_23_wean_PSV'
-    var_rs_p = Path(kit.ConfigRead('ResultSave', 'Form')) / var_rs_f
-    s_g_fold = kit.SaveGen(kit.ConfigRead('ResultSave', 'Graph'), mode_name)
+    var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / var_rs_f
+    s_g_fold = KitTools.SaveGen(KitTools.ConfigRead('ResultSave', 'Graph'),
+                                mode_name)
     p_i_df, p_r_d, roc_df = DataCombine(var_rs_p)
     df_pos, df_neg = NegPosGet(p_i_df, p_r_d)
     df_fp, df_fn, _, _ = FalseBuild(p_i_df, p_r_d)
 
-    plot_p = diagrams.PlotMain(s_g_fold)
+    plot_p = DiagramsGen.PlotMain(s_g_fold)
 
     plot_p.HeatMapPlot(roc_df, 'AUC HeatMap')
     plot_p.SensSpecPlot(df_pos, 'RSBI_fail_med')
@@ -43,7 +44,7 @@ def DataCombine(file_loc):
 
     methods = p_r_l[0].index
     indicat = p_r_l[0].columns
-    p_r_d = kit.FromkeysReid(methods, {})
+    p_r_d = KitTools.FromkeysReid(methods, {})
     roc_df = p_r_l[0].copy()
 
     for i in methods:
@@ -66,7 +67,7 @@ def NegPosGet(df, dict_):
     l_d_pos, l_d_neg = [], []
 
     for i in cut_arr:
-        process_ = variability.SenSpecCounter(i, df_.rsbi)
+        process_ = CalculatePart.SenSpecCounter(i, df_.rsbi)
         dict_0 = process_.CutEndPos(df_.end_0, np.int8)
         dict_1 = process_.CutEndNeg(df_.end_1, np.int8)
         l_d_pos.append(dict_0)

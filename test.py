@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import instantiation as instan
 from operator import mul, sub, add
-from Classes.Func import kit, diagrams
+from Classes.Func import DiagramsGen, KitTools
 
 mode_name = 'extube_sump12'
 
@@ -12,14 +12,14 @@ mode_name = 'extube_sump12'
 def main():
     df = pd.read_csv('extube_sump12.csv')[57:60]
     df.endo_end = np.where(df.endo_end.str.contains('成功'), 0, 1)
-    kit.TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
+    KitTools.TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
     gp = df.groupby('PID')
 
-    data_loc = Path(kit.ConfigRead('WaveData', 'Extube'))
-    s_f_fold = kit.SaveGen(Path(kit.ConfigRead('ResultSave', 'Form')),
-                           mode_name)
-    s_g_fold = kit.SaveGen(Path(kit.ConfigRead('ResultSave', 'Graph')),
-                           mode_name)
+    data_loc = Path(KitTools.ConfigRead('WaveData', 'Extube'))
+    s_f_fold = KitTools.SaveGen(
+        Path(KitTools.ConfigRead('ResultSave', 'Form')), mode_name)
+    s_g_fold = KitTools.SaveGen(
+        Path(KitTools.ConfigRead('ResultSave', 'Graph')), mode_name)
 
     result_l = []
     for pid in df.PID.unique():
@@ -81,7 +81,7 @@ def IndicatorsTrends(resp_l, s_g_loc, save_n):
     save_name = save_n
     wid_l = [i.wid for i in resp_l]
     stl_l = [sum(wid_l[0:i]) for i in range(1, len(wid_l) + 1)]
-    df = pd.DataFrame([kit.GetObjectDict(i) for i in resp_l])
+    df = pd.DataFrame([KitTools.GetObjectDict(i) for i in resp_l])
     df['ind'] = stl_l
     col_sel = {
         'rr': [],
@@ -94,20 +94,20 @@ def IndicatorsTrends(resp_l, s_g_loc, save_n):
         'mp_jl_d': [],
         'mp_jl_t': [0.7, 1.2]
     }
-    diagrams.PlotMain(s_g_loc).MultiLineplot('ind', col_sel, df, save_name)
+    DiagramsGen.PlotMain(s_g_loc).MultiLineplot('ind', col_sel, df, save_name)
 
 
 def TensorStorage(var_rs, s_f_loc, save_n):
 
     var_sl = [var_rs.td, var_rs.hra, var_rs.hrv]
-    var_sl = [kit.GetObjectDict(i) for i in var_sl]
+    var_sl = [KitTools.GetObjectDict(i) for i in var_sl]
     var_sd = {}
     for i in var_sl:
         var_sd.update(i)
     var_save = []
     for k, v in var_sd.items():
         dict_ = {'method': k}
-        dict_.update(kit.GetObjectDict(v))
+        dict_.update(KitTools.GetObjectDict(v))
         var_save.append(dict_)
     df_out = pd.DataFrame(var_save).set_index(['method'])
     pd.DataFrame.to_csv(df_out, s_f_loc / (save_n + '.csv'))
@@ -145,7 +145,7 @@ def SelectByTime(t_set, df_in, sample):
         ut_l = list(map(sub, ut_l, [ut_l[0]] * len(ut_l)))
         ut_l = list(map(add, ut_l, [ut_s[-1]] * len(ut_l))) if ut_s else ut_l
         ut_s.extend(ut_l)
-    vm_sl = vm_l[0:kit.LocatSimiTerms(ut_s, [-t_set])[-t_set]]
+    vm_sl = vm_l[0:KitTools.LocatSimiTerms(ut_s, [-t_set])[-t_set]]
     val_sl = [
         True
         if 'SPONT' in i or 'CPAP' in i or 'APNEA VENTILATION' in i else False
