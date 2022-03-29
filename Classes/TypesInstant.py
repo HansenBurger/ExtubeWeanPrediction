@@ -1,14 +1,13 @@
 import sys
 from pathlib import Path
-from operator import add, mul
 
 sys.path.append(str(Path.cwd()))
 
+from operator import add, mul
 from WaveDataProcess import BinImport
-from Domain import layer_0, layer_1, layer_2
-from Func.KitTools import PathVerify, LocatSimiTerms
-from Func.CalculatePart import IndCalculation, VarAnalysis
-
+from Classes.Domain import layer_0, layer_1, layer_2
+from Classes.Func.KitTools import PathVerify, LocatSimiTerms
+from Classes.Func.CalculatePart import IndCalculation, VarAnalysis
 
 
 class Basic():
