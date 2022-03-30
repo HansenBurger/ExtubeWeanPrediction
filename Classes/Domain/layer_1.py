@@ -108,6 +108,14 @@ class RecPara(func):
         self.__st_ps = []
         self.__st_e_sens = []
         self.__st_sump = []
+        self.__bed_hr = []
+        self.__bed_sbp = []
+        self.__bed_dbp = []
+        self.__bed_mbp = []
+        self.__bed_spo2 = []
+        self.__bed_rr = []
+        self.__bed_pr = []
+        self.__bed_cvpm = []
 
     @property
     def zpx(self):
@@ -172,6 +180,70 @@ class RecPara(func):
     @st_sump.setter
     def st_sump(self, v):
         self.__st_sump = v
+
+    @property
+    def bed_hr(self):
+        return self.__bed_hr
+
+    @bed_hr.setter
+    def bed_hr(self, v):
+        self.__bed_hr = v
+
+    @property
+    def bed_sbp(self):
+        return self.__bed_sbp
+
+    @bed_sbp.setter
+    def bed_sbp(self, v):
+        self.__bed_sbp = v
+
+    @property
+    def bed_dbp(self):
+        return self.__bed_dbp
+
+    @bed_dbp.setter
+    def bed_dbp(self, v):
+        self.__bed_dbp = v
+
+    @property
+    def bed_mbp(self):
+        return self.__bed_mbp
+
+    @bed_mbp.setter
+    def bed_mbp(self, v):
+        self.__bed_mbp = v
+
+    @property
+    def bed_spo2(self):
+        return self.__bed_spo2
+
+    @bed_spo2.setter
+    def bed_spo2(self, v):
+        self.__bed_spo2 = v
+
+    @property
+    def bed_rr(self):
+        return self.__bed_rr
+
+    @bed_rr.setter
+    def bed_rr(self, v):
+        self.__bed_rr = v
+
+    @property
+    def bed_pr(self):
+        return self.__bed_pr
+
+    @bed_pr.setter
+    def bed_pr(self, v):
+        self.__bed_pr = v
+
+    @property
+    def bed_cvpm(self):
+        return self.__bed_cvpm
+
+    @bed_cvpm.setter
+    def bed_cvpm(self, v):
+        self.__bed_cvpm = v
 
 
 class DomainTS(func):

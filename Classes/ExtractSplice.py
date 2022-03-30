@@ -5,7 +5,7 @@ sys.path.append(str(Path.cwd()))
 
 from operator import mul, sub, add
 from Classes.TypesInstant import RecordResp, RecordPara
-from Classes.Func.KitTools import LocatSimiTerms, GetObjectDict
+from Classes.Func.KitTools import LocatSimiTerms, GetObjectDict, FromkeysReid
 
 
 class basic():
@@ -77,9 +77,29 @@ class ExtractSplice(basic):
         self.__ridrec.waves = wave_data
         self.__ridrec.paras = para_data
 
-    def ParaSplicing(self, t_set_s):
+    def __UiIndexSplicing(self):
+        para_data = self.__ridrec.paras.copy()
+        wave_data = self.__ridrec.waves.copy()
+
+        sr = wave_data[0].sr
+        ut_s = []  # save uiindexdata of paras
+
+        for p in reversed(para_data):
+            ui_l = list(reversed(p.u_ind))
+            ut_l = list(map(mul, ui_l, [1 / sr] * len(ui_l)))
+            usize = len(ut_l)
+            ut_l = list(map(sub, ut_l, [ut_l[0]] * usize))
+            ut_l = list(map(add, ut_l, [ut_s[-1]] * usize)) if ut_s else ut_l
+            ut_s.extend(ut_l)
+
+        ut_s = list(map(mul, ut_s, [-1] * len(ut_s)))
+        ut_s[0] = 0
+
+        return ut_s
+
+    def ParaSelecting(self, t_set_s, para_attr_l):
         """
-        ParaSplicing
+        ParaSelecting
         
         Main function to get the parainfo by given time points, the
         INPUT are para-class objs sequance which order in positive
@@ -96,17 +116,15 @@ class ExtractSplice(basic):
 
         para_data = self.__ridrec.paras
         vm_sr = self.__ridrec.waves[0].sr
-        p_select = GetObjectDict(para_data[0])
-        del p_select['zpx'], p_select['u_ind']  # del para type not interested
 
         for p in para_data:
             ut_l = list(map(mul, p.u_ind, [1 / vm_sr] * len(p.u_ind)))
             ut_s_d = LocatSimiTerms(ut_l, t_set_s)
-            for p_type in p_select:
+            for p_type in para_attr_l:
                 p_t_d = {k: getattr(p, p_type)[v] for k, v in ut_s_d.items()}
                 setattr(p, p_type, p_t_d)
 
-        for p_type in p_select:
+        for p_type in para_attr_l:
             p_t_l = [getattr(p, p_type).values() for p in para_data]
             p_t_l.reverse()
             para_dict[p_type] = p_t_l
@@ -132,36 +150,26 @@ class ExtractSplice(basic):
         wave_data = self.__ridrec.waves.copy()
 
         if not wave_data or not para_data:
-            return None
+            return resp_select
 
-        sr = wave_data[0].sr
-        para_data.reverse()
-        wave_data.reverse()
-        ut_s = []  # save uiindexdata of paras
         vm_l = []  # save ventmode of paras
         val_t = lambda x, y: sum([True if i in x else False for i in y])
 
-        for p in para_data:
-            p.st_mode.reverse()
-            vm_l.extend(p.st_mode)
-            p.u_ind.reverse()
-            ut_l = list(map(mul, p.u_ind, [1 / sr] * len(p.u_ind)))
-            usize = len(ut_l)
-            ut_l = list(map(sub, ut_l, [ut_l[0]] * usize))
-            ut_l = list(map(add, ut_l, [ut_s[-1]] * usize)) if ut_s else ut_l
-            ut_s.extend(ut_l)
+        for p in reversed(para_data):
+            vm_s = list(reversed(p.st_mode))
+            vm_l.extend(vm_s)
 
-        ut_s = list(map(mul, ut_s, [-1] * len(ut_s)))
-        vm_l = vm_l[0:LocatSimiTerms(ut_s, [t_set])[t_set]]
+        ut_s = self.__UiIndexSplicing()
+        vm_slice = slice(LocatSimiTerms(ut_s, [t_set])[t_set])
+        vm_l = vm_l[vm_slice]  # from tail to head
         vm_val = [True if val_t(vm, vm_cond) > 0 else False for vm in vm_l]
 
         if False in vm_val:
             pass
         else:
             v_still_t = 0
-            for wave in wave_data:
-                wave.resps.reverse()
-                for resp in wave.resps:
+            for wave in reversed(wave_data):
+                for resp in reversed(wave.resps):
                     if v_still_t > t_set:
                         break
                     elif not resp.val:
@@ -171,4 +179,35 @@ class ExtractSplice(basic):
                         resp_select.append(resp)
 
         # Positive order (range head to op-tail)
-        return resp_select
+        return list(reversed(resp_select))
+
+    def ParaSplicing(self, t_set, para_attr_l):
+        """
+        ababab
+        """
+        para_select = FromkeysReid(para_attr_l)
+
+        para_data = self.__ridrec.paras.copy()
+
+        if not para_data:
+            return {}
+
+        ut_s = self.__UiIndexSplicing()
+        p_slice = slice(0, LocatSimiTerms(ut_s, [t_set])[t_set])
+
+        for p in reversed(para_data):
+            for p_type in para_attr_l:
+                p_list = list(reversed(getattr(p, p_type)))
+                para_select[p_type].extend(p_list)
+
+        for p_type in para_attr_l:
+            p_in = para_select[p_type][p_slice]
+            para_select[p_type] = list(reversed(p_in))
+
+        ut_s = list(reversed(ut_s[p_slice]))
+        ut_s = list(map(sub, ut_s, [ut_s[0]] * len(ut_s)))
+        ut_s = list(map(mul, ut_s, [-1] * len(ut_s)))
+        ut_s[0] = 0
+        para_select['ind'] = ut_s
+
+        return para_select

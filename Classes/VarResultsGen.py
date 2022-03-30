@@ -32,9 +32,15 @@ class VarResultsGen(basic):
         res_p.CountAggr(methods_l)
         self.__pid.result = res_p.rec
 
-    def TrendsPlot(self, folder, col_sel):
+    def ParaTrendsPlot(self, folder, col_sel):
+        save_n = self.__SaveNaming() + '_para'
+        para_d = self.__pid.para_d
+        df = pd.DataFrame(para_d)
+        PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
+
+    def RespTrendsPlot(self, folder, col_sel):
         resp_l = self.__pdi.resp_l
-        save_n = self.__SaveNaming()
+        save_n = self.__SaveNaming() + '_wave'
         wid_l = [i.wid for i in resp_l]
         stl_l = [sum(wid_l[0:i]) for i in range(1, len(wid_l) + 1)]
         df = pd.DataFrame([GetObjectDict(i) for i in resp_l])

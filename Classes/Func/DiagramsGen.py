@@ -1,3 +1,4 @@
+import numpy as np
 import seaborn as sns
 from pathlib import Path
 from matplotlib import pyplot as plt
@@ -30,19 +31,33 @@ class PlotMain():
 
     def MultiLineplot(self, x_label, y_labels, df, fig_n):
         save_loc = self.__safe_loc / (fig_n + '.png')
-        col_sel = list(y_labels.keys())
         sns.set_theme(style="whitegrid")
-        sns.set(rc={'figure.figsize': (16, len(col_sel) * 4)})
+        sns.set(rc={'figure.figsize': (16, len(y_labels) * 4)})
 
-        for i in range(len(col_sel)):
-            col_n = col_sel[i]
-            plt.subplot(len(col_sel), 1, i + 1)
-            if not y_labels[col_n]:
-                pass
-            else:
-                plt.ylim(*y_labels[col_n])
-            sns.lineplot(x=x_label, y=col_n,
-                         data=df).set_title(col_n + '_trends')
+        if type(y_labels) == dict:
+            col_sel = list(y_labels.keys())
+            for i in range(len(col_sel)):
+                col_n = col_sel[i]
+                plt.subplot(len(col_sel), 1, i + 1)
+                if not y_labels[col_n]:
+                    pass
+                else:
+                    plt.ylim(*y_labels[col_n])
+                sns.lineplot(x=x_label, y=col_n,
+                             data=df).set_title(col_n + '_trends')
+        elif type(y_labels) == list:
+            col_sel = y_labels
+            for i in range(len(col_sel)):
+                col_n = col_sel[i]
+                # arr = np.array(df[col_n].to_list())
+                # per_arr = np.diff(arr) / arr[1:] * 100
+                # min_p = np.min(per_arr)
+                # max_p = np.max(per_arr)
+                plt.subplot(len(col_sel), 1, i + 1)
+                # plt.plot(label='Per-Range: {0}% ~ {1}%'.format(min_p, max_p))
+                sns.lineplot(x=x_label, y=col_n,
+                             data=df).set_title(col_n + '_trends')
+
         plt.tight_layout()
         plt.savefig(save_loc)
         # plt.suptitle(fig_n, fontsize=12)

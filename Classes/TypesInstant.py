@@ -86,19 +86,38 @@ class RecordPara(Basic):
     def rec(self):
         return self.__rec
 
+    def __FieldVal(self, para, key_):
+        try:
+            value = para[key_]
+        except:
+            value = None
+        return value
+
     def ParametersInit(self, machine):
         rec = self.__rec
         p_ = BinImport.ParaData(self.__rec.zpx)
         para = p_.ParaInfoGet()
-        try:
-            rec.u_ind = para['uiDataIndex']
-            rec.st_peep = para['st_PEEP']
-            rec.st_ps = para['st_P_SUPP']
-            rec.st_e_sens = para['st_E_SENS']
-            rec.st_mode = p_.VMInter(machine, slice(0, len(rec.u_ind)))
-            rec.st_sump = list(map(add, rec.st_peep, rec.st_ps))
-        except:
+        if not para:
             rec = None
+        else:
+            rec.u_ind = self.__FieldVal(para, 'uiDataIndex')
+            rec.st_peep = self.__FieldVal(para, 'st_PEEP')
+            rec.st_ps = self.__FieldVal(para, 'st_P_SUPP')
+            rec.st_e_sens = self.__FieldVal(para, 'st_E_SENS')
+            rec.bed_hr = self.__FieldVal(para, 'bed_HR')
+            rec.bed_sbp = self.__FieldVal(para, 'bed_SBP')
+            rec.bed_dbp = self.__FieldVal(para, 'bed_DBP')
+            rec.bed_mbp = self.__FieldVal(para, 'bed_MBP')
+            rec.bed_spo2 = self.__FieldVal(para, 'bed_SpO2')
+            rec.bed_rr = self.__FieldVal(para, 'bed_RR')
+            rec.bed_pr = self.__FieldVal(para, 'bed_PR')
+            rec.bed_cvpm = self.__FieldVal(para, 'bed_CVPm')
+            rec.st_sump = list(map(add, rec.st_peep, rec.st_ps))
+
+            try:
+                rec.st_mode = p_.VMInter(machine, slice(0, len(rec.u_ind)))
+            except:
+                rec.st_mode = []
 
     def ParaSelectBT(self, SR, time_tag, para_l):
         rec = self.__rec

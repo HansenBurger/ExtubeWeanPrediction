@@ -31,6 +31,9 @@ col_range_set = {
 }
 
 vm_list = ['SPONT', 'CPAP', 'APNEA VENTILATION']
+p_trend_l = [
+    'bed_sbp', 'bed_dbp', 'bed_mbp', 'bed_spo2', 'bed_rr', 'bed_pr', 'bed_cvpm'
+]
 method_list = ['TD', 'HRA', 'HRV']
 
 
@@ -47,6 +50,7 @@ def main():
         process_0 = ExtractSplice(pid_obj.ridrec)
         process_0.RecBatchesExtract(id_list, 1800)
         pid_obj.resp_l = process_0.RespSplicing(1800, vm_list)
+        pid_obj.para_d = process_0.ParaSplicing(1800, p_trend_l)
 
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
@@ -54,7 +58,8 @@ def main():
         else:
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(method_list)
-            process_1.TensorStorage(s_f_fold)
+            # process_1.TensorStorage(s_f_fold)
+            process_1.ParaTrendsPlot(s_g_fold, p_trend_l)
             # process_1.TrendsPlot(s_g_fold)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))

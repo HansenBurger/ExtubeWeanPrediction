@@ -12,6 +12,7 @@ class Patient(func):
         self.__end_i = ''
         self.__ridrec = None
         self.__resp_l = None
+        self.__para_d = None
         self.__result = None
 
     @property
@@ -62,6 +63,14 @@ class Patient(func):
     @resp_l.setter
     def resp_l(self, v):
         self.__resp_l = v
+
+    @property
+    def para_d(self):
+        return self.__para_d
+
+    @para_d.setter
+    def para_d(self, v):
+        self.__para_d = v
 
     @property
     def result(self):
