@@ -17,7 +17,7 @@ class PlotMain():
         return s_l
 
     def lmplot(self, x_label, y_label, df, fig_name):
-        save_loc = self.__safe_loc / (fig_name + '.png')
+        #s ave_loc = self.__safe_loc / (fig_name + '.png')
         sns.set_theme(style='whitegrid')
         sns.lmplot(x=x_label,
                    y=y_label,

@@ -4,3 +4,5 @@
 # ignore pyc file
 *.pyc
 **.__pycache__
+
+*.csv

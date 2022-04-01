@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 
@@ -267,3 +268,48 @@ class SenSpecCounter(Basic):
         pred_a = (self.__val_a < self.__val_d).astype(d_type)
         sens, spec = self.__SensSpec(true_a, pred_a)
         return {'sep': self.__val_d, 'sens': sens, 'spec': spec}
+
+
+class FreqPreMethod():
+    def __init__(self, time_array, target_array, range_):
+        self.__time_a = time_array[range_]
+        self.__target_a = target_array[range_]
+        self.__df = None
+
+    @property
+    def df(self):
+        return self.__df
+
+    def __LenVertify(self):
+        if not len(self.__time_a) == len(self.__target_a):
+            print('Length Mismatch !')
+            return
+
+    def __SpaceGen(self, fs):
+        ind_0 = self.__time_a.min()
+        ind_1 = self.__time_a.max()
+        ind_num = (ind_1 - ind_0) * fs
+        array = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
+        array = np.around(array, decimals=2)
+        return array
+
+    def InitTimeSeries(self):
+        self.__LenVertify()
+        df = pd.DataFrame({'time': self.__time_a, 'value': self.__target_a})
+        self.__df = df
+
+    def InterpValue(self, interp_rate):
+        self.__LenVertify()
+        array_x = self.__SpaceGen(interp_rate)
+        array_y = np.interp(array_x, self.__time_a, self.__target_a)
+        df = pd.DataFrame({'time': array_x, 'value': array_y})
+        self.__df = df
+
+    def Resampling(self, resample_rate):
+        self.__LenVertify()
+        df = self.__df.copy()
+        array_x = self.__SpaceGen(resample_rate)
+        array_y = np.array(
+            [df.loc[df['time'] == i]['value'].item() for i in array_x])
+        df_ = pd.DataFrame({'time': array_x, 'value': array_y})
+        self.__df = df_
