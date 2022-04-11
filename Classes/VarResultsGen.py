@@ -39,7 +39,7 @@ class VarResultsGen(basic):
         PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
 
     def RespTrendsPlot(self, folder, col_sel):
-        resp_l = self.__pdi.resp_l
+        resp_l = self.__pid.resp_l
         save_n = self.__SaveNaming() + '_wave'
         wid_l = [i.wid for i in resp_l]
         stl_l = [sum(wid_l[0:i]) for i in range(1, len(wid_l) + 1)]

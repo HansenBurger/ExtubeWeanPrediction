@@ -308,7 +308,11 @@ class DomainTS(func):
 class DomainFS(func):
     def __init__(self):
         super().__init__()
-        pass
+        self.__prsa = None
+
+    @property
+    def prsa(self):
+        return self.__prsa
 
 
 class DomainHRV(func):

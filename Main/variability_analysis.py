@@ -13,7 +13,7 @@ from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen
 
 mode_name = 'extube_sump12'
-file_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
+file_name = r'C:\Users\HY_Burger\Desktop\Project\Recordinfo_filted_with.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
@@ -42,8 +42,12 @@ def main():
     df.endo_end = np.where(df.endo_end.str.contains('成功'), 0, 1)
     TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
     gp = df.groupby('PID')
+    a = df.PID.unique()
+    PIDTest(gp, [1813798])
 
-    for pid in df.PID.unique():
+
+def PIDTest(gp, pids):
+    for pid in pids:
         t_s = datetime.now()
         id_list = gp.get_group(pid).zdt_1.tolist()
         pid_obj = PatientGen(gp, pid)
@@ -51,6 +55,7 @@ def main():
         process_0.RecBatchesExtract(id_list, 1800)
         pid_obj.resp_l = process_0.RespSplicing(1800, vm_list)
         pid_obj.para_d = process_0.ParaSplicing(1800, p_trend_l)
+        a = pid_obj.para_d
 
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
@@ -60,7 +65,7 @@ def main():
             process_1.VarRsGen(method_list)
             # process_1.TensorStorage(s_f_fold)
             process_1.ParaTrendsPlot(s_g_fold, p_trend_l)
-            # process_1.TrendsPlot(s_g_fold)
+            process_1.RespTrendsPlot(s_g_fold, col_range_set)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
 

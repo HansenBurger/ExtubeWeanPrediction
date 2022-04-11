@@ -193,6 +193,52 @@ class VarAnalysis(Basic):
         a_1 = np.array(list_[1:])
         return a_0, a_1
 
+    def __SpaceGen(self, arr, fs):
+        ind_0 = arr.min()
+        ind_1 = arr.max()
+        ind_num = (ind_1 - ind_0) * fs
+        arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
+        arr_ = np.round(arr_, decimals=2)
+        return arr_
+
+    def __Resample(self, list_t, list_v, rs_rate):
+        it_rate = 100
+        arr_t = np.array(list_t) if type(list_t) == list else list_t
+        arr_v = np.array(list_v) if type(list_v) == list else list_v
+        arr_t_it = self.__SpaceGen(arr_t, it_rate)
+        df_it = pd.DataFrame({'time': arr_t_it, 'value': arr_v})
+        df_it = df_it.set_index('time', drop=True)
+        arr_t_rs = self.__SpaceGen(arr_t, rs_rate)
+        df_rs = df_it.loc[arr_t_rs]
+        return df_rs.index, df_rs.values
+
+    def __PRSA(self, arr_, L, method):
+
+        anchor_s = []
+
+        if method == 'AC':
+            anchor_set = lambda x, y: True if x[y] > x[y - 1] else False
+        elif method == 'DC':
+            anchor_set = lambda x, y: True if x[y] < x[y - 1] else False
+        else:
+            print('No match method')
+            return
+
+        for i in range(L, len(arr_) - L):
+            if not anchor_set(arr_, i):
+                pass
+            else:
+                clip = slice(i - L, i + L + 1)
+                anchor_s.append(arr_[clip].tolist())
+
+        arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
+        arr_axis = np.linspace(-L, L + 1, 2 * L + 1, endpoint=False)
+        df = pd.DataFrame({'axis': arr_axis, 'value': arr_prsa})
+        df = df.set_index('axis', drop=True)
+        conv_s = lambda x: df.loc[x].value
+        conv = (conv_s(0) + conv_s(1) - conv_s(-1) - conv_s(-2)) / 4
+        return round(conv, 4)
+
     def TimeSeries(self, list_, method_sub):
         array_ = np.array(list_)
 
@@ -213,6 +259,16 @@ class VarAnalysis(Basic):
             print('No match method')
 
         return round(result_, 2)
+
+    def FreqSeries(self, l_t, l_v, rs_, method_sub):
+        _, arr_v = self.__Resample(l_t, l_v, rs_)
+
+        if method_sub == 'PRSA':
+            L = 120
+            met = 'AC'
+            result_ = self.__PRSA(arr_v, L, met)
+
+        return result_
 
     def HRA(self, list_, method_sub):
         array_0, array_1 = self.__Panglais(list_)
@@ -271,7 +327,7 @@ class SenSpecCounter(Basic):
 
 
 class FreqPreMethod():
-    def __init__(self, time_array, target_array, range_):
+    def __init__(self, time_array, target_array, range_=slice(None)):
         self.__time_a = time_array[range_]
         self.__target_a = target_array[range_]
         self.__df = None
@@ -296,6 +352,7 @@ class FreqPreMethod():
     def InitTimeSeries(self):
         self.__LenVertify()
         df = pd.DataFrame({'time': self.__time_a, 'value': self.__target_a})
+        df = df.set_index('time', drop=True)
         self.__df = df
 
     def InterpValue(self, interp_rate):
@@ -303,13 +360,14 @@ class FreqPreMethod():
         array_x = self.__SpaceGen(interp_rate)
         array_y = np.interp(array_x, self.__time_a, self.__target_a)
         df = pd.DataFrame({'time': array_x, 'value': array_y})
+        df = df.set_index('time', drop=True)
         self.__df = df
 
     def Resampling(self, resample_rate):
         self.__LenVertify()
         df = self.__df.copy()
         array_x = self.__SpaceGen(resample_rate)
-        array_y = np.array(
-            [df.loc[df['time'] == i]['value'].item() for i in array_x])
+        array_y = np.array(df.loc[array_x].value)
         df_ = pd.DataFrame({'time': array_x, 'value': array_y})
+        df_ = df_.set_index('time', drop=True)
         self.__df = df_

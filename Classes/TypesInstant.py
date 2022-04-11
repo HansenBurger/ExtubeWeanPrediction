@@ -179,6 +179,22 @@ class ResultStatistical(Basic):
         ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
         return ind_rs
 
+    def __IndStat_1(self, func, method):
+        resp_l = self.__resp_l
+        ind_rs = layer_0.Target0()
+        wid_l = [i.wid for i in resp_l]
+
+        ind_rs.rr = func([i.rr for i in resp_l], method)
+        ind_rs.v_t = func([i.v_t_i for i in resp_l], method)
+        ind_rs.ve = func([i.ve for i in resp_l], method)
+        ind_rs.wob = func([i.wob for i in resp_l], method)
+        ind_rs.rsbi = func([i.rsbi for i in resp_l], method)
+        ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], method)
+        ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], method)
+        ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], method)
+        ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
+        pass
+
     def CountAggr(self, cate_l):
         for cate in cate_l:
             if cate == 'TD':
@@ -187,6 +203,8 @@ class ResultStatistical(Basic):
                 self.HRAAggr()
             elif cate == 'HRV':
                 self.HRVAggr()
+            elif cate == 'FD':
+                self.FDAgger()
             else:
                 print('No match category !')
                 return
@@ -199,6 +217,10 @@ class ResultStatistical(Basic):
         self.__rec.td.cv = self.__IndStat(p_count, 'CV')
         self.__rec.td.qua = self.__IndStat(p_count, 'QUA')
         self.__rec.td.tqua = self.__IndStat(p_count, 'TQUA')
+
+    def FDAgger(self):
+        p_count = VarAnalysis().FreqSeries
+        self.__rec.fd.prsa = self.__IndStat()
 
     def HRAAggr(self):
         p_count = VarAnalysis().HRA

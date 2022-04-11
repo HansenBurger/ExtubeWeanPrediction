@@ -74,6 +74,8 @@ class ExtractSplice(basic):
             print('Wrong type of t_set')
             return
 
+        a = para_data
+
         self.__ridrec.waves = wave_data
         self.__ridrec.paras = para_data
 
