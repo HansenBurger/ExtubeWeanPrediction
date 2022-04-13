@@ -1,5 +1,6 @@
-import json
 from peewee import *
+from playhouse.sqlite_ext import JSONField
+from sqlalchemy import column
 
 db = SqliteDatabase(r'C:\Main\Data\_\Database\sqlite\RespdataWean_2203.db')
 
@@ -36,6 +37,7 @@ class ZresDecode(Model):
     pid = IntegerField(column_name='patient_id')
     rid = TextField(column_name='record_id')
     rec_t = DateTimeField(column_name='record_time')
+    info = JSONField(column_name='resp_info')
 
     class Meta:
         table_name = 'zres_decode'

@@ -75,9 +75,12 @@ class PlotMain():
 
     def HeatMapPlot(self, df, fig_n):
         save_loc = self.__SaveRouteGen(fig_n)
-        df.index = df.index.str.upper()
-        sns.set(rc={'figure.figsize': (9, 8)})
-        sns.heatmap(df, annot=True, linewidths=.5)
+        try:
+            df.index = df.index.str.upper()
+        except:
+            pass
+        sns.set(rc={'figure.figsize': (9, 7)})
+        sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
         plt.title(fig_n, fontsize=18, fontweight='bold')
         plt.tight_layout()
         plt.savefig(save_loc)

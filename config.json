@@ -10,5 +10,11 @@
     "ResultSave": {
         "Form": "C:\\Main\\Data\\_\\Result\\Form",
         "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
+    },
+    "Server": {
+        "host_s": "172.16.31.40",
+        "port_n": 81,
+        "user": "ftpUser",
+        "passwd": "Zjut85290595"
     }
 }

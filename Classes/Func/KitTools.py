@@ -61,6 +61,8 @@ def LocatSimiTerms(l_main, l_depend):
     for i in l_depend:
         if i > l_main.max():
             index_dict[i] = None
+        elif i < l_main.min():
+            index_dict[i] = None
         else:
             clo_value = min(l_main, key=lambda x: abs(x - i))
             clo_index = np.where(l_main == clo_value)[0][0]

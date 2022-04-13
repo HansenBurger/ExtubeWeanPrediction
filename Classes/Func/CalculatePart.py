@@ -369,5 +369,5 @@ class FreqPreMethod():
         array_x = self.__SpaceGen(resample_rate)
         array_y = np.array(df.loc[array_x].value)
         df_ = pd.DataFrame({'time': array_x, 'value': array_y})
-        df_ = df_.set_index('time', drop=True)
+        # df_ = df_.set_index('time', drop=True)
         self.__df = df_
