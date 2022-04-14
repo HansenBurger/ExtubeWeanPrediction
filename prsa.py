@@ -14,7 +14,7 @@ form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
 save_loc = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), 'PRSA')
 vm_list = ['SPONT', 'CPAP', 'APNEA VENTILATION']
-indicator_slice = slice(1, 4)
+indicator_slice = slice(4, 7)
 
 
 def main():

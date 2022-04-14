@@ -71,17 +71,22 @@ def LocatSimiTerms(l_main, l_depend):
     return index_dict
 
 
-def ConfigRead(type, name):
+def ConfigRead(cate: str, name: str = '') -> str:
     p = Path('config.json')
     if not p.is_file():
         print('Json File Not Exist !')
+        return None
     else:
         with open(str(p)) as f:
             data = json.load(f)
-        return data[type][name]
+
+        if not name:
+            return data[cate]
+        else:
+            return data[cate][name]
 
 
-def TimeShift(df, column_names):
+def TimeShift(df: pd.DataFrame, column_names: list) -> None:
 
     date_format = ['%Y/%m/%d %X', '%Y-%m-%d %X', '%Y-%m-%d %H:%M']
 
@@ -100,7 +105,7 @@ def TimeShift(df, column_names):
                             .format(i))
 
 
-def SaveGen(p_loc, fold_n):
+def SaveGen(p_loc: Path, fold_n: str) -> Path:
     now = datetime.now()
     p_loc = Path(p_loc) if not isinstance(p_loc, PurePath) else p_loc
     fold_pre = '{0}{1}{2}_{3}_'.format(now.year,
