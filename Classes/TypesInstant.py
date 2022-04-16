@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from tkinter.tix import Tree
 
 sys.path.append(str(Path.cwd()))
 
@@ -51,27 +52,35 @@ class RecordResp(Basic):
             if not p_count.valid_tag:
                 resp.val = False
             else:
-                resp.val = True
                 resp.wid = p_count.RespT(rec.sr)
-                resp.rr = p_count.RR(rec.sr)
-                resp.v_t_i = p_count.V_t_i()
-                resp.v_t_e = p_count.V_t_e()
-                resp.ve = p_count.VE(resp.rr, resp.v_t_i)
+                resp.rr, rr_val = p_count.RR(rec.sr)
+
+                v_t, v_t_val = p_count.V_t()
+                resp.v_t_i = v_t['v_t_i']
+                resp.v_t_e = v_t['v_t_e']
+
+                wob, wob_val = p_count.WOB()
+                resp.wob = wob['wob']
+                resp.wob_f = wob['wob_f']
+                resp.wob_a = wob['wob_a']
+                resp.wob_b = wob['wob_b']
+
+                resp.ve, ve_val = p_count.VE(resp.rr, resp.v_t_i)
                 resp.rsbi = p_count.RSBI(resp.rr, resp.v_t_i)
 
-                wob_output = p_count.WOB()
-                resp.wob = wob_output['wob']
-                resp.wob_f = wob_output['wob_f']
-                resp.wob_a = wob_output['wob_a']
-                resp.wob_b = wob_output['wob_b']
+                mp_d, mp_d_val = p_count.MP_Area(resp.rr, resp.v_t_i, resp.wob)
+                resp.mp_jm_d = mp_d['mp_jm']
+                resp.mp_jl_d = mp_d['mp_jl']
 
-                mp_out_d = p_count.MP_Area(resp.rr, resp.v_t_i, resp.wob)
-                resp.mp_jm_d = mp_out_d['mp_jm']
-                resp.mp_jl_d = mp_out_d['mp_jl']
+                mp_t, mp_t_val = p_count.MP_Area(resp.rr, resp.v_t_i,
+                                                 resp.wob_f)
+                resp.mp_jm_t = mp_t['mp_jm']
+                resp.mp_jl_t = mp_t['mp_jl']
 
-                mp_out_t = p_count.MP_Area(resp.rr, resp.v_t_i, resp.wob_f)
-                resp.mp_jm_t = mp_out_t['mp_jm']
-                resp.mp_jl_t = mp_out_t['mp_jl']
+                val_list = [
+                    rr_val, v_t_val, wob_val, ve_val, mp_d_val, mp_t_val
+                ]
+                resp.val = True if not False in val_list else False
 
             rec.resps.append(resp)
 
@@ -179,22 +188,6 @@ class ResultStatistical(Basic):
         ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
         return ind_rs
 
-    def __IndStat_1(self, func, method):
-        resp_l = self.__resp_l
-        ind_rs = layer_0.Target0()
-        wid_l = [i.wid for i in resp_l]
-
-        ind_rs.rr = func([i.rr for i in resp_l], method)
-        ind_rs.v_t = func([i.v_t_i for i in resp_l], method)
-        ind_rs.ve = func([i.ve for i in resp_l], method)
-        ind_rs.wob = func([i.wob for i in resp_l], method)
-        ind_rs.rsbi = func([i.rsbi for i in resp_l], method)
-        ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], method)
-        ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], method)
-        ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], method)
-        ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
-        pass
-
     def CountAggr(self, cate_l):
         for cate in cate_l:
             if cate == 'TD':
@@ -218,9 +211,9 @@ class ResultStatistical(Basic):
         self.__rec.td.qua = self.__IndStat(p_count, 'QUA')
         self.__rec.td.tqua = self.__IndStat(p_count, 'TQUA')
 
-    def FDAgger(self):
-        p_count = VarAnalysis().FreqSeries
-        self.__rec.fd.prsa = self.__IndStat()
+    # def FDAgger(self):
+    #     p_count = VarAnalysis().FreqSeries
+    #     self.__rec.fd.prsa = self.__IndStat()
 
     def HRAAggr(self):
         p_count = VarAnalysis().HRA

@@ -6,14 +6,15 @@ from datetime import datetime
 
 sys.path.append(str(Path.cwd()))
 
-from Classes.Domain import layer_3
+from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen
 
 mode_name = 'extube_sump12'
-file_name = r'C:\Users\HY_Burger\Desktop\Project\Recordinfo_filted_with.csv'
+# file_name = r'C:\Users\HY_Burger\Desktop\Project\Recordinfo_filted_with.csv'
+file_name = 'prepare.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
@@ -43,7 +44,7 @@ def main():
     TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
     gp = df.groupby('PID')
     a = df.PID.unique()
-    PIDTest(gp, [1813798])
+    PIDTest(gp, a)
 
 
 def PIDTest(gp, pids):
@@ -54,8 +55,7 @@ def PIDTest(gp, pids):
         process_0 = ExtractSplice(pid_obj.ridrec)
         process_0.RecBatchesExtract(id_list, 1800)
         pid_obj.resp_l = process_0.RespSplicing(1800, vm_list)
-        pid_obj.para_d = process_0.ParaSplicing(1800, p_trend_l)
-        a = pid_obj.para_d
+        # pid_obj.para_d = process_0.ParaSplicing(1800, p_trend_l)
 
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
@@ -63,9 +63,9 @@ def PIDTest(gp, pids):
         else:
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(method_list)
-            # process_1.TensorStorage(s_f_fold)
-            process_1.ParaTrendsPlot(s_g_fold, p_trend_l)
-            process_1.RespTrendsPlot(s_g_fold, col_range_set)
+            process_1.TensorStorage(s_f_fold)
+            # process_1.ParaTrendsPlot(s_g_fold, p_trend_l)
+            # process_1.RespTrendsPlot(s_g_fold, col_range_set)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
 
@@ -74,7 +74,7 @@ def PatientGen(gp, pid):
     df = gp.get_group(pid)
     df = df.reset_index(drop=True)
     rid = df.Record_id.unique()[0]
-    pid_obj = layer_3.Patient()
+    pid_obj = layer_p.Patient()
     pid_obj.pid = pid
     pid_obj.end_t = df.endo_t[0]
     pid_obj.end_i = df.endo_end.unique()[0]

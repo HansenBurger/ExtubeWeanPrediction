@@ -1,3 +1,4 @@
+from click import FloatRange
 import numpy as np
 import pandas as pd
 from sklearn.metrics import confusion_matrix
@@ -10,22 +11,30 @@ class Basic():
 
 class IndCalculation(Basic):
     def __init__(self, p_start, p_end):
+        '''
+        Calculate the value of each indicator for each breath
+        p_start: Point of the resp start
+        p_end: Point of the resp end
+        '''
         super().__init__()
         self.__pro_ind = p_start
         self.__end_ind = p_end
-        self.__min_ind = 0
-        self.__p_in = np.array([])
-        self.__p_ex = np.array([])
-        self.__v_in = np.array([])
-        self.__v_ex = np.array([])
+        self.__min_ind = 0  # point of inhalation and exhalation transition
+        self.__p_in = np.array([])  # Inhalation P
+        self.__p_ex = np.array([])  # Exhalation P
+        self.__v_in = np.array([])  # Inhalation V
+        self.__v_ex = np.array([])  # Exhalation V
 
-        self.__valid_tag = True
+        self.__valid_tag = True  # Validity of current resp
 
     @property
     def valid_tag(self):
         return self.__valid_tag
 
-    def __GapDetection(self):
+    def __GapDetection(self) -> bool:
+        '''
+        Resp width detection
+        '''
         min_gap = 50
         max_gap = 450
         gap = abs(self.__end_ind - self.__pro_ind)
@@ -35,14 +44,19 @@ class IndCalculation(Basic):
         else:
             return True
 
-    def __LineDetection(self, array_):
-
+    def __LineDetection(self, array_: np.array) -> bool:
+        '''
+        Whether the respiratory waveform is straight line detection
+        '''
         if np.all(array_ == array_[0]):
             return False
         else:
             return True
 
-    def __SwitchPoint(self, array_):
+    def __SwitchPoint(self, array_: np.array) -> int:
+        '''
+        Search point of inspiratory and expiratory transition
+        '''
         interval = 15
         ind_array = np.where(array_[interval:] < 0)[0]
         try:
@@ -51,14 +65,20 @@ class IndCalculation(Basic):
             ind = None
         return ind
 
-    def __LenMatch(self, array_1, array_2):
+    def __LenMatch(self, array_1: np.array, array_2: np.array) -> bool:
+        '''
+        Weather two array length equal detection
+        '''
         len_1 = array_1.shape[0]
         len_2 = array_2.shape[0]
 
         if len_1 != len_2:
             self.__valid_tag = False
 
-    def __ArrayCertify(self, list_):
+    def __ArrayCertify(self, list_: list) -> None:
+        '''
+        Weather array empty detection
+        '''
         list_ = [list_] if type(list_) == np.array else list_
 
         for array in list_:
@@ -66,7 +86,15 @@ class IndCalculation(Basic):
                 self.__valid_tag = False
                 return
 
-    def ValidityCheck(self, s_F, s_V, s_P):
+    def ValidityCheck(self, s_F: list, s_V: list, s_P: list) -> None:
+        '''
+        Checking the validity of the respiratory waveform and 
+        searching for inspiratory and expiratory switching points 
+        in preparation for index calculations
+        s_F: Resp flow sequence
+        s_V: Resp volumn sequence
+        s_P Resp pressure sequence
+        '''
         p_i, e_i, m_i = self.__pro_ind, self.__end_ind, self.__min_ind
 
         if self.__GapDetection():
@@ -96,26 +124,56 @@ class IndCalculation(Basic):
         else:
             self.__valid_tag = False
 
-    def RespT(self, sample_rate):
+    def __ValRangeCheck(self, vals: list, val_range: range) -> bool:
+        '''
+        Check if the index value is within the range
+        '''
+        vals = [vals] if not type(vals) == list else vals
+        tri_l = [True if round(v) in val_range else False for v in vals]
+        triger = True if not False in tri_l else False
+        return triger
+
+    def RespT(self, sample_rate: float) -> float:
+        '''
+        Count "resp still time" per resp
+        Unit: Second (s)
+        '''
         vent_len = self.__end_ind - self.__pro_ind
         resp_t = vent_len * 1 / sample_rate
         return round(resp_t, 2)
 
-    def RR(self, sample_rate):
+    def RR(self, sample_rate: float) -> list:
+        '''
+        Count "resp rate" per resp
+        Unit: N/min (n/min)
+        '''
         vent_len = self.__end_ind - self.__pro_ind
         RR = 60 / (vent_len * 1 / sample_rate)
-        return round(RR, 2)
+        RR_val = self.__ValRangeCheck(RR, range(0, 60))
+        return round(RR, 2), RR_val
 
-    def V_t_i(self):
-        v_t_i = self.__v_in[-1]
-        return round(v_t_i, 2)
-
-    def V_t_e(self):
-        v_in, v_ex = self.__v_in, self.__v_ex
+    def V_t(self) -> list:
+        '''
+        Count "tidal volume during expiratory" per resp
+        Unit: ml (ml)
+        '''
+        v_in = self.__v_in
+        v_ex = self.__v_ex
+        v_t_i = v_in[-1]
         v_t_e = v_in[-1] + (v_ex[-1] if v_ex[-1] < 0 else -v_ex[-1])
-        return round(v_t_e, 2)
+        v_t = {'v_t_i': round(v_t_i, 2), 'v_t_e': round(v_t_e, 2)}
+        v_t_val = self.__ValRangeCheck([v_t_i, v_t_e], range(0, 2000))
+        return v_t, v_t_val
 
-    def WOB(self):
+    def WOB(self) -> list:
+        '''
+        Count "work of breath" in multiple modes per resp
+        wob: WOB, Dynamic
+        wob_f: WOB Full, Dynamic + Static
+        wob_a: WOB A, Resistive WOB in
+        wob_b: WOB B, Elastic WOB in
+        Unit: J/L (J/L)
+        '''
         p_in, v_in = self.__p_in, self.__v_in
         vp_rectangle = (p_in[-1] * v_in[-1]) / 1000
         peep_rectangle = (p_in[0] * v_in[-1]) / 1000
@@ -126,25 +184,46 @@ class IndCalculation(Basic):
         wob_b = ((p_in[-1] - p_in[0]) * v_in[-1]) / 2000
         wob_a = wob - wob_b
 
-        return {
+        wob_val = self.__ValRangeCheck([wob, wob_full], range(0, 20))
+        wob_ = {
             'wob': round(wob, 2),
             'wob_f': round(wob_full, 2),
             'wob_a': round(wob_a, 2),
             'wob_b': round(wob_b, 2)
         }
+        return wob_, wob_val
 
-    def VE(self, rr, v_t):
+    def VE(self, rr: float, v_t: float) -> list:
+        '''
+        Count "minute ventilation" per resp
+        Unit: L/min (L/min)
+        '''
         VE = rr * (v_t / 1000)
-        return round(VE, 2)
+        val = self.__ValRangeCheck(VE, range(0, 30))
+        return round(VE, 2), val
 
-    def RSBI(self, rr, v_t):
+    def RSBI(self, rr: float, v_t: float) -> float:
+        '''
+        Count "rapid shallow breathing index" per resp 
+        Unit: Index (f/L)
+        '''
         rsbi = rr / (v_t / 1000)
         return round(rsbi, 2)
 
-    def MP_Area(self, rr, v_t, wob):
+    def MP_Area(self, rr: float, v_t: float, wob: float) -> list:
+        '''
+        Count the work of the ventilator using the area method
+        mp_jm_area: MP(Jm)
+        mp_jl_area: MP(JL)
+        '''
         mp_jm_area = 0.098 * rr * wob
         mp_jl_area = 0.098 * wob / (v_t * 0.001)
-        return {'mp_jm': round(mp_jm_area, 2), 'mp_jl': round(mp_jl_area, 2)}
+        mp_area = {
+            'mp_jm': round(mp_jm_area, 2),
+            'mp_jl': round(mp_jl_area, 2)
+        }
+        mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area], range(0, 20))
+        return mp_area, mp_val
 
 
 class VarAnalysis(Basic):
@@ -260,7 +339,7 @@ class VarAnalysis(Basic):
 
         return round(result_, 2)
 
-    def FreqSeries(self, l_t, l_v, rs_, method_sub):
+    def FreqSeries(self, l_t: list, l_v: list, rs_: float, method_sub: str):
         _, arr_v = self.__Resample(l_t, l_v, rs_)
 
         if method_sub == 'PRSA':
@@ -352,7 +431,6 @@ class FreqPreMethod():
     def InitTimeSeries(self):
         self.__LenVertify()
         df = pd.DataFrame({'time': self.__time_a, 'value': self.__target_a})
-        df = df.set_index('time', drop=True)
         self.__df = df
 
     def InterpValue(self, interp_rate):
@@ -360,14 +438,13 @@ class FreqPreMethod():
         array_x = self.__SpaceGen(interp_rate)
         array_y = np.interp(array_x, self.__time_a, self.__target_a)
         df = pd.DataFrame({'time': array_x, 'value': array_y})
-        df = df.set_index('time', drop=True)
         self.__df = df
 
     def Resampling(self, resample_rate):
         self.__LenVertify()
         df = self.__df.copy()
         array_x = self.__SpaceGen(resample_rate)
-        array_y = np.array(df.loc[array_x].value)
+        array_y = np.array(df[df.time.isin(array_x)].value)
         df_ = pd.DataFrame({'time': array_x, 'value': array_y})
         # df_ = df_.set_index('time', drop=True)
         self.__df = df_

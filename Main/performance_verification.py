@@ -1,14 +1,17 @@
+import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from Classes.Func import CalculatePart, DiagramsGen, KitTools
-from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.metrics import roc_auc_score
 
-mode_name = 'wean_PSV'
+sys.path.append(str(Path.cwd()))
+from Classes.Func import CalculatePart, DiagramsGen, KitTools
+
+mode_name = 'extube_sump12'
 
 
 def main():
-    var_rs_f = r'C:\Main\Data\_\Result\Form\20220325_23_wean_PSV'
+    var_rs_f = r'C:\Main\Data\_\Result\Form\20220416_23_extube_sump12'
     var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / var_rs_f
     s_g_fold = KitTools.SaveGen(KitTools.ConfigRead('ResultSave', 'Graph'),
                                 mode_name)

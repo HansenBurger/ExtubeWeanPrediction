@@ -14,7 +14,7 @@ form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
 save_loc = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), 'PRSA')
 vm_list = ['SPONT', 'CPAP', 'APNEA VENTILATION']
-indicator_slice = slice(4, 7)
+indicator_slice = slice(1, 2)
 
 
 def main():
@@ -116,7 +116,7 @@ def ValueGen(resp_l):
 
 def PRSARangeTest(arr_t, arr_v):
     re_rate = 4
-    L = 120
+    L = 240
     S_s = [2, 4, 6, 8, 10, 12, 14]
     T_s = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45]
 

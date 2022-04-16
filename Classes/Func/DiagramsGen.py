@@ -79,8 +79,9 @@ class PlotMain():
             df.index = df.index.str.upper()
         except:
             pass
-        sns.set(rc={'figure.figsize': (9, 7)})
+        sns.set(rc={'figure.figsize': (9, 10)})
         sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
+        # sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
         plt.title(fig_n, fontsize=18, fontweight='bold')
         plt.tight_layout()
         plt.savefig(save_loc)
