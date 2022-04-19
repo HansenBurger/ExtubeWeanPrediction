@@ -7,11 +7,11 @@ from sklearn.metrics import roc_auc_score
 sys.path.append(str(Path.cwd()))
 from Classes.Func import CalculatePart, DiagramsGen, KitTools
 
-mode_name = 'extube_sump12'
+mode_name = 'wean_psv'
 
 
 def main():
-    var_rs_f = r'C:\Main\Data\_\Result\Form\20220416_23_extube_sump12'
+    var_rs_f = r'C:\Main\Data\_\Result\Form\20220417_09_wean_psv'
     var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / var_rs_f
     s_g_fold = KitTools.SaveGen(KitTools.ConfigRead('ResultSave', 'Graph'),
                                 mode_name)

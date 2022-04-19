@@ -12,10 +12,10 @@ from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen
 
-mode_name = 'extube_sump12'
+mode_name = 'wean_psv'
 # file_name = r'C:\Users\HY_Burger\Desktop\Project\Recordinfo_filted_with.csv'
 file_name = 'prepare.csv'
-data_loc = Path(ConfigRead('WaveData', 'Extube'))
+data_loc = Path(ConfigRead('WaveData', 'Wean'))
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
 
