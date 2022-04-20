@@ -1,4 +1,8 @@
+import sys, pathlib
 from ftplib import FTP
+
+sys.path.append(pathlib.Path.cwd())
+
 from Classes.Func.KitTools import ConfigRead
 
 

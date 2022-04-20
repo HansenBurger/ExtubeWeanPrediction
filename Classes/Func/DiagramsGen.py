@@ -1,19 +1,18 @@
-import numpy as np
+import pandas as pd
 import seaborn as sns
-from pathlib import Path
+from pathlib import Path, PurePath
 from matplotlib import pyplot as plt
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 
 
 class PlotMain():
-    def __init__(self, save_loc=None):
-        self.__safe_loc = save_loc
+    def __init__(self, save_loc: Path = Path.cwd()):
+        self.__safe_loc = Path(save_loc) if not isinstance(
+            save_loc, PurePath) else save_loc
 
-    def __SaveRouteGen(self, fig_n):
-        if not self.__safe_loc:
-            s_l = Path.cwd() / (fig_n + '.png')
-        else:
-            s_l = self.__safe_loc / (fig_n + '.png')
-
+    def __SaveRouteGen(self, fig_n: str) -> Path:
+        s_l = self.__safe_loc / (fig_n + '.png')
         return s_l
 
     def lmplot(self, x_label, y_label, df, fig_name):
@@ -71,6 +70,29 @@ class PlotMain():
         plt.title(fig_name, fontsize=12)
         plt.show()
         # plt.savefig(save_loc)
+        plt.close()
+
+    def RocPlot(self, x_labels: list, y_label: str, df: pd.DataFrame,
+                fig_n: str) -> None:
+        save_loc = self.__SaveRouteGen(fig_n)
+        x_labels = [x_labels] if type(x_labels) is not list else x_labels
+        fig_dims = (6, 6)
+        plt.subplots(figsize=fig_dims)
+        plt.title('Receiver operating characteristic')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.plot([0, 1], [0, 1], 'r--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        for x_label in x_labels:
+            roc_auc = round(roc_auc_score(df[y_label], df[x_label]), 2)
+            fpr, tpr, _ = roc_curve(df[y_label], df[x_label])
+            plt.plot(fpr,
+                     tpr,
+                     label='ROC: {0} (AUC = {1})'.format(x_label, roc_auc))
+        plt.legend(loc="lower right")
+        plt.tight_layout()
+        plt.savefig(save_loc)
         plt.close()
 
     def HeatMapPlot(self, df, fig_n):

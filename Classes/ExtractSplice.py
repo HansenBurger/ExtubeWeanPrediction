@@ -99,7 +99,7 @@ class ExtractSplice(basic):
 
         return ut_s
 
-    def ParaSelecting(self, t_set_s, para_attr_l):
+    def ParaSelecting(self, t_set_s, para_attr_l: list):
         """
         ParaSelecting
         

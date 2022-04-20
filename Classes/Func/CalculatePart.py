@@ -423,7 +423,7 @@ class FreqPreMethod():
     def __SpaceGen(self, fs):
         ind_0 = self.__time_a.min()
         ind_1 = self.__time_a.max()
-        ind_num = (ind_1 - ind_0) * fs
+        ind_num = round((ind_1 - ind_0) * fs)
         array = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
         array = np.around(array, decimals=2)
         return array
