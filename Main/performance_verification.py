@@ -11,7 +11,7 @@ mode_name = 'wean_psv'
 
 
 def main():
-    var_rs_f = r'C:\Main\Data\_\Result\Form\20220417_09_wean_psv'
+    var_rs_f = r'C:\Main\Data\_\Result\Form\20220423_20_wean_psv'
     var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / var_rs_f
     s_g_fold = KitTools.SaveGen(KitTools.ConfigRead('ResultSave', 'Graph'),
                                 mode_name)

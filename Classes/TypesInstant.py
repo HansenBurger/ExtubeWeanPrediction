@@ -169,6 +169,7 @@ class ResultStatistical(Basic):
         self.__rec.fd = layer_1.DomainFS()
         self.__rec.hra = layer_1.DomainHRA()
         self.__rec.hrv = layer_1.DomainHRV()
+        self.__rec.ent = layer_1.DomainEntropy()
 
     @property
     def rec(self):
@@ -196,8 +197,8 @@ class ResultStatistical(Basic):
                 self.HRAAggr()
             elif cate == 'HRV':
                 self.HRVAggr()
-            elif cate == 'FD':
-                self.FDAgger()
+            elif cate == 'ENT':
+                self.EntAggr()
             else:
                 print('No match category !')
                 return
@@ -225,3 +226,9 @@ class ResultStatistical(Basic):
         p_count = VarAnalysis().HRV
         self.__rec.hrv.sd1 = self.__IndStat(p_count, 'SD1')
         self.__rec.hrv.sd2 = self.__IndStat(p_count, 'SD2')
+
+    def EntAggr(self):
+        p_count = VarAnalysis().Entropy
+        self.__rec.ent.app = self.__IndStat(p_count, 'AppEn')
+        self.__rec.ent.samp = self.__IndStat(p_count, 'SampEn')
+        self.__rec.ent.fuzz = self.__IndStat(p_count, 'FuzzEn')

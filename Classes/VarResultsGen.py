@@ -51,7 +51,7 @@ class VarResultsGen(basic):
         save_n = self.__SaveNaming()
 
         var_rs = self.__pid.result
-        var_sl = [var_rs.td, var_rs.hra, var_rs.hrv]
+        var_sl = [var_rs.td, var_rs.hra, var_rs.hrv, var_rs.ent]
         var_sl = [GetObjectDict(i) for i in var_sl]
         var_sd = {}
         for i in var_sl:

@@ -65,7 +65,8 @@ class PlotMain():
     def lineplot(self, x_label, y_label, df, fig_name):
         #save_loc = Path(self.__safe_loc) / (fig_name + '.png')
         sns.set_theme(style='whitegrid')
-        sns.set(rc={'figure.figsize': (18, 4)})
+        # sns.set(rc={'figure.figsize': (18, 4)})
+        plt.figure(figsize=(18, 4))
         sns.lineplot(x=x_label, y=y_label, data=df)
         plt.title(fig_name, fontsize=12)
         plt.show()
@@ -101,10 +102,12 @@ class PlotMain():
             df.index = df.index.str.upper()
         except:
             pass
-        sns.set(rc={'figure.figsize': (9, 10)})
+        sns.set(rc={'figure.figsize': (10, 10)})
         sns.heatmap(df, annot=True, linewidths=.5)
         # sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
         plt.title(fig_n, fontsize=18, fontweight='bold')
+        plt.ylabel('Scale S')
+        plt.xlabel('Anchor Len T')
         plt.tight_layout()
         plt.savefig(save_loc)
         plt.close()

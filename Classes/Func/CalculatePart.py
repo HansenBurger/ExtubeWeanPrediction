@@ -1,6 +1,9 @@
-from click import FloatRange
+import math
 import numpy as np
 import pandas as pd
+import entropy as ent
+import EntropyHub as eh
+from scipy import interpolate
 from sklearn.metrics import confusion_matrix
 
 
@@ -129,6 +132,7 @@ class IndCalculation(Basic):
         Check if the index value is within the range
         '''
         vals = [vals] if not type(vals) == list else vals
+        vals = [-999 if math.isnan(v) else v for v in vals]
         tri_l = [True if round(v) in val_range else False for v in vals]
         triger = True if not False in tri_l else False
         return triger
@@ -318,8 +322,9 @@ class VarAnalysis(Basic):
         conv = (conv_s(0) + conv_s(1) - conv_s(-1) - conv_s(-2)) / 4
         return round(conv, 4)
 
-    def TimeSeries(self, list_, method_sub):
-        array_ = np.array(list_)
+    def TimeSeries(self, ind_s: list, method_sub: str) -> float:
+        array_ = np.array(ind_s) if not isinstance(ind_s,
+                                                   np.ndarray) else ind_s
 
         if method_sub == 'AVE':
             result_ = np.mean(array_)
@@ -339,18 +344,18 @@ class VarAnalysis(Basic):
 
         return round(result_, 2)
 
-    def FreqSeries(self, l_t: list, l_v: list, rs_: float, method_sub: str):
-        _, arr_v = self.__Resample(l_t, l_v, rs_)
+    # def FreqSeries(self, l_t: list, l_v: list, rs_: float, method_sub: str):
+    #     _, arr_v = self.__Resample(l_t, l_v, rs_)
 
-        if method_sub == 'PRSA':
-            L = 120
-            met = 'AC'
-            result_ = self.__PRSA(arr_v, L, met)
+    #     if method_sub == 'PRSA':
+    #         L = 120
+    #         met = 'AC'
+    #         result_ = self.__PRSA(arr_v, L, met)
 
-        return result_
+    #     return result_
 
-    def HRA(self, list_, method_sub):
-        array_0, array_1 = self.__Panglais(list_)
+    def HRA(self, ind_s: list, method_sub: str) -> float:
+        array_0, array_1 = self.__Panglais(ind_s)
 
         if method_sub == 'PI':
             result_ = self.__PI(array_0, array_1)
@@ -364,8 +369,8 @@ class VarAnalysis(Basic):
 
         return result_
 
-    def HRV(self, list_, method_sub):
-        array_0, array_1 = self.__Panglais(list_)
+    def HRV(self, ind_s: list, method_sub: str) -> float:
+        array_0, array_1 = self.__Panglais(ind_s)
 
         if method_sub == 'SD1':
             result_ = self.__SD1(array_0, array_1)
@@ -376,6 +381,21 @@ class VarAnalysis(Basic):
             print('No match method')
 
         return result_
+
+    def Entropy(self, ind_s: list, method_sub: str) -> float:
+        array_ = np.array(ind_s) if not isinstance(ind_s,
+                                                   np.ndarray) else ind_s
+        if method_sub == 'AppEn':
+            result_, _ = eh.ApEn(array_, m=1)
+        elif method_sub == 'SampEn':
+            result_, _, _ = eh.SampEn(array_, m=1)
+        elif method_sub == 'FuzzEn':
+            result_, _, _ = eh.FuzzEn(array_, m=1)
+        else:
+            result_ = -999
+            print('No match method')
+
+        return round(result_[-1], 2)
 
 
 class SenSpecCounter(Basic):
@@ -442,9 +462,11 @@ class FreqPreMethod():
 
     def Resampling(self, resample_rate):
         self.__LenVertify()
-        df = self.__df.copy()
+        # df = self.__df.copy()
+        f = interpolate.interp1d(self.__time_a, self.__target_a)
         array_x = self.__SpaceGen(resample_rate)
-        array_y = np.array(df[df.time.isin(array_x)].value)
-        df_ = pd.DataFrame({'time': array_x, 'value': array_y})
+        array_y = f(array_x)
+        #array_y = np.array(df[df.time.isin(array_x)].value)
+        df = pd.DataFrame({'time': array_x, 'value': array_y})
         # df_ = df_.set_index('time', drop=True)
-        self.__df = df_
+        self.__df = df

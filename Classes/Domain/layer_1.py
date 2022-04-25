@@ -368,3 +368,35 @@ class DomainHRA(func):
     @si.setter
     def si(self, obj):
         self.__si = obj
+
+
+class DomainEntropy(func):
+    def __init__(self):
+        super().__init__()
+        self.__app = None
+        self.__samp = None
+        self.__fuzz = None
+
+    @property
+    def app(self):
+        return self.__app
+
+    @app.setter
+    def app(self, obj):
+        self.__app = obj
+
+    @property
+    def samp(self):
+        return self.__samp
+
+    @samp.setter
+    def samp(self, obj):
+        self.__samp = obj
+
+    @property
+    def fuzz(self):
+        return self.__fuzz
+
+    @fuzz.setter
+    def fuzz(self, obj):
+        self.__fuzz = obj

@@ -60,6 +60,7 @@ class Result(func):
         self.__fd = None
         self.__hra = None
         self.__hrv = None
+        self.__ent = None
 
     @property
     def td(self):
@@ -92,3 +93,11 @@ class Result(func):
     @hrv.setter
     def hrv(self, obj):
         self.__hrv = obj
+
+    @property
+    def ent(self):
+        return self.__ent
+
+    @ent.setter
+    def ent(self, obj):
+        self.__ent = obj

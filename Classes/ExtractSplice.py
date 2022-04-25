@@ -32,7 +32,7 @@ class ExtractSplice(basic):
         par_p.ParametersInit(vm)
         return par_p.rec
 
-    def RecBatchesExtract(self, id_list, t_set=None):
+    def RecBatchesExtract(self, id_list: list, t_set: int = -1) -> None:
         """
         RecBatchesExtract
 
@@ -43,13 +43,13 @@ class ExtractSplice(basic):
         """
         wave_data = []
         para_data = []
-        if not t_set:
+        if type(t_set) == int and t_set < 0:
             for i in id_list:
                 w_d = self.__WaveBatchGen(i)
                 p_d = self.__ParaBatchGen(i)
                 wave_data.append(w_d)
                 para_data.append(p_d)
-        elif type(t_set) == int:
+        elif type(t_set) == int and t_set > 0:
             v_still_t = 0
             id_list.reverse()
             for i in id_list:
@@ -73,8 +73,6 @@ class ExtractSplice(basic):
         else:
             print('Wrong type of t_set')
             return
-
-        a = para_data
 
         self.__ridrec.waves = wave_data
         self.__ridrec.paras = para_data
@@ -134,7 +132,7 @@ class ExtractSplice(basic):
         # Reverse order out (tail to head)
         return para_dict
 
-    def RespSplicing(self, t_set, vm_cond):
+    def RespSplicing(self, vm_cond: list, t_set: int) -> list:
         """
         RespSplicing
 
@@ -183,7 +181,7 @@ class ExtractSplice(basic):
         # Positive order (range head to op-tail)
         return list(reversed(resp_select))
 
-    def ParaSplicing(self, t_set, para_attr_l):
+    def ParaSplicing(self, para_attr_l: list, t_set: int = -1):
         """
         ababab
         """
@@ -195,7 +193,10 @@ class ExtractSplice(basic):
             return {}
 
         ut_s = self.__UiIndexSplicing()
-        p_slice = slice(0, LocatSimiTerms(ut_s, [t_set])[t_set])
+        if t_set > 0:
+            p_slice = slice(0, LocatSimiTerms(ut_s, [t_set])[t_set])
+        else:
+            p_slice = slice(0, len(ut_s))
 
         for p in reversed(para_data):
             for p_type in para_attr_l:
