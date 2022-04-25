@@ -3,9 +3,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from scipy.stats import mannwhitneyu
-from sklearn.metrics import roc_auc_score
-from scipy.stats import normaltest, ttest_ind, wilcoxon
 
 sys.path.append(str(Path.cwd()))
 
@@ -13,13 +10,15 @@ from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.ExtractSplice import ExtractSplice
-from Classes.Func.CalculatePart import FreqPreMethod
+from Classes.Func.CalculatePart import FreqPreMethod, PerfomAssess
 from Classes.Func.KitTools import TimeShift, ConfigRead, SaveGen
 
-# form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
-form_name = 'prepare.csv'
+mode_name = 'PRSA_DC_f'
+# form_name = 'prepare.csv'
+form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
-save_loc = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), 'PRSA')
+s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
+s_g_loc = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
 vm_list = ['SPONT', 'CPAP', 'APNEA VENTILATION']
 indicator_slice = slice(1, 7)
 
@@ -33,7 +32,7 @@ def main():
             pass
         else:
             p_list.append(prsa_d)
-    GraphProcess(p_list, 'AUC')
+    GraphProcess(p_list)
 
 
 def Preprocess(form_n):
@@ -65,26 +64,37 @@ def CountPorcess(gp, pid):
     return pr_d
 
 
-def GraphProcess(p_list: list, method: str) -> None:
+def GraphProcess(p_list: list) -> None:
     ture_arr = np.array([i['end'] for i in p_list])
     for ind in list(p_list[0]['prsa'].keys())[indicator_slice]:
         l_df = [pd.DataFrame(p['prsa'][ind]) for p in p_list]
+
         df_o = l_df[0].copy()
-        df_o = df_o.reindex(index=df_o.index[::-1])
+        df_p = df_o.reindex(index=df_o.index[::-1])
+        df_p_pos = df_p.copy()
+        df_p_neg = df_p.copy()
+        df_auc = df_p.copy()
+
         for i in df_o.index:
             for j in df_o.columns:
                 pred_arr = np.array([x.loc[i, j] for x in l_df])
-                df_r = pd.DataFrame({'label': ture_arr, 'value': pred_arr})
-                if method == 'AUC':
-                    roc = roc_auc_score(ture_arr, pred_arr)
-                    df_o.loc[i, j] = roc
-                elif method == 'PV':
-                    pred_arr_0 = df_r[df_r.label == 0].value
-                    pred_arr_1 = df_r[df_r.label == 1].value
-                    p, _, _ = PCount(pred_arr_0, pred_arr_1)
-                    df_o.loc[i, j] = p
-        p_ = PlotMain(save_loc)
-        p_.HeatMapPlot(df_o, 'PRSA({0})'.format(ind))
+                p_assess = PerfomAssess(ture_arr, pred_arr)
+                roc, _, _ = p_assess.AucAssess()
+                df_auc.loc[i, j] = roc
+                p, rs_pos, rs_neg = p_assess.PAssess()
+                df_p.loc[i, j] = p
+                df_p_pos.loc[i, j] = rs_pos
+                df_p_neg.loc[i, j] = rs_neg
+
+        pd.DataFrame.to_csv(df_p_pos,
+                            s_f_fold / 'p_pos_dist_{0}.csv'.format(ind),
+                            index=False)
+        pd.DataFrame.to_csv(df_p_neg,
+                            s_f_fold / 'p_neg_dist_{0}.csv'.format(ind),
+                            index=False)
+        p_ = PlotMain(s_g_loc)
+        p_.HeatMapPlot(df_auc, 'PRSA_AUC({0})'.format(ind))
+        p_.HeatMapPlot(df_p, 'PRSA_P({0})'.format(ind))
 
 
 def InfoCollect(gp, pid):
@@ -101,7 +111,7 @@ def InfoCollect(gp, pid):
     id_list = gp.get_group(pid).zdt_1.tolist()
     process_0 = ExtractSplice(pid_obj.ridrec)
     process_0.RecBatchesExtract(id_list, 1800)
-    pid_obj.resp_l = process_0.RespSplicing(1800, vm_list)
+    pid_obj.resp_l = process_0.RespSplicing(vm_list, 1800)
     return pid_obj.end_i, pid_obj.resp_l
 
 
@@ -143,39 +153,11 @@ def PRSARangeTest(arr_t, arr_v):
     p_.ReSample(re_rate, arr_t)
     for t in T_s:
         result_d[t] = {}
-        p_.PRSAGet(t, 'AC')
+        p_.PRSAGet(t, 'DC')
         for s in S_s:
             p_.WaveletsAna(s)
             result_d[t][s] = p_.value
     return result_d
-
-
-def PCount(arr_1, arr_2):
-    _, p_1 = normaltest(arr_1)
-    _, p_2 = normaltest(arr_2)
-    alpha = 0.05
-    if p_1 > alpha and p_2 > alpha:
-        _, p = ttest_ind(arr_1, arr_2, equal_var=False)
-        ave_1 = round(np.mean(arr_1), 3)
-        std_1 = round(np.std(arr_1), 3)
-        ave_2 = round(np.mean(arr_2), 3)
-        std_2 = round(np.std(arr_2), 3)
-        v_rs_1 = '{0} +- {1}'.format(ave_1, std_1)
-        v_rs_2 = '{0} +- {1}'.format(ave_2, std_2)
-        # p = round(p, 4) if p > 0.0001 else 'p < 0.0001'
-    else:
-        _, p = mannwhitneyu(arr_1, arr_2)
-        med_1 = round(np.median(arr_1), 3)
-        qua_1 = round(np.percentile(arr_1, 25), 3)
-        tqua_1 = round(np.percentile(arr_1, 75), 3)
-        med_2 = round(np.median(arr_2), 3)
-        qua_2 = round(np.percentile(arr_2, 25), 3)
-        tqua_2 = round(np.percentile(arr_2, 75), 3)
-        v_rs_1 = '{0} ({1}, {2})'.format(med_1, qua_1, tqua_1)
-        v_rs_2 = '{0} ({1}, {2})'.format(med_2, qua_2, tqua_2)
-        # p = round(p, 4) if p > 0.0001 else 'p < 0.0001'
-    p = round(p, 4)
-    return p, v_rs_1, v_rs_2
 
 
 class PRSA():
@@ -201,7 +183,6 @@ class PRSA():
     def ReSample(self, re_rate, arr_t):
         p_ = FreqPreMethod(arr_t, self.__arr_i)
         p_.InitTimeSeries()
-        # p_.InterpValue(100)
         p_.Resampling(re_rate)
         self.__arr_i = p_.df.value
 

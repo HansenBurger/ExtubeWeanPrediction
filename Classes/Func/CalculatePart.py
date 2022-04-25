@@ -4,7 +4,11 @@ import pandas as pd
 import entropy as ent
 import EntropyHub as eh
 from scipy import interpolate
+from scipy.stats import mannwhitneyu
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix
+from scipy.stats import normaltest, ttest_ind
 
 
 class Basic():
@@ -323,9 +327,7 @@ class VarAnalysis(Basic):
         return round(conv, 4)
 
     def TimeSeries(self, ind_s: list, method_sub: str) -> float:
-        array_ = np.array(ind_s) if not isinstance(ind_s,
-                                                   np.ndarray) else ind_s
-
+        array_ = np.array(ind_s)
         if method_sub == 'AVE':
             result_ = np.mean(array_)
         elif method_sub == 'STD':
@@ -383,8 +385,7 @@ class VarAnalysis(Basic):
         return result_
 
     def Entropy(self, ind_s: list, method_sub: str) -> float:
-        array_ = np.array(ind_s) if not isinstance(ind_s,
-                                                   np.ndarray) else ind_s
+        array_ = np.array(ind_s)
         if method_sub == 'AppEn':
             result_, _ = eh.ApEn(array_, m=1)
         elif method_sub == 'SampEn':
@@ -396,6 +397,47 @@ class VarAnalysis(Basic):
             print('No match method')
 
         return round(result_[-1], 2)
+
+
+class PerfomAssess(Basic):
+    def __init__(self, ture_l: list, pred_l: list) -> None:
+        super().__init__()
+        self.__true_a: np.ndarray = np.array(ture_l)
+        self.__pred_a: np.ndarray = np.array(pred_l)
+
+    def __PosNegSep(self) -> list:
+        df = pd.DataFrame({'true': self.__true_a, 'pred': self.__pred_a})
+        pos_arr = np.array(df[df.true == 1].pred)
+        neg_arr = np.array(df[df.true == 0].pred)
+        return pos_arr, neg_arr
+
+    def AucAssess(self, v_ran: int = 3) -> list:
+        fpr, tpr, _ = roc_curve(self.__true_a, self.__pred_a)
+        auc = round(roc_auc_score(self.__true_a, self.__pred_a), v_ran)
+        return auc, fpr, tpr
+
+    def PAssess(self, alpha: float = 0.05):
+        pos_, neg_ = self.__PosNegSep()
+        _, p_1 = normaltest(pos_)
+        _, p_2 = normaltest(neg_)
+
+        if p_1 > alpha and p_2 > alpha:
+            len_euqal = len(pos_) == len(neg_)
+            _, p = ttest_ind(pos_, neg_, equal_var=len_euqal)
+            rs_pos = '{0} +- {1}'.format(round(np.mean(pos_), 3),
+                                         round(np.std(pos_), 3))
+            rs_neg = '{0} +- {1}'.format(round(np.mean(neg_), 3),
+                                         round(np.std(neg_), 3))
+        else:
+            _, p = mannwhitneyu(pos_, neg_)
+            rs_pos = '{0} ({1}, {2})'.format(round(np.median(pos_), 3),
+                                             round(np.percentile(pos_, 25), 3),
+                                             round(np.percentile(pos_, 75), 3))
+            rs_neg = '{0} ({1}, {2})'.format(round(np.median(neg_), 3),
+                                             round(np.percentile(neg_, 25), 3),
+                                             round(np.percentile(neg_, 75), 3))
+        p = round(p, 4) if not p < 0.0001 else 0.0001
+        return p, rs_pos, rs_neg
 
 
 class SenSpecCounter(Basic):
