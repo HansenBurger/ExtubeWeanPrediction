@@ -61,6 +61,7 @@ class Result(func):
         self.__hra = None
         self.__hrv = None
         self.__ent = None
+        self.__prsa = None
 
     @property
     def td(self):
@@ -101,3 +102,11 @@ class Result(func):
     @ent.setter
     def ent(self, obj):
         self.__ent = obj
+
+    @property
+    def prsa(self):
+        return self.__prsa
+
+    @prsa.setter
+    def prsa(self, obj):
+        self.__prsa = obj

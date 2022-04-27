@@ -13,9 +13,9 @@ from Classes.ExtractSplice import ExtractSplice
 from Classes.Func.CalculatePart import FreqPreMethod, PerfomAssess
 from Classes.Func.KitTools import TimeShift, ConfigRead, SaveGen
 
-mode_name = 'PRSA_DC_f'
-# form_name = 'prepare.csv'
-form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
+mode_name = 'PRSA_AC_s'
+form_name = 'prepare.csv'
+# form_name = r'C:\Users\HY_Burger\Desktop\Project\extube_sump12.csv'
 data_loc = Path(ConfigRead('WaveData', 'Extube'))
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
 s_g_loc = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
@@ -139,21 +139,21 @@ def ValueGen(resp_l):
 
 
 def PRSARangeTest(arr_t, arr_v):
-    # re_rate = 4
-    # L = 240
-    # S_s = [2, 4, 6, 8, 10, 12, 14]
-    # T_s = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45]
-    re_rate = 0.25
-    L = 15
-    S_s = [2, 4, 6]
-    T_s = [1, 5, 10]
+    re_rate = 2
+    L = 120
+    S_s = [2, 4, 6, 8, 10, 12, 14]
+    T_s = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45]
+    # re_rate = 0.25
+    # L = 15
+    # S_s = [2, 4, 6]
+    # T_s = [1, 5, 10]
 
     result_d = {}
     p_ = PRSA(L, arr_v)
     p_.ReSample(re_rate, arr_t)
     for t in T_s:
         result_d[t] = {}
-        p_.PRSAGet(t, 'DC')
+        p_.PRSAGet(t, 'AC')
         for s in S_s:
             p_.WaveletsAna(s)
             result_d[t][s] = p_.value

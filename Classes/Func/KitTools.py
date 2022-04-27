@@ -53,7 +53,7 @@ def FromkeysReid(dict_name, type_=[]):
     return dict_
 
 
-def PathVerify(loc):
+def PathVerify(loc: PurePath) -> PurePath:
     return Path(loc) if not isinstance(loc, PurePath) else loc
 
 

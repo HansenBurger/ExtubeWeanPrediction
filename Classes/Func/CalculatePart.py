@@ -235,96 +235,9 @@ class IndCalculation(Basic):
 
 
 class VarAnalysis(Basic):
-    def __init__(self):
+    def __init__(self, ind_t: list = []):
         super().__init__()
-
-    def __PI(self, a_0, a_1):
-        n = 0
-        m = 0
-        for i in range(len(a_0)):
-            n += 1 if a_0[i] < a_1[i] else 0
-            m += 1 if a_0[i] > a_1[i] else 0
-        pi = 100 * m / (n + m)
-        return round(pi, 2)
-
-    def __GI(self, a_0, a_1):
-        d1 = 0
-        d2 = 0
-        for i in range(len(a_0)):
-            d1 += (a_1[i] - a_0[i]) / np.sqrt(2) if a_0[i] < a_1[i] else 0
-            d2 += (a_0[i] - a_1[i]) / np.sqrt(2) if a_0[i] > a_1[i] else 0
-        gi = 100 * d1 / (d1 + d2)
-        return round(gi, 2)
-
-    def __SI(self, a_0, a_1):
-        theta_1 = 0
-        theta_2 = 0
-        for i in range(len(a_0)):
-            theta_1 += (np.degrees(np.arctan(a_1[i] / a_0[i])) -
-                        45) if a_0[i] < a_1[i] else 0
-            theta_2 += (-np.degrees(np.arctan(a_1[i] / a_0[i])) +
-                        45) if a_0[i] > a_1[i] else 0
-        si = 100 * theta_1 / (theta_1 + theta_2)
-        return round(si, 2)
-
-    def __SD1(self, a_0, a_1):
-        sd = np.std(a_1 - a_0) / np.sqrt(2)
-        return round(sd, 2)
-
-    def __SD2(self, a_0, a_1):
-        sd = np.std(a_1 + a_0) / np.sqrt(2)
-        return round(sd, 2)
-
-    def __Panglais(self, list_):
-        a_0 = np.array(list_[:len(list_) - 1])
-        a_1 = np.array(list_[1:])
-        return a_0, a_1
-
-    def __SpaceGen(self, arr, fs):
-        ind_0 = arr.min()
-        ind_1 = arr.max()
-        ind_num = (ind_1 - ind_0) * fs
-        arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
-        arr_ = np.round(arr_, decimals=2)
-        return arr_
-
-    def __Resample(self, list_t, list_v, rs_rate):
-        it_rate = 100
-        arr_t = np.array(list_t) if type(list_t) == list else list_t
-        arr_v = np.array(list_v) if type(list_v) == list else list_v
-        arr_t_it = self.__SpaceGen(arr_t, it_rate)
-        df_it = pd.DataFrame({'time': arr_t_it, 'value': arr_v})
-        df_it = df_it.set_index('time', drop=True)
-        arr_t_rs = self.__SpaceGen(arr_t, rs_rate)
-        df_rs = df_it.loc[arr_t_rs]
-        return df_rs.index, df_rs.values
-
-    def __PRSA(self, arr_, L, method):
-
-        anchor_s = []
-
-        if method == 'AC':
-            anchor_set = lambda x, y: True if x[y] > x[y - 1] else False
-        elif method == 'DC':
-            anchor_set = lambda x, y: True if x[y] < x[y - 1] else False
-        else:
-            print('No match method')
-            return
-
-        for i in range(L, len(arr_) - L):
-            if not anchor_set(arr_, i):
-                pass
-            else:
-                clip = slice(i - L, i + L + 1)
-                anchor_s.append(arr_[clip].tolist())
-
-        arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
-        arr_axis = np.linspace(-L, L + 1, 2 * L + 1, endpoint=False)
-        df = pd.DataFrame({'axis': arr_axis, 'value': arr_prsa})
-        df = df.set_index('axis', drop=True)
-        conv_s = lambda x: df.loc[x].value
-        conv = (conv_s(0) + conv_s(1) - conv_s(-1) - conv_s(-2)) / 4
-        return round(conv, 4)
+        self.__arr_t = np.array(ind_t)
 
     def TimeSeries(self, ind_s: list, method_sub: str) -> float:
         array_ = np.array(ind_s)
@@ -346,17 +259,56 @@ class VarAnalysis(Basic):
 
         return round(result_, 2)
 
-    # def FreqSeries(self, l_t: list, l_v: list, rs_: float, method_sub: str):
-    #     _, arr_v = self.__Resample(l_t, l_v, rs_)
+    def __Panglais(self, list_: list) -> np.array:
+        a_0 = np.array(list_[:len(list_) - 1])
+        a_1 = np.array(list_[1:])
+        return a_0, a_1
 
-    #     if method_sub == 'PRSA':
-    #         L = 120
-    #         met = 'AC'
-    #         result_ = self.__PRSA(arr_v, L, met)
+    def __PI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+        '''
+        Count PI(the point below LI)
+        a_0: Array of IND_i
+        a_1: Array of IND_i+1
+        '''
+        n = 0
+        m = 0
+        for i in range(len(a_0)):
+            n += 1 if a_0[i] < a_1[i] else 0
+            m += 1 if a_0[i] > a_1[i] else 0
+        pi = 100 * m / (n + m)
+        return round(pi, 2)
 
-    #     return result_
+    def __GI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+        '''
+        Count GI(the distance contributed by the points above LI)
+        a_0: Array of IND_i
+        a_1: Array of IND_i+1
+        '''
+        d1 = 0
+        d2 = 0
+        for i in range(len(a_0)):
+            d1 += (a_1[i] - a_0[i]) / np.sqrt(2) if a_0[i] < a_1[i] else 0
+            d2 += (a_0[i] - a_1[i]) / np.sqrt(2) if a_0[i] > a_1[i] else 0
+        gi = 100 * d1 / (d1 + d2)
+        return round(gi, 2)
 
-    def HRA(self, ind_s: list, method_sub: str) -> float:
+    def __SI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+        '''
+        Count SI(the phase angle difference of the points above LI)
+        a_0: Array of IND_i
+        a_1: Array of IND_i+1
+        '''
+        theta_1 = 0
+        theta_2 = 0
+        for i in range(len(a_0)):
+            theta_1 += (np.degrees(np.arctan(a_1[i] / a_0[i])) -
+                        45) if a_0[i] < a_1[i] else 0
+            theta_2 += (-np.degrees(np.arctan(a_1[i] / a_0[i])) +
+                        45) if a_0[i] > a_1[i] else 0
+        si = 100 * theta_1 / (theta_1 + theta_2)
+        return round(si, 2)
+
+    def HRA(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
 
         if method_sub == 'PI':
@@ -371,7 +323,25 @@ class VarAnalysis(Basic):
 
         return result_
 
-    def HRV(self, ind_s: list, method_sub: str) -> float:
+    def __SD1(self, a_0, a_1):
+        '''
+        Count SD1()
+        a_0: Array of IND_i
+        a_1: Array of IND_i+1
+        '''
+        sd = np.std(a_1 - a_0) / np.sqrt(2)
+        return round(sd, 2)
+
+    def __SD2(self, a_0, a_1):
+        '''
+        Count SD2()
+        a_0: Array of IND_i
+        a_1: Array of IND_i+1
+        '''
+        sd = np.std(a_1 + a_0) / np.sqrt(2)
+        return round(sd, 2)
+
+    def HRV(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
 
         if method_sub == 'SD1':
@@ -384,7 +354,7 @@ class VarAnalysis(Basic):
 
         return result_
 
-    def Entropy(self, ind_s: list, method_sub: str) -> float:
+    def Entropy(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_ = np.array(ind_s)
         if method_sub == 'AppEn':
             result_, _ = eh.ApEn(array_, m=1)
@@ -397,6 +367,67 @@ class VarAnalysis(Basic):
             print('No match method')
 
         return round(result_[-1], 2)
+
+    def __SpaceGen(self, arr, fs):
+        ind_0 = arr.min()
+        ind_1 = arr.max()
+        ind_num = round((ind_1 - ind_0) * fs)
+        arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
+        arr_ = np.round(arr_, decimals=2)
+        return arr_
+
+    def __Resample(self, ind_s: list, resample_rate: float) -> np.ndarray:
+        arr_v = np.array(ind_s)
+        arr_t = self.__arr_t.copy()
+        arr_t = np.array([sum(arr_t[0:i + 1]) for i in range(len(arr_t))])
+
+        f = interpolate.interp1d(arr_t, arr_v)
+        arr_t_i = self.__SpaceGen(arr_t, resample_rate)
+        arr_v_i = f(arr_t_i)
+        return arr_v_i
+
+    def PRSA(self, ind_s: list, method_sub: str, L: int, F: float, T: int,
+             s: int) -> float:
+        array_ = self.__Resample(ind_s, F)
+
+        def WtJudge(val: float) -> float:
+            if val >= -1 and val < 0:
+                para = -1 / 2
+            elif val >= 0 and val < 1:
+                para = 1 / 2
+            else:
+                para = 0
+            return para
+
+        anchor_s = []
+
+        if method_sub == 'AC':
+            anchor_set = lambda x, y: True if np.mean(x[y:y + T]) > np.mean(x[
+                y - T:y]) else False
+        elif method_sub == 'DC':
+            anchor_set = lambda x, y: True if np.mean(x[y:y + T]) < np.mean(x[
+                y - T:y]) else False
+        else:
+            print('No match method')
+            return
+
+        for i in range(L, len(array_) - L):
+            if not anchor_set(array_, i):
+                pass
+            else:
+                clip = slice(i - L, i + L + 1)
+                anchor_s.append(array_[clip].tolist())
+
+        arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
+        arr_axis = np.linspace(-L, L + 1, 2 * L + 1, endpoint=False)
+        df = pd.DataFrame({'axis': arr_axis, 'prsa': arr_prsa})
+
+        arr_axis_s = np.linspace(-s, s, 2 * s, endpoint=False)
+        arr_prsa_s = df[df.axis.isin(arr_axis_s)].prsa
+        arr_para_s = np.array([WtJudge(i / s) for i in arr_axis_s])
+        prsa_ana = np.sum(arr_prsa_s * arr_para_s / s)
+
+        return round(prsa_ana, 4)
 
 
 class PerfomAssess(Basic):
@@ -495,20 +526,10 @@ class FreqPreMethod():
         df = pd.DataFrame({'time': self.__time_a, 'value': self.__target_a})
         self.__df = df
 
-    def InterpValue(self, interp_rate):
-        self.__LenVertify()
-        array_x = self.__SpaceGen(interp_rate)
-        array_y = np.interp(array_x, self.__time_a, self.__target_a)
-        df = pd.DataFrame({'time': array_x, 'value': array_y})
-        self.__df = df
-
     def Resampling(self, resample_rate):
         self.__LenVertify()
-        # df = self.__df.copy()
         f = interpolate.interp1d(self.__time_a, self.__target_a)
         array_x = self.__SpaceGen(resample_rate)
         array_y = f(array_x)
-        #array_y = np.array(df[df.time.isin(array_x)].value)
         df = pd.DataFrame({'time': array_x, 'value': array_y})
-        # df_ = df_.set_index('time', drop=True)
         self.__df = df

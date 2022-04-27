@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from tkinter.tix import Tree
+from datetime import datetime
 
 sys.path.append(str(Path.cwd()))
 
@@ -137,7 +137,7 @@ class RecordPara(Basic):
 
 
 class RecordInfo(Basic):
-    def __init__(self, parent, t_, id_):
+    def __init__(self, parent: any, t_: datetime, id_: str):
         super().__init__()
         self.__rec = layer_2.RidRec()
         self.__rec.zif = PathVerify(parent) / (
@@ -161,35 +161,43 @@ class RecordInfo(Basic):
 
 
 class ResultStatistical(Basic):
-    def __init__(self, resp_list):
+    def __init__(self, resp_list: list) -> None:
         super().__init__()
-        self.__rec = layer_2.Result()
         self.__resp_l = resp_list
+        self.__rec = layer_2.Result()
         self.__rec.td = layer_1.DomainTS()
         self.__rec.fd = layer_1.DomainFS()
         self.__rec.hra = layer_1.DomainHRA()
         self.__rec.hrv = layer_1.DomainHRV()
         self.__rec.ent = layer_1.DomainEntropy()
+        self.__rec.prsa = layer_1.DomainPRSA()
 
     @property
     def rec(self):
         return self.__rec
 
-    def __IndStat(self, func, method):
+    def __IndStat(self,
+                  func: function,
+                  meth: str,
+                  para_: dict = {}) -> layer_0.Target0:
+        ind_sel = ['rr', 'v_t', 've', 'wob', 'rsbi', 'mp']
+        para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
+
         resp_l = self.__resp_l
         ind_rs = layer_0.Target0()
-        ind_rs.rr = func([i.rr for i in resp_l], method)
-        ind_rs.v_t = func([i.v_t_i for i in resp_l], method)
-        ind_rs.ve = func([i.ve for i in resp_l], method)
-        ind_rs.wob = func([i.wob for i in resp_l], method)
-        ind_rs.rsbi = func([i.rsbi for i in resp_l], method)
-        ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], method)
-        ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], method)
-        ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], method)
-        ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], method)
+        ind_rs.rr = func([i.rr for i in resp_l], meth, **para_['rr'])
+        ind_rs.v_t = func([i.v_t_i for i in resp_l], meth, **para_['v_t'])
+        ind_rs.ve = func([i.ve for i in resp_l], meth, **para_['ve'])
+        ind_rs.wob = func([i.wob for i in resp_l], meth, **para_['wob'])
+        ind_rs.rsbi = func([i.rsbi for i in resp_l], meth, **para_['rsbi'])
+        ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], meth, **para_['mp'])
+        ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], meth, **para_['mp'])
+        ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], meth, **para_['mp'])
+        ind_rs.mp_jm_t = func([i.mp_jm_t for i in resp_l], meth, **para_['mp'])
+
         return ind_rs
 
-    def CountAggr(self, cate_l):
+    def CountAggr(self, cate_l: list):
         for cate in cate_l:
             if cate == 'TD':
                 self.TDAggr()
@@ -199,6 +207,8 @@ class ResultStatistical(Basic):
                 self.HRVAggr()
             elif cate == 'ENT':
                 self.EntAggr()
+            elif cate == 'PRSA':
+                self.PRSAAggr()
             else:
                 print('No match category !')
                 return
@@ -211,10 +221,6 @@ class ResultStatistical(Basic):
         self.__rec.td.cv = self.__IndStat(p_count, 'CV')
         self.__rec.td.qua = self.__IndStat(p_count, 'QUA')
         self.__rec.td.tqua = self.__IndStat(p_count, 'TQUA')
-
-    # def FDAgger(self):
-    #     p_count = VarAnalysis().FreqSeries
-    #     self.__rec.fd.prsa = self.__IndStat()
 
     def HRAAggr(self):
         p_count = VarAnalysis().HRA
@@ -232,3 +238,46 @@ class ResultStatistical(Basic):
         self.__rec.ent.app = self.__IndStat(p_count, 'AppEn')
         self.__rec.ent.samp = self.__IndStat(p_count, 'SampEn')
         self.__rec.ent.fuzz = self.__IndStat(p_count, 'FuzzEn')
+
+    def PRSAAggr(self):
+        p_count = VarAnalysis([round(i.wid) for i in self.__resp_l]).PRSA
+        ind_para = {
+            'rr': {
+                'L': 120,
+                'F': 2.0,
+                'T': 1,
+                's': 6
+            },
+            'v_t': {
+                'L': 120,
+                'F': 2.0,
+                'T': 5,
+                's': 6
+            },
+            've': {
+                'L': 120,
+                'F': 2.0,
+                'T': 45,
+                's': 14
+            },
+            'wob': {
+                'L': 120,
+                'F': 2.0,
+                'T': 1,
+                's': 6
+            },
+            'rsbi': {
+                'L': 120,
+                'F': 2.0,
+                'T': 1,
+                's': 14
+            },
+            'mp': {
+                'L': 120,
+                'F': 2.0,
+                'T': 45,
+                's': 14
+            }
+        }
+        self.__rec.prsa.dc = self.__IndStat(p_count, 'DC', ind_para)
+        self.__rec.prsa.ac = self.__IndStat(p_count, 'AC', ind_para)

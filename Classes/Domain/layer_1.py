@@ -400,3 +400,26 @@ class DomainEntropy(func):
     @fuzz.setter
     def fuzz(self, obj):
         self.__fuzz = obj
+
+
+class DomainPRSA(func):
+    def __init__(self):
+        super().__init__()
+        self.__ac = None
+        self.__dc = None
+
+    @property
+    def ac(self):
+        return self.__ac
+
+    @ac.setter
+    def ac(self, obj):
+        self.__ac = obj
+
+    @property
+    def dc(self):
+        return self.__dc
+
+    @dc.setter
+    def dc(self, obj):
+        self.__dc = obj

@@ -102,7 +102,7 @@ class PlotMain():
             df.index = df.index.str.upper()
         except:
             pass
-        sns.set(rc={'figure.figsize': (5, 5)})
+        sns.set(rc={'figure.figsize': (10, 10)})
         # sns.heatmap(df, annot=True, linewidths=.5)
         sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
         plt.title(fig_n, fontsize=18, fontweight='bold')
