@@ -8,6 +8,8 @@ class Resp(func):
         super().__init__()
         self.__wid = None
         self.__val = None
+        self.__pip = 0.0
+        self.__mpaw = 0.0
         self.__rr = 0.0
         self.__v_t_i = 0.0
         self.__v_t_e = 0.0
@@ -37,6 +39,22 @@ class Resp(func):
     @val.setter
     def val(self, v):
         self.__val = v
+
+    @property
+    def pip(self):
+        return self.__pip
+
+    @pip.setter
+    def pip(self, v):
+        self.__pip = v
+
+    @property
+    def mpaw(self):
+        return self.__mpaw
+
+    @mpaw.setter
+    def mpaw(self, v):
+        self.__mpaw = v
 
     @property
     def rr(self):

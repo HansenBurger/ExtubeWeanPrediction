@@ -5,7 +5,7 @@ sys.path.append(str(Path.cwd()))
 
 from operator import mul, sub, add
 from Classes.TypesInstant import RecordResp, RecordPara
-from Classes.Func.KitTools import LocatSimiTerms, GetObjectDict, FromkeysReid
+from Classes.Func.KitTools import LocatSimiTerms, FromkeysReid
 
 
 class basic():
@@ -132,7 +132,10 @@ class ExtractSplice(basic):
         # Reverse order out (tail to head)
         return para_dict
 
-    def RespSplicing(self, vm_cond: list, t_set: int) -> list:
+    def RespSplicing(self,
+                     vm_cond: list,
+                     t_set: int,
+                     tag: bool = False) -> list:
         """
         RespSplicing
 

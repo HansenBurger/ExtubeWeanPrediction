@@ -3,6 +3,9 @@
         "ExtubeDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2201.db",
         "WeanDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespdataWean_2203.db"
     },
+    "RespData": {
+        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2205.db"
+    },
     "WaveData": {
         "Extube": "C:\\Main\\Data\\_\\Baguan\\Records",
         "Wean": "C:\\Main\\Data\\_\\Weaning\\Records"
@@ -16,5 +19,6 @@
         "port_n": 81,
         "user": "ftpUser",
         "passwd": "Zjut85290595"
-    }
+    },
+    "ServerData": "/RespData"
 }

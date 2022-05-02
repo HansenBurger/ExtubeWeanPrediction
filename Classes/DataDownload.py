@@ -1,29 +1,51 @@
-import re
 import sys
-from os import remove
+import pandas as pd
 from pathlib import Path
 from ftplib import FTP
 from shutil import copy
 from datetime import datetime, timedelta
 
 sys.path.append(str(Path.cwd()))
+
 from WaveDataProcess import BinImport
 
 
 class Basic():
     def __init__(self) -> None:
-        self.__t_format = '%Y-%m-%d %H:%M:%S'
+        self.__format_l = ['%Y-%m-%d %H:%M:%S']
         pass
 
-    def __TFtrans(self, t_str):
-        t_out = datetime.strptime(t_str, self.__t_format)
-        return t_out
+    def __STtrans(self, time_string: str) -> datetime:
+        '''
+        Convert the time string to datetime on cond
+        time_string: the time string prepared tobe converted
+        '''
+        time_time = None
+        for t_format in self.__format_l:
+            try:
+                time_time = datetime.strptime(time_string, t_format)
+            except:
+                continue
+        if not time_time:
+            print('No Match format !')
+        return time_time
 
-    def __TPtrans(self, t_in):
-        path = str(t_in.year) + str(t_in.month).rjust(2, '0')
-        return path
+    def __TPtrans(self, time_time: datetime) -> str:
+        '''
+        Convert datetime to part of file path
+        time_time: record's datetime info
+        '''
+        time_year = str(time_time.year)
+        time_month = str(time_time.month).rjust(2, '0')
+        time_path = time_year + time_month
+        return time_path
 
-    def __FileCheck(self, path, ftp):
+    def __FileCheck(self, path: Path, ftp: FTP):
+        '''
+        Check if the file exist in the path
+        path: purepath for detection
+        ftp: FTP server cursor
+        '''
         try:
             ftp.cwd(str(path.parents[0]))
             file_check = lambda f: f in ftp.nlst()
@@ -32,7 +54,13 @@ class Basic():
         except:
             return False
 
-    def __FileDownload(self, src_p, dst_p, ftp):
+    def __FileDownload(self, src_p: str, dst_p: str, ftp: FTP):
+        '''
+        Download File from source to destination
+        src_p: source path
+        dst_p: destination path
+        ftp: FTP: server cursor
+        '''
         src_p = str(src_p) if type(src_p) != str else src_p
         dst_p = str(dst_p) if type(dst_p) != str else dst_p
 
@@ -41,7 +69,11 @@ class Basic():
 
 
 class MYFTP(Basic):
-    def __init__(self, host_s, port_n, user=None, passwd=None):
+    def __init__(self,
+                 host_s: str,
+                 port_n: int,
+                 user: str = '',
+                 passwd: str = ''):
         super().__init__()
         self.__usr = user
         self.__pwd = passwd
@@ -66,109 +98,150 @@ class MYFTP(Basic):
         self.__ftp.quit()
 
 
-class RecordIdDetect(Basic):
+class RecordDetect(Basic):
     def __init__(self, obj_src, dic_dst):
         super().__init__()
-        self.__src = obj_src
-        self.__dst = dic_dst
-        self.__bicheck = lambda x, y, z, func: func(x, z) & func(y, z)
+        self.__src = obj_src.copy()
+        self.__dst = dic_dst.copy()
+        self.__bicheck = lambda x, y, z, func: func(x, z) & func(
+            y, z)  # check the folder and zif
         self.__icu_list = [
             'CCU', 'EICU', 'ICU3F', 'ICU4F', 'xsICU3F', 'xsICU4F'
         ]
 
-    def InfoDetection(self, table, func):
-        end_t = table.select(func(
-            table.rec_t)).where(table.rid == self.__src.rid).scalar()
+    @property
+    def dst(self):
+        return self.__dst
+
+    def __TimeRange(self, t_jug: datetime) -> list:
+        '''
+        Determine if the input time meets the demand
+        t_jug: time judge(get the range around the time judge)
+        '''
+        t_jug = self._Basic__TFtrans(t_jug) if type(t_jug) == str else t_jug
+
+        t_sep_early = {'hours': 3, 'minutes': 10}
+        t_sep_delay = {'hours': 6, 'minutes': 5}
+
+        t_pre = t_jug - timedelta(**t_sep_early)
+        t_post = t_jug + timedelta(**t_sep_delay)
+
+        return t_pre, t_post
+
+    def InfoDetection(self,
+                      table: any,
+                      func: function,
+                      flag: list = []) -> None:
+        '''
+        Rid basic info detection
+        table: zres_param
+        func: function certain the maxium value in table
+        flag: flag for whether or not to perform the operation
+        '''
+
+        cond_0 = table.rid == self.__src.rid
+        end_t = table.select(func(table.rec_t)).where(cond_0).scalar()
+
+        if not flag:
+            op_exist = False
+        else:
+            cond_1 = table.pid == self.__src.pid
+            cond_2 = table.rec_i == flag[0]
+            cond_3 = table.rec_f == flag[1]
+            op_exist = table.select().where(cond_1 & cond_2 & cond_3).exists()
 
         self.__dst['pid'] = self.__src.pid
         self.__dst['rid'] = self.__src.rid
-        self.__dst['end_t'] = end_t
+        self.__dst['icu'] = self.__src.binfo.icu
+        self.__dst['tail_t'] = end_t
+        self.__dst['opt'] = op_exist
 
-    def RouteDetection(self, ftp, main_loc):
-        icu = self.__src.binfo.icu
-        tin = self.TPtrans(self.__dst['end_t'])
+    def RidDetection(self, ftp: FTP, main_loc: Path) -> None:
+        '''
+        Rid route detection
+        ftp: server cursor
+        main_loc: resp data loc
+        '''
+        icu = self.__dst['icu']
+        tin = self._Basic__TPtrans(self.__dst['tail_t'])
         rid = self.__dst['rid']
 
-        or_p = main_loc / icu / tin / rid
-        or_p_ = main_loc / icu / tin / (rid + '.zif')
+        def ICUDefine(icu):
+            p_folder = main_loc / icu / tin / rid
+            p_file = main_loc / icu / tin / (rid + '.zif')
 
-        if self.__bicheck(or_p, or_p_, ftp, self.FileCheck):
+            p_status = self.__bicheck(p_folder, p_file, ftp,
+                                      self._Basic__FileCheck)
+            return p_status
+
+        if ICUDefine(icu):
             pass
         else:
-            icu = None
+            icu = ''  # redirect the file path(icu)
             for icu_t in self.__icu_list:
-
-                re_p = main_loc / icu_t / tin / rid
-                re_p_ = main_loc / icu_t / tin / (rid + '.zif')
-
-                if self.__bicheck(re_p, re_p_, ftp, self.FileCheck):
+                if not ICUDefine(icu_t):
+                    continue
+                else:
                     icu = icu_t
                     break
-                else:
-                    continue
 
         de_p = main_loc / icu / tin / rid if icu else None
         self.__dst['rot'] = de_p
 
+    def RecsDetection(self, ftp: FTP, save_loc: Path):
+        '''
+        Collect all records meeting requirement in RID folder
+        ftp: server cursor
+        save_loc: local path to maintain the data
+        '''
+        rot = self.__dst['rot']
+        rid = self.__dst['rid']
+        ext = self.__src.binfo.ex_t
+        ext_pre, ext_post = self.__TimeRange(ext)
+        zif_file = rid + '.zif'
 
-class RecordNDetect(Basic):
-    def __init__(self, obj_src, dic_dst) -> None:
-        super().__init__()
-        self.__src = obj_src
-        self.__dst = dic_dst
-        self.__tmp = obj_src.rid + '.zif'
-        self.__patt = r'([A-Z]\w*_\d*)(202\d{1}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}){'
+        self._Basic__FileDownload(str(rot) + '.zif', zif_file, ftp)
+        df_rec = pd.DataFrame(BinImport.RidData(zif_file).RecordListGet())
 
-    def __ZifRead(self, src, ftp):
-        self._FileDownload(str(src) + '.zif', self.__tmp, ftp)
-        with open(self.__tmp, 'rb') as binary_file:
-            list_ = binary_file.readlines()
-        lines = [str(x) for x in list_]
-        return lines
+        if df_rec.empty:
+            pass
+        else:
+            df_rec = df_rec.sort_values(by='s_t')
+            filt_0, filt_1 = df_rec.s_t > ext_pre, df_rec.s_t < ext_post
+            df_rec = df_rec[filt_0 & filt_1]
 
-    def __TimeCheck(self, t_jug, t_juged):
-        t_jug = self._Basic__TFtrans(t_jug) if type(t_jug) == str else t_jug
-        t_juged = self._Basic__TFtrans(t_juged) if type(t_juged) == str else t_juged
-        early_t = timedelta(hours=3, minutes=10)
-        delay_t = timedelta(hours=6, minutes=5)
-        t_pre, t_post = (t_jug - early_t), (t_jug + delay_t)
-        result = False if t_juged > t_post or t_juged < t_pre else True
-        return result
+        self.__dst['zdt'] = None if df_rec.empty else []
+        self.__dst['zpx'] = None if df_rec.empty else []
+        self.__dst['rec_t'] = None if df_rec.empty else []
 
-    def RecsDetection(self, save_loc, ftp):
-        self.ins_list = []
-        rot, rid, ext = self.__src.rot, self.__src.rid, self.__src.binfo.ex_t
+        if df_rec.empty:
+            pass
+        else:
 
-        raw_lines = self.__ZifRead(rot, ftp)
-        val_lines = [x for x in raw_lines if re.search(self.__patt, x)]
-        raw_binfo = [list(re.findall(self.__patt, x)[0]) for x in val_lines]
-        val_binfo = [x for x in raw_binfo if self.__TimeCheck(ext, x[1])]
+            for i in df_rec.index:
+                src_zdt = rot / (i.fid + '.zdt')
+                src_zpx = rot / (i.fid + '.zpx')
 
-        for binfo in val_binfo:
-            rec_n, rec_t = binfo[0], self.TFtrans(binfo[1])
-            rec_n_s = [rec_n + '.zdt', rec_n + '.zpx', rid + '.zif']
+                zdt_sta = i.fid if self._Basic__FileCheck(src_zdt,
+                                                          ftp) else None
+                zpx_sta = i.fid if self._Basic__FileCheck(src_zpx,
+                                                          ftp) else None
 
-            zdt_check = not self._Basic__FileCheck(rot / rec_n_s[0], ftp)
-            zpx_check = not self._Basic__FileCheck(rot / rec_n_s[1], ftp)
+                if not zdt_sta or not zpx_sta:
+                    pass
+                else:
+                    dst_loc = save_loc / self.TPtrans(i.s_t) / rid
+                    dst_loc.mkdir(parents=True, exist_ok=True)
+                    dst_zdt = dst_loc / (i.fid + '.zdt')
+                    dst_zpx = dst_loc / (i.fid + '.zpx')
 
-            if zdt_check or zpx_check:
-                continue
-            else:
-                # zdt zpx file download
-                dst_loc = save_loc / self.TPtrans(rec_t) / rid
-                dst_loc.mkdir(parents=True, exist_ok=True)
-                self._Basic__FileDownload(rot / rec_n_s[0], dst_loc / rec_n_s[0], ftp)
-                self._Basic__FileDownload(rot / rec_n_s[1], dst_loc / rec_n_s[1], ftp)
-                copy(self.__tmp, str(dst_loc / rec_n_s[2]))
+                    self._Basic__FileDownload(src_zdt, dst_zdt, ftp)
+                    self._Basic__FileDownload(src_zpx, dst_zpx, ftp)
 
-                # result dict generate
-                dict_ = self.__dst.copy()
-                dict_['rid'], dict_['rec_t'] = rid, rec_t
-                dict_['zdt'], dict_['zpx'] = rec_n, rec_n
-                self.ins_list.append(dict_)
+                    copy(str(Path.cwd() / zif_file), str(dst_loc / zif_file))
 
-        remove(self.__tmp)
+                self.__dst['rec_t'].append(i.s_t)
+                self.__dst['zdt'].append(zdt_sta)
+                self.__dst['zpx'].append(zpx_sta)
 
-        if len(self.ins_list) < 1:
-            self.__dst['rid'] = rid
-            self.ins_list.append(self.__dst)
+        Path(Path.cwd() / zif_file).unlink()
