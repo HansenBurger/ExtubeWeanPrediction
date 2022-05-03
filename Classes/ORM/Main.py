@@ -44,8 +44,8 @@ class ExtubePrep(Model):
     index = AutoField()
     pid = IntegerField(column_name='PID')
     icu = TextField(column_name='ICU')
-    end_t = DateTimeField(column_name='END_t')
-    end_i = TextField(column_name='END_i')
+    e_t = DateTimeField(column_name='END_t')
+    e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
     tail_t = DateTimeField(column_name='TAIL_t', null=True)
     rot = TextField(column_name='route', null=True)
@@ -53,25 +53,30 @@ class ExtubePrep(Model):
     zdt = TextField(column_name='ZDT', null=True)
     zpx = TextField(column_name='ZPX', null=True)
     opt = BooleanField(column_name='op_tag', null=True)
+    v_t = IntegerField(column_name='vent_time', null=True)
+    mch = TextField(column_name='machine', null=True)
     vmd = JSONField(column_name='vent_mode', null=True)
     spd = JSONField(column_name='peep_ps', null=True)
 
     class Meta:
-        table_name = 'ExtubePrep'
+        table_name = 'Extube_Prep'
         database = db
 
     def ObjToDict(self):
         dict_ = {
             'pid': self.pid,
             'icu': self.icu,
-            'e_t': self.end_t,
-            'e_s': self.end_i,
+            'e_t': self.e_t,
+            'e_s': self.e_s,
             'rid': self.rid,
             'tail_t': self.tail_t,
+            'rot': self.rot,
             'rec_t': self.rec_t,
             'zdt': self.zdt,
             'zpx': self.zpx,
             'opt': self.opt,
+            'v_t': self.v_t,
+            'mch': self.mch,
             'vmd': self.vmd,
             'spd': self.spd
         }
@@ -83,8 +88,8 @@ class WeanPrep(Model):
     index = AutoField()
     pid = IntegerField(column_name='PID')
     icu = TextField(column_name='ICU')
-    end_t = DateTimeField(column_name='END_t')
-    end_i = TextField(column_name='END_i')
+    e_t = DateTimeField(column_name='END_t')
+    e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
     tail_t = DateTimeField(column_name='TAIL_t', null=True)
     rot = TextField(column_name='route', null=True)
@@ -92,25 +97,30 @@ class WeanPrep(Model):
     zdt = TextField(column_name='ZDT', null=True)
     zpx = TextField(column_name='ZPX', null=True)
     opt = BooleanField(column_name='op_tag', null=True)
+    v_t = IntegerField(column_name='vent_time', null=True)
+    mch = TextField(column_name='machine', null=True)
     vmd = JSONField(column_name='vent_mode', null=True)
     spd = JSONField(column_name='peep_ps', null=True)
 
     class Meta:
-        table_name = 'WeanPrep'
+        table_name = 'Wean_Prep'
         database = db
 
     def ObjToDict(self):
         dict_ = {
             'pid': self.pid,
             'icu': self.icu,
-            'e_t': self.end_t,
-            'e_s': self.end_i,
+            'e_t': self.e_t,
+            'e_s': self.e_s,
             'rid': self.rid,
             'tail_t': self.tail_t,
+            'rot': self.rot,
             'rec_t': self.rec_t,
             'zdt': self.zdt,
             'zpx': self.zpx,
             'opt': self.opt,
+            'v_t': self.v_t,
+            'mch': self.mch,
             'vmd': self.vmd,
             'spd': self.spd
         }

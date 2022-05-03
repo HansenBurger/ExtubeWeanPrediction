@@ -1,4 +1,5 @@
 import json
+from re import L
 import numpy as np
 import pandas as pd
 from time import time
@@ -86,6 +87,14 @@ def ConfigRead(cate: str, name: str = '') -> str:
             return data[cate]
         else:
             return data[cate][name]
+
+
+def DLToLD(DL: dict) -> list:
+    DL = {k: [v] if type(v) != list else v for k, v in DL.items()}
+    max_len = max([len(i) for i in DL.values()])
+    DL = {k: v * max_len if len(v) < max_len else v for k, v in DL.items()}
+    LD = [dict(zip(DL, t)) for t in zip(*DL.values())]
+    return LD
 
 
 def TimeShift(df: pd.DataFrame, column_names: list) -> None:

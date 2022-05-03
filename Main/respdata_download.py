@@ -1,57 +1,63 @@
+from datetime import datetime
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
-from Classes.Func.KitTools import ConfigRead, measure
+from Classes.Func.KitTools import ConfigRead, DLToLD, measure
 from Classes.DataDownload import MYFTP, RecordDetect
 from Classes.ORM.main import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
 
 main_mode = 'Extube'
+mode_info = {
+    'Extube': {
+        'class': ExtubePrep,
+        'tag': [3004, 129]
+    },
+    'Wean': {
+        'class': WeanPrep,
+        'tag': []
+    }
+}
 
 
+@measure
 def main() -> None:
     Ftp = __FtpGen()
+
+    dst_class = mode_info[main_mode]['class']
+    dst_flag = mode_info[main_mode]['tag']
     data_path = Path(ConfigRead('ServerData'))
-    save_path = Path(ConfigRead(main_mode))
+    save_path = Path(ConfigRead('WaveData', main_mode))
     quer_list = RidQuery(main_mode)
 
-    dst_class = {'Extube': ExtubePrep, 'Wean': WeanPrep}
-    dst_flag = {'Extube': [3004, 129], 'Wean': []}
+    db.create_tables([dst_class])
 
-    try:
-        db.create_tables([dst_class[main_mode]])
-    except:
-        print('Table already exist!')
-
-    @measure
     def __RecDownload(query_obj: any) -> dict:
-        ins_d: dict = dst_class().ObjToDict()
-        main_p = RecordDetect(query_obj, ins_d)
-        main_p.InfoDetection(ZresParam, fn.MAX, dst_flag[main_mode])
+        ins_d = dst_class().ObjToDict()
+        main_p = RecordDetect(query_obj, ins_d, main_mode)
+        main_p.InfoDetection(ZresParam, fn.MAX, dst_flag)
         main_p.RidDetection(Ftp.ftp, data_path)
         main_p.RecsDetection(Ftp.ftp, save_path)
         return main_p.dst
 
-    def __RecRegister(src_dict: dict) -> None:
-        DL = {k: [v] if type(v) != list else v for k, v in src_dict.items()}
-        max_len = max(len(DL.values()))
-        DL = {
-            k: v * max_len if len(v) < max_len else v
-            for k, v in src_dict.items()
-        }
-        LD = [dict(zip(DL, t)) for t in zip(*DL.values())]
-        dst_class.insert_many(LD).execute()
+    def __RecRegister(ins_d: dict) -> None:
+        ins_l = DLToLD(ins_d)
+        dst_class.insert_many(ins_l).on_conflict('replace').execute()
 
     Ftp.FtpLogin()
 
     for que_o in quer_list:
-        ins_d: dict = dst_class().ObjToDict()
-        main_p = RecordDetect(que_o, ins_d)
-        main_p.InfoDetection(ZresParam, fn.MAX, dst_flag[main_mode])
-        main_p.RidDetection(Ftp.ftp, data_path)
-        main_p.RecsDetection(Ftp.ftp, save_path)
-        dst_d = main_p.dst
+        t_s = datetime.now()
+        ins_d = __RecDownload(que_o)
+        __RecRegister(ins_d)
+        t_e = datetime.now()
+
+        print('Pid: {0}, Rid: {1}, ValRec: {2}, Process Time: {3}'.format(
+            ins_d['pid'], ins_d['rid'],
+            len(ins_d['rec_t']) if ins_d['rec_t'] else 0, t_e - t_s))
+
+    Ftp.FtpLogout()
 
 
 def __FtpGen() -> MYFTP:
@@ -78,8 +84,10 @@ def RidQuery(q_mode: str) -> list:
         return
     elif q_mode == 'Extube':
         end_t = src_0.ex_t
+        end_i = src_0.ex_s
     elif q_mode == 'Wean':
         end_t = src_0.we_t
+        end_i = src_0.we_s
     else:
         print('No such data collecting mode!')
         return
@@ -88,7 +96,7 @@ def RidQuery(q_mode: str) -> list:
 
     pew_time = fn.date_trunc
     col_set = [src_1.pid, src_1.rid]
-    col_que = [src_1.pid, src_1.rid, src_0.icu, end_t]
+    col_que = [src_1.pid, src_1.rid, src_0.icu, end_t, end_i]
     cond_0 = end_t != None
     cond_1 = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
     condition = cond_0 & cond_1
