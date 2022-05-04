@@ -121,16 +121,22 @@ class ExtractSplice(basic):
             ut_l = list(map(mul, p.u_ind, [1 / vm_sr] * len(p.u_ind)))
             ut_s_d = LocatSimiTerms(ut_l, t_set_s)
             for p_type in para_attr_l:
-                p_t_d = {k: getattr(p, p_type)[v] for k, v in ut_s_d.items()}
+                p_t_d = {}
+                for k, v in ut_s_d.items():
+                    if not v and v != 0:
+                        p_t_d[k] = None
+                    else:
+                        p_t_d[k] = getattr(p, p_type)[v]
+                # para_dict[p_type] = p_t_d
                 setattr(p, p_type, p_t_d)
 
-        for p_type in para_attr_l:
-            p_t_l = [getattr(p, p_type).values() for p in para_data]
-            p_t_l.reverse()
-            para_dict[p_type] = p_t_l
+        # for p_type in para_attr_l:
+        #     p_t_l = [getattr(p, p_type).values() for p in para_data]
+        #     p_t_l.reverse()
+        #     para_dict[p_type] = p_t_l
 
-        # Reverse order out (tail to head)
-        return para_dict
+        # TODO Reverse order out (tail to head)
+        # return para_dict
 
     def RespSplicing(self,
                      vm_cond: list,

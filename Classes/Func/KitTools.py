@@ -1,11 +1,10 @@
 import json
-from re import L
 import numpy as np
 import pandas as pd
 from time import time
 from pathlib import Path, PurePath
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timedelta
 from copy import deepcopy
 
 # config_file = r'C:\Users\HY_Burger\Desktop\Project\ExtubeWeanPrediction\config.json'
@@ -23,7 +22,13 @@ def measure(func):
             return func(*args, **kwargs)
         finally:
             end_ = int(round(time() * 1000)) - start
-            print(f"Total execution time: {end_ if end_ > 0 else 0} ms\n")
+            if end_ < 0:
+                end_ = str(0) + ' ms'
+            elif end_ > 10000:
+                end_ = str(timedelta(seconds=end_ / 1000))
+            else:
+                end_ = str(end_) + ' ms'
+            print(f"Total execution time: {0}\n".format(end_))
 
     return _time_it
 

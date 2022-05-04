@@ -1,6 +1,6 @@
-from datetime import datetime
 import sys
 from pathlib import Path
+from datetime import datetime
 
 sys.path.append(str(Path.cwd()))
 
@@ -8,7 +8,7 @@ from Classes.Func.KitTools import ConfigRead, DLToLD, measure
 from Classes.DataDownload import MYFTP, RecordDetect
 from Classes.ORM.main import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
 
-main_mode = 'Extube'
+main_mode = 'Wean'
 mode_info = {
     'Extube': {
         'class': ExtubePrep,
@@ -68,7 +68,7 @@ def __FtpGen() -> MYFTP:
     return ftp
 
 
-def RidQuery(q_mode: str) -> list:
+def RidQuery(q_mode: str, p_start: int = 0) -> list:
     src_0, src_1 = OutcomeExWean, ZresParam
 
     join_info = {
@@ -99,7 +99,8 @@ def RidQuery(q_mode: str) -> list:
     col_que = [src_1.pid, src_1.rid, src_0.icu, end_t, end_i]
     cond_0 = end_t != None
     cond_1 = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
-    condition = cond_0 & cond_1
+    cond_2 = src_1.pid > p_start
+    condition = cond_0 & cond_1 & cond_2
 
     query_list = src_1.select(*col_que).join(
         **join_info).where(condition).group_by(*col_set).order_by(*col_set)

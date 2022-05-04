@@ -218,7 +218,7 @@ class RecordDetect(Basic):
 
         rot = Path(self.__dst['rot'])
         rid = self.__dst['rid']
-        ext = self.__src.binfo.ex_t
+        ext = self.__dst['e_t']
         ext_pre, ext_post = self.__TimeRange(ext)
         zif_file = rid + '.zif'
 
@@ -228,6 +228,7 @@ class RecordDetect(Basic):
         if df_rec.empty:
             pass
         else:
+            df_rec = df_rec.loc[df_rec.s_t.apply(type) == pd.Timestamp]
             df_rec = df_rec.sort_values(by='s_t')
             filt_0, filt_1 = df_rec.s_t > ext_pre, df_rec.s_t < ext_post
             df_rec = df_rec[filt_0 & filt_1]

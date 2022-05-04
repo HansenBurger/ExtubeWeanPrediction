@@ -177,7 +177,7 @@ class ResultStatistical(Basic):
         return self.__rec
 
     def __IndStat(self,
-                  func: function,
+                  func: any,
                   meth: str,
                   para_: dict = {}) -> layer_0.Target0:
         ind_sel = ['rr', 'v_t', 've', 'wob', 'rsbi', 'mp']
