@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+from regex import R
+
 sys.path.append(str(Path.cwd()))
 
 from operator import add, mul
@@ -15,20 +17,72 @@ class Basic():
     def __init__(self) -> None:
         pass
 
+    def __RecPathGen(self, parent_p: Path, rec: any) -> Path:
 
-class RecordResp(Basic):
-    def __init__(self, parent, id_):
+        if type(rec) == layer_1.RecWave:
+            id_ = rec.zdt
+            rec_p = PathVerify(parent_p) / (id_ + '.zdt')
+        elif type(rec) == layer_1.RecPara:
+            id_ = rec.zpx
+            rec_p = PathVerify(parent_p) / (id_ + '.zpx')
+
+        if rec_p.is_file():
+            return rec_p
+        else:
+            t_ = rec.rec_t
+            t_folder = str(t_.year) + str(t_.month).rjust(2, '0')
+            rec_p = rec_p.parents[2] / t_folder / rec_p.parts[-2] / rec_p.name
+
+            return rec_p
+
+
+class RecordInfo(Basic):
+    def __init__(self, id_: str, t_: datetime):
         super().__init__()
-        self.__rec = layer_1.RecWave()
-        self.__rec.zdt = PathVerify(parent) / (id_ + '.zdt')
+        self.__rec = layer_2.RidRec()
+        self.__rec.zif = id_
+        self.__rec.cls_t = t_  # give tmp t not close t
 
     @property
     def rec(self):
         return self.__rec
 
-    def WaveformInit(self):
+    def __PathCompose(self):
+        id_ = self.__rec.zif
+        t_ = self.__rec.cls_t
+        t_folder = Path(str(t_.year) + str(t_.month).rjust(2, '0'))
+        t_file = t_folder / id_ / (id_ + '.zif')
+        return t_file
+
+    def ParametersInit(self, parent_p: Path):
         rec = self.__rec
-        p_wave = BinImport.WaveData(self.__rec.zdt)
+        rec.zif = PathVerify(parent_p) / self.__PathCompose()
+        p_rid = BinImport.RidData(self.__rec.zif)
+        info = p_rid.RecordInfoGet()
+        recs = p_rid.RecordListGet()
+        try:
+            rec.vm_n = info['m_n']
+            rec.cls_t = max(recs['s_t'])
+        except:
+            print('zif file exist errors')
+            rec = None
+
+
+class RecordResp(Basic):
+    def __init__(self, id_: str, t_: datetime):
+        super().__init__()
+        self.__rec = layer_1.RecWave()
+        self.__rec.zdt = id_
+        self.__rec.rec_t = t_
+
+    @property
+    def rec(self):
+        return self.__rec
+
+    def WaveformInit(self, parent_p: Path):
+        rec = self.__rec
+        rec.zdt = self._Basic__RecPathGen(parent_p, rec)
+        p_wave = BinImport.WaveData(rec.zdt)
         wave = p_wave.WaveDataGet()
         try:
             rec.sr = p_wave.resr
@@ -86,10 +140,11 @@ class RecordResp(Basic):
 
 
 class RecordPara(Basic):
-    def __init__(self, parent, id_):
+    def __init__(self, id_: str, t_: datetime):
         super().__init__()
         self.__rec = layer_1.RecPara()
-        self.__rec.zpx = PathVerify(parent) / (id_ + '.zpx')
+        self.__rec.zpx = id_
+        self.__rec.rec_t = t_
 
     @property
     def rec(self):
@@ -102,10 +157,11 @@ class RecordPara(Basic):
             value = None
         return value
 
-    def ParametersInit(self, machine):
+    def ParametersInit(self, parent_p: Path, machine: str):
         rec = self.__rec
-        p_ = BinImport.ParaData(self.__rec.zpx)
-        para = p_.ParaInfoGet()
+        rec.zpx = self._Basic__RecPathGen(parent_p, rec)
+        p_para = BinImport.ParaData(rec.zpx)
+        para = p_para.ParaInfoGet()
         if not para:
             rec = None
         else:
@@ -124,7 +180,7 @@ class RecordPara(Basic):
             rec.st_sump = list(map(add, rec.st_peep, rec.st_ps))
 
             try:
-                rec.st_mode = p_.VMInter(machine, slice(0, len(rec.u_ind)))
+                rec.st_mode = p_para.VMInter(machine, slice(0, len(rec.u_ind)))
             except:
                 rec.st_mode = []
 
@@ -134,30 +190,6 @@ class RecordPara(Basic):
         s_ind = LocatSimiTerms(t_ind, time_tag).values()
         p_s_l = [para_l[i] for i in s_ind if i != None]
         return p_s_l
-
-
-class RecordInfo(Basic):
-    def __init__(self, parent: any, t_: datetime, id_: str):
-        super().__init__()
-        self.__rec = layer_2.RidRec()
-        self.__rec.zif = PathVerify(parent) / (
-            str(t_.year) + str(t_.month).rjust(2, '0')) / id_ / (id_ + '.zif')
-
-    @property
-    def rec(self):
-        return self.__rec
-
-    def ParametersInit(self):
-        rec = self.__rec
-        p_ = BinImport.RidData(self.__rec.zif)
-        info = p_.RecordInfoGet()
-        recs = p_.RecordListGet()
-        try:
-            rec.vm_n = info['m_n']
-            rec.cls_t = max(recs['s_t'])
-        except:
-            print('zif file error')
-            rec = None
 
 
 class ResultStatistical(Basic):

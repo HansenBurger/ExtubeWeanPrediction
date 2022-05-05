@@ -2,7 +2,6 @@ import sys
 from peewee import *
 from pathlib import Path
 from playhouse.sqlite_ext import JSONField
-from sqlalchemy import null
 
 sys.path.append(str(Path.cwd()))
 

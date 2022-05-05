@@ -9,30 +9,29 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ORM.main import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-main_mode = 'Extube'
+main_mode = 'Wean'
 mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
 
 
 @measure
 def main() -> None:
 
-    st_t_ran = [10, 900, 1800, 2700]
+    st_t_ran = [10, 910, 1810, 2710]
     st_paras = ['st_mode', 'st_peep', 'st_ps']
 
     data_path = Path(ConfigRead('WaveData', main_mode))
-    query_list = RecQuery(main_mode)
+    query_list = RecQuery(main_mode, range(5050, 9548))
 
     def RidInit(que_o: any) -> any:
         '''
         '''
-        main_p = RecordInfo(data_path, que_o.e_t, que_o.rid)
-        main_p.ParametersInit()
-        rid_obj = main_p.rec
-        reco_p = ExtractSplice(rid_obj)
-        reco_p.RecBatchesExtract([que_o.zdt])
+        main_p = RecordInfo(que_o.rid, que_o.e_t)
+        main_p.ParametersInit(data_path)
+        reco_p = ExtractSplice(main_p.rec)
+        reco_p.RecBatchesExtract([que_o.zdt], [que_o.rec_t])
         reco_p.ParaSelecting(st_t_ran, st_paras)
 
-        return rid_obj
+        return main_p.rec
 
     def InfoCollect(rid_o: any) -> dict:
         '''
@@ -58,7 +57,7 @@ def main() -> None:
                 st_t_ps = para.st_ps[st_t]
                 st_t_peep = para.st_peep[st_t]
 
-                if not st_t_ps or not st_t_peep:
+                if st_t_ps == None or st_t_peep == None:
                     peep_ps_sum_d[st_t] = None
                 else:
                     peep_ps_sum_d[st_t] = st_t_ps + st_t_peep
@@ -84,12 +83,14 @@ def main() -> None:
         print('Process row: {0}, Consume: {1}'.format(que_o.index, t_e - t_s))
 
 
-def RecQuery(q_mode: str, index_slice: slice = None):
+def RecQuery(q_mode: str, index_range: range = None):
     dst_class = mode_info[q_mode]['class']
-    if not index_slice:
+    if not index_range:
         query_list = dst_class.select()
     else:
-        query_list = dst_class.select()[index_slice]
+        cond_0 = dst_class.index >= index_range[0]
+        cond_1 = dst_class.index <= index_range[-1]
+        query_list = dst_class.select().where(cond_0 & cond_1)
 
     return query_list
 

@@ -18,45 +18,49 @@ class ExtractSplice(basic):
         super().__init__()
         self.__ridrec = ridrec_o
 
-    def __WaveBatchGen(self, id_):
+    def __WaveBatchGen(self, id_, t_):
         ridrec = self.__ridrec
-        wav_p = RecordResp(ridrec.zif.parent, id_)
-        wav_p.WaveformInit()
+        wav_p = RecordResp(id_, t_)
+        wav_p.WaveformInit(ridrec.zif.parent)
         wav_p.IndicatorCalculate()
         return wav_p.rec
 
-    def __ParaBatchGen(self, id_):
+    def __ParaBatchGen(self, id_, t_):
         ridrec = self.__ridrec
         vm = ridrec.vm_n
-        par_p = RecordPara(ridrec.zif.parent, id_)
-        par_p.ParametersInit(vm)
+        par_p = RecordPara(id_, t_)
+        par_p.ParametersInit(ridrec.zif.parent, vm)
         return par_p.rec
 
-    def RecBatchesExtract(self, id_list: list, t_set: int = -1) -> None:
+    def RecBatchesExtract(self,
+                          id_l: list,
+                          t_l: list,
+                          t_set: int = -1) -> None:
         """
-        RecBatchesExtract
-
+        **id_l and t_l must be same length**
         Collect the RidRec-class obj's waves and paras data
 
         id_list: zdt, zpx id in positive order
+        t_list: rec time in positive order
         t_set: time range set before op-end
         """
         wave_data = []
         para_data = []
         if type(t_set) == int and t_set < 0:
-            for i in id_list:
-                w_d = self.__WaveBatchGen(i)
-                p_d = self.__ParaBatchGen(i)
+            for i in range(len(id_l)):
+                w_d = self.__WaveBatchGen(id_l[i], t_l[i])
+                p_d = self.__ParaBatchGen(id_l[i], t_l[i])
                 wave_data.append(w_d)
                 para_data.append(p_d)
         elif type(t_set) == int and t_set > 0:
             v_still_t = 0
-            id_list.reverse()
-            for i in id_list:
+            id_l.reverse()
+            t_l.reverse()
+            for i in range(len(id_l)):
                 if v_still_t > t_set:
                     break
-                w_d = self.__WaveBatchGen(i)
-                p_d = self.__ParaBatchGen(i)
+                w_d = self.__WaveBatchGen(id_l[i], t_l[i])
+                p_d = self.__ParaBatchGen(id_l[i], t_l[i])
                 wave_data.append(w_d)
                 para_data.append(p_d)
                 v_still_t += sum([i.wid for i in w_d.resps if i.val])
@@ -77,12 +81,15 @@ class ExtractSplice(basic):
         self.__ridrec.waves = wave_data
         self.__ridrec.paras = para_data
 
-    def __UiIndexSplicing(self):
+    def __UiIndexSplicing(self) -> list:
         para_data = self.__ridrec.paras.copy()
         wave_data = self.__ridrec.waves.copy()
 
         sr = wave_data[0].sr
         ut_s = []  # save uiindexdata of paras
+
+        if not sr:
+            return ut_s
 
         for p in reversed(para_data):
             ui_l = list(reversed(p.u_ind))
@@ -115,18 +122,24 @@ class ExtractSplice(basic):
         para_dict = {}
 
         para_data = self.__ridrec.paras
-        vm_sr = self.__ridrec.waves[0].sr
+        sr = self.__ridrec.waves[0].sr
 
         for p in para_data:
-            ut_l = list(map(mul, p.u_ind, [1 / vm_sr] * len(p.u_ind)))
+            ui_l = p.u_ind
+            ut_l = list(map(mul, ui_l, [1 / sr] * len(ui_l))) if sr else [-100]
             ut_s_d = LocatSimiTerms(ut_l, t_set_s)
+
             for p_type in para_attr_l:
                 p_t_d = {}
                 for k, v in ut_s_d.items():
                     if not v and v != 0:
                         p_t_d[k] = None
                     else:
-                        p_t_d[k] = getattr(p, p_type)[v]
+                        # v out of para range
+                        try:
+                            p_t_d[k] = getattr(p, p_type)[v]
+                        except:
+                            p_t_d[k] = None
                 # para_dict[p_type] = p_t_d
                 setattr(p, p_type, p_t_d)
 

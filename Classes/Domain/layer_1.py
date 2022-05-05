@@ -102,6 +102,7 @@ class RecPara(func):
     def __init__(self):
         super().__init__()
         self.__zpx = ''
+        self.__rec_t = None
         self.__u_ind = []
         self.__st_mode = None  # pre save dict, then num
         self.__st_peep = []
@@ -124,6 +125,14 @@ class RecPara(func):
     @zpx.setter
     def zpx(self, v):
         self.__zpx = v
+
+    @property
+    def rec_t(self):
+        return self.__rec_t
+
+    @rec_t.setter
+    def rec_t(self, v):
+        self.__rec_t = v
 
     @property
     def u_ind(self):

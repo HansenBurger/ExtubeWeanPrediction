@@ -28,7 +28,7 @@ def measure(func):
                 end_ = str(timedelta(seconds=end_ / 1000))
             else:
                 end_ = str(end_) + ' ms'
-            print(f"Total execution time: {0}\n".format(end_))
+            print("Total execution time: {0}\n".format(end_))
 
     return _time_it
 
@@ -63,9 +63,9 @@ def PathVerify(loc: PurePath) -> PurePath:
     return Path(loc) if not isinstance(loc, PurePath) else loc
 
 
-def LocatSimiTerms(l_main, l_depend):
+def LocatSimiTerms(l_main: list, l_depend: list):
     index_dict = {}
-    l_main = np.array(l_main) if type(l_main) == list else l_main
+    l_main = np.array(l_main)
     for i in l_depend:
         if i > l_main.max():
             index_dict[i] = None

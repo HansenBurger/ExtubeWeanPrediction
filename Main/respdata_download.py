@@ -68,7 +68,7 @@ def __FtpGen() -> MYFTP:
     return ftp
 
 
-def RidQuery(q_mode: str, p_start: int = 0) -> list:
+def RidQuery(q_mode: str, p_range: range = None) -> list:
     src_0, src_1 = OutcomeExWean, ZresParam
 
     join_info = {
@@ -99,7 +99,10 @@ def RidQuery(q_mode: str, p_start: int = 0) -> list:
     col_que = [src_1.pid, src_1.rid, src_0.icu, end_t, end_i]
     cond_0 = end_t != None
     cond_1 = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
-    cond_2 = src_1.pid > p_start
+    if not p_range:
+        cond_2 = src_1.pid > 0
+    else:
+        cond_2 = (src_1.pid >= p_range[0]) & (src_1.pid <= p_range[-1])
     condition = cond_0 & cond_1 & cond_2
 
     query_list = src_1.select(*col_que).join(
