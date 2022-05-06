@@ -6,7 +6,7 @@ sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, DLToLD, measure
 from Classes.DataDownload import MYFTP, RecordDetect
-from Classes.ORM.main import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
+from Classes.ORM.basic import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
 
 main_mode = 'Wean'
 mode_info = {

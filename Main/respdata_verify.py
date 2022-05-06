@@ -6,7 +6,7 @@ sys.path.append(str(Path.cwd()))
 
 from Classes.ExtractSplice import ExtractSplice
 from Classes.TypesInstant import RecordInfo
-from Classes.ORM.main import ExtubePrep, WeanPrep
+from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
 main_mode = 'Wean'
