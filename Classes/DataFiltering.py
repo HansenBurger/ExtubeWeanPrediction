@@ -12,13 +12,13 @@ from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, ExtubeNotPSV, WeanPSV, Wea
 mode_info = {
     'Extube': {
         'class': ExtubePrep,
-        'd_e_s': OutcomeExWean.we_s,
-        'd_e_t': OutcomeExWean.we_t
+        'd_e_s': OutcomeExWean.ex_s,
+        'd_e_t': OutcomeExWean.ex_t
     },
     'Wean': {
         'class': WeanPrep,
-        'd_e_s': OutcomeExWean.ex_s,
-        'd_e_t': OutcomeExWean.ex_t
+        'd_e_s': OutcomeExWean.we_s,
+        'd_e_t': OutcomeExWean.we_t
     }
 }
 
@@ -69,12 +69,14 @@ class DataMainFilt():
         return que
 
     def ValQueGen(self, save_path: Path) -> ModelSelect:
+        src_0 = self.__src_0
         src_1 = self.__src_1
 
         que_0 = self.__InitialQue()
         que_1 = self.__PartialQue()
 
         # src_0 filt condition(mainly about opreation exist)
+        gp_0 = [src_0.pid]
         c_op = ~self.__end_s.is_null()
         c_op_0, c_op_1 = self.__PosNegCond(self.__end_s)
 
@@ -83,7 +85,7 @@ class DataMainFilt():
         tot_1 = self.__QueOnConds(que_0, [c_op, c_op_1])
 
         # src_1 filt condition(mainly about rec validation)
-        gp_col = [src_1.pid]
+        gp_1 = [src_1.pid]
         c_rot = ~src_1.rot.is_null()
         c_rec = ~src_1.zdt.is_null() & ~src_1.zpx.is_null()
         c_v60 = ~src_1.mch.contains('V60')
@@ -95,12 +97,36 @@ class DataMainFilt():
 
         val_cond = [c_rot, c_rec, c_v60, c_840]
         val = self.__QueOnConds(que_1, val_cond)
-        val_0 = self.__QueOnConds(que_1, val_cond.append(c_0))
-        val_1 = self.__QueOnConds(que_1, val_cond.append(c_1))
+        val_0 = self.__QueOnConds(que_1, val_cond + [c_0])
+        val_1 = self.__QueOnConds(que_1, val_cond + [c_1])
 
         getlen = lambda x, y: len(x.group_by(y))
 
-        with open(save_path / 'table_info.txt', 'w') as f:
-            pass
+        file_name = save_path / (self.__mode + 'TableInfo.txt')
+
+        with open(file_name, 'w') as f:
+            repr_0_type = '{0}-{1}:'.format(self.__mode, 'Basic')
+            repr_0_recs = 'Pid_n: {0}'.format(getlen(tot, gp_0))
+            repr_0_dist = 'succ: {0} | fail: {1}'.format(
+                getlen(tot_0, gp_0), getlen(tot_1, gp_0))
+
+            repr_0 = ('\n\t').join([repr_0_type, repr_0_recs, repr_0_dist])
+            f.write(repr_0 + '\n')
+
+            repr_1_type = '{0}-{1}:'.format(self.__mode, 'Valid')
+            repr_1_recs = 'Pid_n: {0}'.format(getlen(val, gp_1))
+            repr_1_dist = 'succ: {0} | fail: {1}'.format(
+                getlen(val_0, gp_1), getlen(val_1, gp_1))
+
+            repr_1 = ('\n\t').join([repr_1_type, repr_1_recs, repr_1_dist])
+            f.write(repr_1 + '\n')
+
+            repr_2_type = '{0}-{1}:'.format(self.__mode, 'Invalid')
+            repr_2_recs = 'N: {0}'.format(getlen(val, gp_1))
+            repr_2_dist = 'succ: {0} | fail: {1}'.format(
+                getlen(val_0, gp_1), getlen(val_1, gp_1))
+
+            repr_1 = ('\n\t').join([repr_2_type, repr_2_recs, repr_2_dist])
+            f.write(repr_1 + '\n')
 
         return val
