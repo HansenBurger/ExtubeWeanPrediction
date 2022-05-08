@@ -8,7 +8,7 @@ from Classes.Func.KitTools import ConfigRead, DLToLD, measure
 from Classes.DataDownload import MYFTP, RecordDetect
 from Classes.ORM.basic import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
 
-main_mode = 'Wean'
+mode_ = 'Wean'
 mode_info = {
     'Extube': {
         'class': ExtubePrep,
@@ -25,17 +25,17 @@ mode_info = {
 def main() -> None:
     Ftp = __FtpGen()
 
-    dst_class = mode_info[main_mode]['class']
-    dst_flag = mode_info[main_mode]['tag']
+    dst_class = mode_info[mode_]['class']
+    dst_flag = mode_info[mode_]['tag']
     data_path = Path(ConfigRead('ServerData'))
-    save_path = Path(ConfigRead('WaveData', main_mode))
-    quer_list = RidQuery(main_mode)
+    save_path = Path(ConfigRead('WaveData', mode_))
+    quer_list = RidQuery(mode_)
 
     db.create_tables([dst_class])
 
     def __RecDownload(query_obj: any) -> dict:
         ins_d = dst_class().ObjToDict()
-        main_p = RecordDetect(query_obj, ins_d, main_mode)
+        main_p = RecordDetect(query_obj, ins_d, mode_)
         main_p.InfoDetection(ZresParam, fn.MAX, dst_flag)
         main_p.RidDetection(Ftp.ftp, data_path)
         main_p.RecsDetection(Ftp.ftp, save_path)

@@ -9,7 +9,7 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-main_mode = 'Wean'
+mode_ = 'Wean'
 mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
 
 
@@ -19,8 +19,8 @@ def main() -> None:
     st_t_ran = [10, 910, 1810, 2710]
     st_paras = ['st_mode', 'st_peep', 'st_ps']
 
-    data_path = Path(ConfigRead('WaveData', main_mode))
-    query_list = RecQuery(main_mode, range(5050, 9548))
+    data_path = Path(ConfigRead('WaveData', mode_))
+    query_list = RecQuery(mode_)
 
     def RidInit(que_o: any) -> any:
         '''

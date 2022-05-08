@@ -61,6 +61,11 @@ class ExtubePrep(Model):
         table_name = 'Extube_Prep'
         database = db
 
+    @classmethod
+    def get_as_dict(cls, expr):
+        query = cls.select().where(expr).dicts()
+        return query.get()
+
     def ObjToDict(self):
         dict_ = {
             'pid': self.pid,

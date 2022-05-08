@@ -151,10 +151,7 @@ class ExtractSplice(basic):
         # TODO Reverse order out (tail to head)
         # return para_dict
 
-    def RespSplicing(self,
-                     vm_cond: list,
-                     t_set: int,
-                     tag: bool = False) -> list:
+    def RespSplicing(self, vm_cond: list, t_set: int) -> list:
         """
         RespSplicing
 

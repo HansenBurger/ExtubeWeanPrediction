@@ -54,8 +54,9 @@ class RecordInfo(Basic):
         t_file = t_folder / id_ / (id_ + '.zif')
         return t_file
 
-    def ParametersInit(self, parent_p: Path):
+    def ParametersInit(self, parent_p: Path, opt: bool):
         rec = self.__rec
+        rec.op_t = opt
         rec.zif = PathVerify(parent_p) / self.__PathCompose()
         p_rid = BinImport.RidData(self.__rec.zif)
         info = p_rid.RecordInfoGet()

@@ -11,13 +11,25 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen
+from Classes.ORM.basic import db
+from Classes.ORM.expr import PatientInfo
+from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_name = 'wean_psv'
-# file_name = r'C:\Users\HY_Burger\Desktop\Project\Recordinfo_filted_with.csv'
-file_name = 'prepare.csv'
-data_loc = Path(ConfigRead('WaveData', 'Wean'))
-s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_name)
-s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_name)
+mode_ = 'Extube_PSV'
+mode_info = {
+    'Extube': {
+        'PSV': ExtubePSV,
+        'SumP12': ExtubeSumP12
+    },
+    'Wean': {
+        'PSV': WeanPSV,
+        'SumP12': WeanSumP12
+    }
+}
+
+data_loc = Path(ConfigRead('WaveData', mode_.split('_')[0]))
+s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_)
+s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_)
 
 col_range_set = {
     'rr': [],
@@ -35,27 +47,24 @@ vm_list = ['SPONT', 'CPAP', 'APNEA VENTILATION']
 p_trend_l = [
     'bed_sbp', 'bed_dbp', 'bed_mbp', 'bed_spo2', 'bed_rr', 'bed_pr', 'bed_cvpm'
 ]
-method_list = ['TD', 'HRA', 'HRV', 'ENT']
+method_list = ['TD', 'HRA', 'HRV', 'ENT', 'PRSA']
 
 
 def main():
-    df = pd.read_csv(file_name)
-    df.endo_end = np.where(df.endo_end.str.contains('成功'), 0, 1)
-    TimeShift(df, ['endo_t', 'END_t', 'Resp_t'])
-    gp = df.groupby('PID')
-    a = df.PID.unique()
-    PIDTest(gp, a)
+    df = TableQuery()
+    gp = df.groupby('pid')
+    pid_list = df.pid.unique()
+    PIDTest(gp, pid_list)
 
 
 def PIDTest(gp, pids):
     for pid in pids:
         t_s = datetime.now()
-        id_list = gp.get_group(pid).zdt_1.tolist()
+        id_list = gp.get_group(pid).zdt.tolist()
         pid_obj = PatientGen(gp, pid)
         process_0 = ExtractSplice(pid_obj.ridrec)
         process_0.RecBatchesExtract(id_list, 1800)
         pid_obj.resp_l = process_0.RespSplicing(vm_list, 1800)
-        # pid_obj.para_d = process_0.ParaSplicing(1800, p_trend_l)
 
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
@@ -64,8 +73,6 @@ def PIDTest(gp, pids):
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(method_list)
             process_1.TensorStorage(s_f_fold)
-            # process_1.ParaTrendsPlot(s_g_fold, p_trend_l)
-            # process_1.RespTrendsPlot(s_g_fold, col_range_set)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
 
@@ -73,17 +80,28 @@ def PIDTest(gp, pids):
 def PatientGen(gp, pid):
     df = gp.get_group(pid)
     df = df.reset_index(drop=True)
-    rid = df.Record_id.unique()[0]
-    pid_obj = layer_p.Patient()
-    pid_obj.pid = pid
-    pid_obj.end_t = df.endo_t[0]
-    pid_obj.end_i = df.endo_end.unique()[0]
+    rid = df.rid.unique()[0]
 
-    rid_p = RecordInfo(data_loc, pid_obj.end_t, rid)
-    rid_p.ParametersInit()
+    pid_o = layer_p.Patient()
+    pid_o.pid = pid
+    pid_o.end_t = df.e_t[0]
+    pid_o.end_i = df.e_s[0]
 
-    pid_obj.ridrec = rid_p.rec
-    return pid_obj
+    rid_p = RecordInfo(rid, pid_o.end_t)
+    rid_p.ParametersInit(data_loc, df.opt[0])
+    pid_o.ridrec = rid_p.rec
+
+    return pid_o
+
+
+def TableQuery():
+    mode_n_l = mode_.split('_')
+    src_ = mode_info[mode_n_l[0]][mode_n_l[1]]
+    que = src_.select()
+    df = pd.DataFrame(list(que.dicts()))
+    df = df.drop('index', axis=1)
+    df.e_t = np.where(df.e_t.str.contains('成功'), 0, 1)
+    return df
 
 
 if __name__ == '__main__':

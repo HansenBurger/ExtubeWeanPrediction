@@ -8,11 +8,11 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func import CalculatePart, DiagramsGen, KitTools
 
 mode_name = 'wean_psv'
+folder_name = r'C:\Main\Data\_\Result\Form\20220423_20_wean_psv'
 
 
 def main():
-    var_rs_f = r'C:\Main\Data\_\Result\Form\20220423_20_wean_psv'
-    var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / var_rs_f
+    var_rs_p = Path(KitTools.ConfigRead('ResultSave', 'Form')) / folder_name
     s_g_fold = KitTools.SaveGen(KitTools.ConfigRead('ResultSave', 'Graph'),
                                 mode_name)
     p_i_df, p_r_d, roc_df = DataCombine(var_rs_p)

@@ -8,6 +8,7 @@ class RidRec(func):
         super().__init__()
         self.__zif = ''
         self.__vm_n = ''
+        self.__op_t = -1
         self.__cls_t = None
         self.__waves = []
         self.__paras = []
@@ -27,6 +28,14 @@ class RidRec(func):
     @vm_n.setter
     def vm_n(self, v):
         self.__vm_n = v
+
+    @property
+    def op_t(self):
+        return self.__op_t
+
+    @op_t.setter
+    def op_t(self, v):
+        self.__op_t = v
 
     @property
     def cls_t(self):

@@ -1,34 +1,23 @@
-import sys
+import pandas as pd
+import seaborn as sns
+from math import isnan
 from pathlib import Path
 from functools import reduce
-from peewee import ModelSelect, TextField
-
-sys.path.append(str(Path.cwd()))
-
-from Classes.Func.KitTools import measure, ConfigRead
-from Classes.ORM.basic import OutcomeExWean, ExtubePrep, WeanPrep
-from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, ExtubeNotPSV, WeanPSV, WeanSumP12, WeanNotPSV
-
-mode_info = {
-    'Extube': {
-        'class': ExtubePrep,
-        'd_e_s': OutcomeExWean.ex_s,
-        'd_e_t': OutcomeExWean.ex_t
-    },
-    'Wean': {
-        'class': WeanPrep,
-        'd_e_s': OutcomeExWean.we_s,
-        'd_e_t': OutcomeExWean.we_t
-    }
-}
+from matplotlib import pyplot as plt
+from peewee import ModelSelect, TextField, Expression
 
 
-class DataMainFilt():
-    def __init__(self, mode_: str):
-        self.__mode = mode_
-        self.__src_0 = OutcomeExWean
-        self.__src_1 = mode_info[mode_]['class']
-        self.__end_s = mode_info[mode_]['d_e_s']
+class Basic():
+    def __init__(self) -> None:
+        pass
+
+
+class TablePrepFilt(Basic):
+    def __init__(self, src_0: any, src_1: any, end_s: any):
+        super().__init__()
+        self.__src_0 = src_0
+        self.__src_1 = src_1
+        self.__end_s = end_s
 
     def __QueOnConds(self, que: ModelSelect, cond_l: list) -> ModelSelect:
         '''
@@ -53,7 +42,8 @@ class DataMainFilt():
         '''
         Table 0 total
         '''
-        que = self.__src_0.select()
+        que_col = [self.__src_0.pid]
+        que = self.__src_0.select(*que_col)
         return que
 
     def __PartialQue(self) -> ModelSelect:
@@ -67,6 +57,16 @@ class DataMainFilt():
         }
         que = self.__src_1.select().join(**join_d)
         return que
+
+    def __GetVmCond(self, vm_l: list, func: any) -> Expression:
+        vmd = self.__src_1.vmd
+        que = self.__PartialQue()
+        vmk = que[0:1][0].vmd.keys()
+        cond_l = [
+            reduce(func, [vmd[k].contains(vm) for k in vmk]) for vm in vm_l
+        ]
+        cond = reduce(func, cond_l)
+        return cond
 
     def ValQueGen(self, save_path: Path) -> ModelSelect:
         src_0 = self.__src_0
@@ -88,45 +88,246 @@ class DataMainFilt():
         gp_1 = [src_1.pid]
         c_rot = ~src_1.rot.is_null()
         c_rec = ~src_1.zdt.is_null() & ~src_1.zpx.is_null()
-        c_v60 = ~src_1.mch.contains('V60')
-        c_840 = ~src_1.mch.in_(['840-4', '840-22'])
-        c_0, c_1 = self.__PosNegCond(src_1.e_s)
+        c_mch = (~src_1.mch.contains('V500') & ~src_1.mch.contains('V60')
+                 & ~src_1.mch.in_(['840-4', '840-22']))
+        c_vmd = self.__GetVmCond(['SPONT', 'CPAP'], lambda x, y: x | y)
+        c_mul = (src_1.rec_t < src_1.e_t) | c_vmd
+        c_len = ~src_1.v_t == 0
 
+        c_0, c_1 = self.__PosNegCond(src_1.e_s)
         rot_est = self.__QueOnConds(que_1, [c_rot])
         rec_est = self.__QueOnConds(que_1, [c_rot, c_rec])
+        mch_val = self.__QueOnConds(que_1, [c_rot, c_rec, c_mch])
+        mul_val = self.__QueOnConds(que_1, [c_rot, c_rec, c_mch, c_mul])
 
-        val_cond = [c_rot, c_rec, c_v60, c_840]
+        val_cond = [c_rot, c_rec, c_mch, c_mul, c_len]
         val = self.__QueOnConds(que_1, val_cond)
         val_0 = self.__QueOnConds(que_1, val_cond + [c_0])
         val_1 = self.__QueOnConds(que_1, val_cond + [c_1])
 
-        getlen = lambda x, y: len(x.group_by(y))
+        p_val = [i.pid for i in val.group_by(src_1.pid)]
 
-        file_name = save_path / (self.__mode + 'TableInfo.txt')
+        getlen = lambda x, y: len(x.group_by(y)) if y else len(x)
+
+        file_name = save_path / 'PrepFiltInfo.txt'
 
         with open(file_name, 'w') as f:
-            repr_0_type = '{0}-{1}:'.format(self.__mode, 'Basic')
-            repr_0_recs = 'Pid_n: {0}'.format(getlen(tot, gp_0))
-            repr_0_dist = 'succ: {0} | fail: {1}'.format(
-                getlen(tot_0, gp_0), getlen(tot_1, gp_0))
+            repr_gen = lambda dict_: ('\n\t').join(k + ':\t' + str(v)
+                                                   for k, v in dict_.items())
 
-            repr_0 = ('\n\t').join([repr_0_type, repr_0_recs, repr_0_dist])
+            repr_0_dist = {
+                'Name': 'Basic',
+                'Pid_n': getlen(tot, gp_0),
+                'Rec_n': getlen(tot, None),
+                'Succ': getlen(tot_0, gp_0),
+                'Fail': getlen(tot_1, gp_0)
+            }
+            repr_0 = repr_gen(repr_0_dist)
             f.write(repr_0 + '\n')
 
-            repr_1_type = '{0}-{1}:'.format(self.__mode, 'Valid')
-            repr_1_recs = 'Pid_n: {0}'.format(getlen(val, gp_1))
-            repr_1_dist = 'succ: {0} | fail: {1}'.format(
-                getlen(val_0, gp_1), getlen(val_1, gp_1))
-
-            repr_1 = ('\n\t').join([repr_1_type, repr_1_recs, repr_1_dist])
+            repr_1_dist = {
+                'Name': 'Valid',
+                'Pid_n': getlen(val, gp_1),
+                'Rec_n': getlen(val, None),
+                'Succ': getlen(val_0, gp_1),
+                'Fail': getlen(val_1, gp_1)
+            }
+            repr_1 = repr_gen(repr_1_dist)
             f.write(repr_1 + '\n')
 
-            repr_2_type = '{0}-{1}:'.format(self.__mode, 'Invalid')
-            repr_2_recs = 'N: {0}'.format(getlen(val, gp_1))
-            repr_2_dist = 'succ: {0} | fail: {1}'.format(
-                getlen(val_0, gp_1), getlen(val_1, gp_1))
+            repr_2_dist = {
+                'Name': 'Invalid',
+                'Pid_n': getlen(tot, gp_0) - getlen(val, gp_1),
+                'No rid opday': getlen(tot, gp_0) - getlen(que_1, gp_1),
+                'No rid route': getlen(que_1, gp_1) - getlen(rot_est, gp_1),
+                'No val record': getlen(rot_est, gp_1) - getlen(rec_est, gp_1),
+                'Wrong machine': getlen(rec_est, gp_1) - getlen(mch_val, gp_1),
+                'No val op-end': getlen(mch_val, gp_1) - getlen(mul_val, gp_1),
+                'No val resp': getlen(mul_val, gp_1) - getlen(val, gp_1)
+            }
+            repr_2 = repr_gen(repr_2_dist)
+            f.write(repr_2 + '\n')
 
-            repr_1 = ('\n\t').join([repr_2_type, repr_2_recs, repr_2_dist])
-            f.write(repr_1 + '\n')
+        return val.order_by(src_1.pid, src_1.rec_t), p_val
 
-        return val
+
+class RecTransmit(Basic):
+    def __init__(self, p_val: ModelSelect, t_set: int) -> None:
+        super().__init__()
+        self.__p_d = {}
+        self.__s_t = t_set
+        self.__df = pd.DataFrame(list(p_val.dicts()))
+
+    @property
+    def p_d(self):
+        return self.__p_d
+
+    def __RecGen(self, dst, row: pd.Series):
+        rec = {}
+        rec['pid'] = row.pid
+        rec['e_t'] = row.e_t.to_pydatetime()
+        rec['e_s'] = row.e_s
+        rec['rid'] = row.rid
+        rec['rec_t'] = row.rec_t.to_pydatetime()
+        rec['zdt'] = row.zdt
+        rec['zpx'] = row.zpx
+        rec['opt'] = row.opt
+        dst.create(**rec)
+        return rec
+
+    def __Transmit(self, series: pd.Series) -> dict:
+        def DropHeadNone(l: list) -> list:
+            l_ = []
+            for i in range(len(l)):
+                if not l[i]:
+                    continue
+                else:
+                    l_ = l[i:]
+                    break
+            return l_
+
+        t_tag = [int(i) for i in series[0].keys()]
+        t_gap = round((max(t_tag) - min(t_tag)) / (len(t_tag) - 1))
+        values = sum([list(series[i].values()) for i in series.index], [])
+        values = DropHeadNone(values)  # drop head None
+        values = DropHeadNone(list(reversed(values)))  # drop tail None
+        t_keys = [t_gap * (i + 1) for i in range(len(values))]
+        dict_ = {'t_tag': t_keys, 'value': values}
+
+        return dict_
+
+    def PDistBuilt(self) -> None:
+        df = self.__df.copy()
+        dict_spd = self.__Transmit(self.__df.spd)
+        dict_vmd = self.__Transmit(self.__df.vmd)
+        self.__p_d['pid'] = df.pid[0]
+        self.__p_d['end'] = 0 if '成功' in df.e_s[0] else 1
+        self.__p_d['spd'] = dict_spd
+        self.__p_d['vmd'] = dict_vmd
+
+    def __PSVFilt(self, vm_l: list) -> bool:
+        if self.__df.opt[0]:
+            return True
+        else:
+            df_tmp = pd.DataFrame(self.__p_d['vmd'])
+
+            if df_tmp.empty:
+                return False
+
+            filt_0 = df_tmp.t_tag <= self.__s_t
+            filt_l = [df_tmp.value.str.contains(vm) for vm in vm_l]
+            filt_1 = reduce(lambda x, y: x | y, filt_l)
+            df_val = df_tmp[filt_0 & filt_1]
+            return not df_val.empty
+
+    def __SumpFilt(self, st_val: int) -> bool:
+        df_tmp = pd.DataFrame(self.__p_d['spd'])
+        filt_0 = df_tmp.t_tag <= self.__s_t
+        filt_1 = df_tmp.value <= st_val
+        df_val = df_tmp[filt_0 & filt_1]
+        return not df_val.empty
+
+    def PSVInsert(self, dst_: any, vm_l: list) -> None:
+        state = self.__PSVFilt(vm_l)
+        if state:
+            for i in self.__df.index:
+                row = self.__df.iloc[i]
+                self.__RecGen(dst_, row)
+
+    def NotPSVInsert(self, dst_: any, vm_l: list) -> None:
+        state = self.__PSVFilt(vm_l)
+        if not state:
+            for i in self.__df.index:
+                row = self.__df.iloc[i]
+                self.__RecGen(dst_, row)
+
+    def PSVSumPInsert(self, dst_: any, vm_l: list, st_s: int) -> None:
+        state_0 = self.__PSVFilt(vm_l)
+        state_1 = self.__SumpFilt(st_s)
+        if state_0 and state_1:
+            for i in self.__df.index:
+                row = self.__df.iloc[i]
+                self.__RecGen(dst_, row)
+
+
+class DistGenerate(Basic):
+    def __init__(self, l_d) -> None:
+        super().__init__()
+        self.__l_d = l_d
+        self.__t_l = []
+        self.__max = max([len(d['vmd']['t_tag']) for d in l_d])
+
+    def __TimeColGen(self) -> None:
+        t_gap = round(self.__l_d[0]['vmd']['t_tag'][0] / 60)  # first value
+        t_l = [t_gap * (i + 1) for i in range(self.__max)]
+        t_l = [('before_' + str(t) + '_min') for t in t_l]
+        self.__t_l = t_l
+
+    def __InterpValue(self, l_, v_in):
+        if len(l_) >= self.__max:
+            pass
+        else:
+            l_ += [v_in] * (self.__max - len(l_))
+        return l_
+
+    def __RecGen(self, p_d: dict, cate: str) -> dict:
+        v_d = {}
+        v_d['pid'] = p_d['pid']
+        v_d['end'] = p_d['end']
+        v_l = self.__InterpValue(p_d[cate]['value'], None)
+        v_d.update(dict(zip(self.__t_l, v_l)))
+        return v_d
+
+    def __Histplot(self, df: pd.DataFrame, save_p: Path, hue_l: str) -> None:
+        fig_dims = (12, 5)
+        x_label = save_p.stem.split('-')[1]
+        df = df.loc[df[x_label] != None]
+        plt.subplots(figsize=fig_dims)
+        plt.title(save_p.stem, fontdict={'fontsize': 15})
+        plt.xlabel('Type')
+        plt.ylabel('Sample (n)')
+        sns.set_style('whitegrid')
+        fx = sns.histplot(data=df,
+                          x=x_label,
+                          hue=hue_l,
+                          multiple='stack',
+                          shrink=.9)
+        fx.tick_params(axis='x', rotation=60)
+        for label in (fx.get_xticklabels() + fx.get_yticklabels()):
+            label.set_fontsize(7)
+        plt.tight_layout()
+        plt.savefig(save_p)
+        plt.close()
+
+    def __HistPatch(self, df: pd.DataFrame, save_p: Path):
+        with open(save_p, 'w') as f:
+            for col_n in df.columns[2:13]:
+                f.write('{0}\'s distribution info: \n'.format(col_n))
+                gp = pd.DataFrame.groupby(df, by=col_n)
+                gp_cat_list = df[col_n].dropna().unique().tolist()
+                gp_cat_list = [x for x in gp_cat_list if x]  # drop none value
+                gp_cat_list.sort()
+
+                for cat in gp_cat_list:
+                    df_tmp = gp.get_group(cat)
+                    succ = df_tmp.loc[df_tmp['end'] == 0].shape[0]
+                    fail = df_tmp.loc[df_tmp['end'] == 1].shape[0]
+                    f.write('{0}: succ {1} | fail {2} \n'.format(
+                        cat, succ, fail))
+
+                f.write('\n')
+        pass
+
+    def DistInfo(self, type_n: str, s_f_p: Path, s_g_p: Path):
+        file_n = type_n + '_dist'
+
+        self.__TimeColGen()
+        ld = [self.__RecGen(d, type_n) for d in self.__l_d]
+        df = pd.DataFrame(ld)
+        pd.DataFrame.to_csv(df, s_f_p / (file_n + '.csv'), index=False)
+
+        self.__HistPatch(df, s_g_p / (file_n + '.txt'))
+        for x_lab in self.__t_l[0:11]:
+            fig_name = type_n + '-' + x_lab
+            fig_path = s_g_p / (fig_name + '.png')
+            self.__Histplot(df, fig_path, 'end')
