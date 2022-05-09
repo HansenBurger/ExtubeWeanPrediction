@@ -7,8 +7,8 @@ from sklearn.metrics import roc_auc_score
 sys.path.append(str(Path.cwd()))
 from Classes.Func import CalculatePart, DiagramsGen, KitTools
 
-mode_name = 'wean_psv'
-folder_name = r'C:\Main\Data\_\Result\Form\20220423_20_wean_psv'
+mode_name = 'Wean_SumP12_Nad'
+folder_name = r'C:\Main\Data\_\Result\Form\20220509_21_Wean_SumP12_Nad'
 
 
 def main():

@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from functools import reduce
 
 sys.path.append(str(Path.cwd()))
 
@@ -178,25 +179,49 @@ class ExtractSplice(basic):
             vm_s = list(reversed(p.st_mode))
             vm_l.extend(vm_s)
 
-        ut_s = self.__UiIndexSplicing()
-        vm_slice = slice(LocatSimiTerms(ut_s, [t_set])[t_set])
-        vm_l = vm_l[vm_slice]  # from tail to head
-        vm_val = [True if val_t(vm, vm_cond) > 0 else False for vm in vm_l]
+        ut_s = self.__UiIndexSplicing()  # UiDataIndex Splice
 
-        if False in vm_val:
-            pass
+        p_str = 0
+        p_end = LocatSimiTerms(ut_s, [t_set])[t_set]
+
+        def GetWindowVMValidity(vm_list):
+            vm_val = [val_t(v, vm_cond) > 0 for v in vm_list]
+            vm_l_val = reduce(lambda x, y: x & y, vm_val)
+            return vm_l_val
+
+        if not self.__ridrec.op_t:
+            vm_window = vm_l[slice(p_str, p_end)]
+            vm_win_val = GetWindowVMValidity(vm_window)
         else:
+            while p_end < len(vm_l):
+                vm_window = vm_l[slice(p_str, p_end)]
+                vm_win_val = GetWindowVMValidity(vm_window)
+                if vm_win_val:
+                    break
+                else:
+                    p_str += 1
+                    p_end += 1
+
+        def RespDataConcat(wave_s):
+            resp_data = []
             v_still_t = 0
-            for wave in reversed(wave_data):
+            for wave in reversed(wave_s):
                 for resp in reversed(wave.resps):
+
                     if v_still_t > t_set:
                         break
                     elif not resp.val:
                         continue
                     else:
                         v_still_t += resp.wid
-                        resp_select.append(resp)
+                        resp_data.append(resp)
 
+            return resp_data
+
+        if not vm_win_val:
+            pass
+        else:
+            resp_select = RespDataConcat(wave_data)
         # Positive order (range head to op-tail)
         return list(reversed(resp_select))
 

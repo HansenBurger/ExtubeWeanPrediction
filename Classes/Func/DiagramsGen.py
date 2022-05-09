@@ -96,15 +96,17 @@ class PlotMain():
         plt.savefig(save_loc)
         plt.close()
 
-    def HeatMapPlot(self, df, fig_n):
+    def HeatMapPlot(self, df: any, fig_n: str, cmap: str = "rocket"):
         save_loc = self.__SaveRouteGen(fig_n)
         try:
             df.index = df.index.str.upper()
         except:
             pass
-        sns.set(rc={'figure.figsize': (10, 10)})
+        fig_wid = df.shape[1]
+        fig_het = df.shape[0] - 2
+        sns.set(rc={'figure.figsize': (fig_wid, fig_het)})
         # sns.heatmap(df, annot=True, linewidths=.5)
-        sns.heatmap(df, annot=True, linewidths=.5, cmap="YlGnBu")
+        sns.heatmap(df, annot=True, linewidths=.5, cmap=cmap)
         plt.title(fig_n, fontsize=18, fontweight='bold')
         plt.ylabel('Scale S')
         plt.xlabel('Anchor Len T')
