@@ -1,6 +1,5 @@
 import pandas as pd
 import seaborn as sns
-from math import isnan
 from pathlib import Path
 from functools import reduce
 from matplotlib import pyplot as plt
@@ -316,7 +315,6 @@ class DistGenerate(Basic):
                         cat, succ, fail))
 
                 f.write('\n')
-        pass
 
     def DistInfo(self, type_n: str, s_f_p: Path, s_g_p: Path):
         file_n = type_n + '_dist'

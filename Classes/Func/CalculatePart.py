@@ -72,7 +72,7 @@ class IndCalculation(Basic):
             ind = None
         return ind
 
-    def __LenMatch(self, array_1: np.array, array_2: np.array) -> bool:
+    def __LenMatch(self, array_1: np.array, array_2: np.array) -> None:
         '''
         Weather two array length equal detection
         '''
@@ -92,6 +92,27 @@ class IndCalculation(Basic):
             if not np.any(array):
                 self.__valid_tag = False
                 return
+
+    def __OutliersDel(self, array_1: np.array, array_2: np.array) -> None:
+        '''
+        Delet the outliers in p_in&v_in or p_ex|v_ex
+        '''
+        def GetOutliers(arr_: np.array, max_d: int):
+            dis_mean = arr_ - np.mean(arr_)
+            outliers = dis_mean > max_d * np.std(arr_)
+            return outliers
+
+        max_deviation = 4
+
+        arr_1_outs = GetOutliers(array_1, max_deviation)
+        arr_2_outs = GetOutliers(array_2, max_deviation)
+
+        arrs_not_outs = ~(arr_1_outs | arr_2_outs)
+
+        array_1 = array_1[arrs_not_outs]
+        array_2 = array_2[arrs_not_outs]
+
+        return array_1, array_2
 
     def ValidityCheck(self, s_F: list, s_V: list, s_P: list) -> None:
         '''
@@ -120,6 +141,12 @@ class IndCalculation(Basic):
                         [self.__p_in, self.__p_ex, self.__v_in, self.__v_ex])
                     self.__LenMatch(self.__p_in, self.__v_in)
                     self.__LenMatch(self.__p_ex, self.__v_ex)
+
+                    if self.__valid_tag:
+                        self.__p_in, self.__v_in = self.__OutliersDel(
+                            self.__p_in, self.__v_in)
+                        self.__p_ex, self.__v_ex = self.__OutliersDel(
+                            self.__p_ex, self.__v_ex)
 
                     if self.__v_in[-1] == 0:
                         self.__valid_tag = False

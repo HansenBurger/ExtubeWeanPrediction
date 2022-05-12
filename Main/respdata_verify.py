@@ -9,7 +9,7 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-mode_ = 'Wean'
+mode_ = 'Extube'
 mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
 
 
@@ -26,7 +26,7 @@ def main() -> None:
         '''
         '''
         main_p = RecordInfo(que_o.rid, que_o.e_t)
-        main_p.ParametersInit(data_path)
+        main_p.ParametersInit(data_path, que_o.opt)
         reco_p = ExtractSplice(main_p.rec)
         reco_p.RecBatchesExtract([que_o.zdt], [que_o.rec_t])
         reco_p.ParaSelecting(st_t_ran, st_paras)
@@ -44,7 +44,7 @@ def main() -> None:
         if not wave:
             resp_val_t = None
         else:
-            resp_val_l = [i.wid if i.wid else 0 for i in wave.resps]
+            resp_val_l = [i.wid if i.val else 0 for i in wave.resps]
             resp_val_t = round(sum(resp_val_l))
 
         if not para:

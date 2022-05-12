@@ -7,8 +7,8 @@ from sklearn.metrics import roc_auc_score
 sys.path.append(str(Path.cwd()))
 from Classes.Func import CalculatePart, DiagramsGen, KitTools
 
-mode_name = 'Wean_SumP12_Nad'
-folder_name = r'C:\Main\Data\_\Result\Form\20220509_21_Wean_SumP12_Nad'
+mode_name = 'Extube_SumP12_Nad'
+folder_name = r'C:\Main\Data\_\Result\Form\20220509_19_Extube_SumP12_Nad'
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
 
     plot_p = DiagramsGen.PlotMain(s_g_fold)
 
-    plot_p.HeatMapPlot(roc_df, 'AUC HeatMap')
+    plot_p.HeatMapPlot(roc_df, 'AUC HeatMap', 'coolwarm')
     plot_p.SensSpecPlot(df_pos, 'RSBI_fail_med')
     plot_p.SensSpecPlot(df_neg, 'RSBI_succ_med')
     pd.DataFrame.to_csv(df_pos, s_g_fold / 'RSBI_fail_med.csv', index=False)

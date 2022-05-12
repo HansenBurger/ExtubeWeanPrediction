@@ -16,7 +16,7 @@ from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_ = 'Wean_SumP12_Nad'
+mode_ = 'Extube_PSV'
 mode_info = {
     'Extube': {
         'PSV': ExtubePSV,
@@ -52,7 +52,7 @@ method_list = ['TD', 'HRA', 'HRV', 'ENT', 'PRSA']
 
 
 def main():
-    df = TableQuery(True)
+    df = TableQuery()
     gp = df.groupby('pid')
     pid_list = df.pid.unique()
     PIDTest(gp, pid_list)
@@ -86,12 +86,12 @@ def DataGen(gp, pid):
 
     rid_p = RecordInfo(rid, pid_o.end_t)
     rid_p.ParametersInit(data_loc, df.opt[0])
-    pid_o.ridrec = rid_p.rec
+    pid_o.rid_s = rid_p.rec
 
     rec_id_s = df.zdt.tolist()
     rec_t_s = df.rec_t.tolist()
 
-    splice_p = ExtractSplice(pid_o.ridrec)
+    splice_p = ExtractSplice(pid_o.rid_s)
     splice_p.RecBatchesExtract(rec_id_s, rec_t_s, 1800)
     pid_o.resp_l = splice_p.RespSplicing(vm_list, 1800)
 
@@ -104,7 +104,7 @@ def TableQuery(aged_ill: bool = False) -> pd.DataFrame:
     if aged_ill:
         cond = src_.pid.in_(NonAgedIllQuery())
     else:
-        cond = src_.pid > 0
+        cond = src_.pid >= 5681683
     que = src_.select().where(cond)
     df = pd.DataFrame(list(que.dicts()))
     df = df.drop('index', axis=1)

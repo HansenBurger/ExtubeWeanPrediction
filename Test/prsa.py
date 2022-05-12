@@ -153,7 +153,7 @@ def PRSARangeTest(arr_t, arr_v):
     p_.ReSample(re_rate, arr_t)
     for t in T_s:
         result_d[t] = {}
-        p_.PRSAGet(t, 'AC')
+        p_.PRSAGet(t, 'DC')
         for s in S_s:
             p_.WaveletsAna(s)
             result_d[t][s] = p_.value

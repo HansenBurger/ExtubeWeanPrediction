@@ -10,7 +10,7 @@ class Patient(func):
         self.__icu = ''
         self.__end_t = None
         self.__end_i = ''
-        self.__ridrec = None
+        self.__rid_s = []
         self.__resp_l = None
         self.__para_d = None
         self.__result = None
@@ -48,13 +48,13 @@ class Patient(func):
         self.__end_i = v
 
     @property
-    def ridrec(self):
+    def rid_s(self):
         # string or lists
-        return self.__ridrec
+        return self.__rid_s
 
-    @ridrec.setter
-    def ridrec(self, v):
-        self.__ridrec = v
+    @rid_s.setter
+    def rid_s(self, v):
+        self.__rid_s = v
 
     @property
     def resp_l(self):
