@@ -107,11 +107,11 @@ def InfoCollect(gp, pid):
     pid_obj.end_i = df.endo_end.unique()[0]
     rid_p = RecordInfo(data_loc, pid_obj.end_t, rid)
     rid_p.ParametersInit()
-    pid_obj.ridrec = rid_p.rec
+    pid_obj.rid_s = rid_p.rec
     id_list = gp.get_group(pid).zdt_1.tolist()
-    process_0 = ExtractSplice(pid_obj.ridrec)
+    process_0 = ExtractSplice(pid_obj.rid_s)
     process_0.RecBatchesExtract(id_list, 1800)
-    pid_obj.resp_l = process_0.RespSplicing(vm_list, 1800)
+    pid_obj.resp_l, _ = process_0.RespSplicing(vm_list, 1800)
     return pid_obj.end_i, pid_obj.resp_l
 
 

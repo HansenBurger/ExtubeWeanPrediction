@@ -22,7 +22,7 @@ class VarResultsGen(basic):
     def __SaveNaming(self):
         pid = self.__pid.pid
         end_i = self.__pid.end_i
-        rid = self.__pid.ridrec.zif.name.split('.')[0]
+        rid = self.__pid.rid_s.zif.name.split('.')[0]
         save_n = '{0}_{1}_{2}'.format(pid, end_i, rid)
         return save_n
 

@@ -165,12 +165,15 @@ class ExtractSplice(basic):
         """
         # Positive order in (head to tail)
         resp_select = []
+        resp_info = {'data_val': False, 'mode_val': False}
 
         para_data = self.__ridrec.paras.copy()
         wave_data = self.__ridrec.waves.copy()
 
         if not wave_data or not para_data:
-            return resp_select
+            return resp_select, resp_info
+        else:
+            resp_info['data_val'] = True
 
         vm_l = []  # save ventmode of paras
         val_t = lambda x, y: sum([True if i in x else False for i in y])
@@ -221,9 +224,10 @@ class ExtractSplice(basic):
         if not vm_win_val:
             pass
         else:
+            resp_info['mode_val'] = True
             resp_select = RespDataConcat(wave_data)
         # Positive order (range head to op-tail)
-        return list(reversed(resp_select))
+        return list(reversed(resp_select)), resp_info
 
     def ParaSplicing(self, para_attr_l: list, t_set: int = -1):
         """

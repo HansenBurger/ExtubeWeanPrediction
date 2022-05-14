@@ -11,7 +11,7 @@ from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
-from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen
+from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen, measure
 from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
@@ -19,18 +19,30 @@ from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 mode_ = 'Extube_PSV'
 mode_info = {
     'Extube': {
-        'PSV': ExtubePSV,
-        'SumP12': ExtubeSumP12
+        'PSV':
+        ExtubePSV,
+        'SumP12':
+        ExtubeSumP12,
+        'multirid': [
+            2417319, 5597021, 5616583, 5694206, 6447979, 6584930, 6750903,
+            6828867
+        ]
     },
     'Wean': {
-        'PSV': WeanPSV,
-        'SumP12': WeanSumP12
+        'PSV':
+        WeanPSV,
+        'SumP12':
+        WeanSumP12,
+        'multirid': [
+            2417319, 3351693, 4151492, 4281275, 4455851, 5597021, 5628925,
+            5694206, 6396656, 6447142, 6447979, 6750903, 6828867, 6983384
+        ]
     }
 }
 
 data_loc = Path(ConfigRead('WaveData', mode_.split('_')[0]))
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), mode_)
-# s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_)
+s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), mode_)
 
 col_range_set = {
     'rr': [],
@@ -51,18 +63,22 @@ p_trend_l = [
 method_list = ['TD', 'HRA', 'HRV', 'ENT', 'PRSA']
 
 
+@measure
 def main():
-    df = TableQuery()
-    gp = df.groupby('pid')
-    pid_list = df.pid.unique()
-    PIDTest(gp, pid_list)
+    df_tot = TableQuery(len(mode_.split('_')) > 2)
+    gp_tot = df_tot.groupby('pid')
+    pid_list = df_tot.pid.unique()
+    pid_o_l = PIDTest(gp_tot, pid_list)
+    PInfoCollect(pid_o_l)
 
 
 def PIDTest(gp, pids):
+    pid_obj_s = []
+
     for pid in pids:
         t_s = datetime.now()
-
         pid_obj = DataGen(gp, pid)
+        pid_obj_s.append(pid_obj)
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
             continue
@@ -72,6 +88,8 @@ def PIDTest(gp, pids):
             process_1.TensorStorage(s_f_fold)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
+
+    return pid_obj_s
 
 
 def DataGen(gp, pid):
@@ -93,9 +111,32 @@ def DataGen(gp, pid):
 
     splice_p = ExtractSplice(pid_o.rid_s)
     splice_p.RecBatchesExtract(rec_id_s, rec_t_s, 1800)
-    pid_o.resp_l = splice_p.RespSplicing(vm_list, 1800)
+    pid_o.resp_l, pid_o.validy = splice_p.RespSplicing(vm_list, 1800)
 
     return pid_o
+
+
+def PInfoCollect(pid_o_l: list):
+    save_path = s_g_fold / 'process_info.txt'
+    save_param = {'succ_n': 0, 'fail_n': 0, 'data_inval': 0, 'mode_inval': 0}
+    repr_gen = lambda dict_: ('\n').join(k + ':\t' + str(v)
+                                         for k, v in dict_.items())
+    for p_o in pid_o_l:
+        p_o_val = reduce(lambda x, y: x & y, list(p_o.validy.values()))
+        if p_o_val:
+            save_param['succ_n'] += 1 if not p_o.end_i else 0
+            save_param['fail_n'] += 1 if p_o.end_i else 0
+        else:
+            save_param['data_inval'] += 1 if sum(
+                p_o.validy.values()) == 2 else 0
+            save_param['mode_inval'] += 1 if sum(
+                p_o.validy.values()) == 1 else 0
+
+    param_repr = repr_gen(save_param)
+
+    with open(save_path, 'w') as f:
+        f.write(mode_ + '_ProcessInfo:\n')
+        f.write(param_repr)
 
 
 def TableQuery(aged_ill: bool = False) -> pd.DataFrame:
@@ -104,8 +145,11 @@ def TableQuery(aged_ill: bool = False) -> pd.DataFrame:
     if aged_ill:
         cond = src_.pid.in_(NonAgedIllQuery())
     else:
-        cond = src_.pid >= 5681683
-    que = src_.select().where(cond)
+        cond = src_.pid > 0
+
+    cond_ = ~src_.pid.in_(mode_info[mode_n_l[0]]['multirid'])
+
+    que = src_.select().where(cond & cond_)
     df = pd.DataFrame(list(que.dicts()))
     df = df.drop('index', axis=1)
     df.e_s = np.where(df.e_s.str.contains('成功'), 0, 1)

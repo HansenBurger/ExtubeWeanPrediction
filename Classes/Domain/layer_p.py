@@ -11,6 +11,7 @@ class Patient(func):
         self.__end_t = None
         self.__end_i = ''
         self.__rid_s = []
+        self.__validy = {}
         self.__resp_l = None
         self.__para_d = None
         self.__result = None
@@ -55,6 +56,14 @@ class Patient(func):
     @rid_s.setter
     def rid_s(self, v):
         self.__rid_s = v
+
+    @property
+    def validy(self):
+        return self.__validy
+
+    @validy.setter
+    def validy(self, v):
+        self.__validy = v
 
     @property
     def resp_l(self):

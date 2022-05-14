@@ -9,7 +9,7 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-mode_ = 'Extube'
+mode_ = 'Wean'
 mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
 
 
