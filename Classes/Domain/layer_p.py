@@ -88,3 +88,35 @@ class Patient(func):
     @result.setter
     def result(self, v):
         self.__result = v
+
+
+class VarPiLoad(func):
+    def __init__(self) -> None:
+        super().__init__()
+        self.__pid = 0
+        self.__end = -1
+        self.__data = None
+
+    @property
+    def pid(self):
+        return self.__pid
+
+    @pid.setter
+    def pid(self, v):
+        self.__pid = v
+
+    @property
+    def end(self):
+        return self.__end
+
+    @end.setter
+    def end(self, v):
+        self.__end = v
+
+    @property
+    def data(self):
+        return self.__data
+
+    @data.setter
+    def data(self, v):
+        self.__data = v

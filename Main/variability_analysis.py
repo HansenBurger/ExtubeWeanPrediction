@@ -16,7 +16,7 @@ from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_ = 'Extube_PSV'
+mode_ = 'Extube_PSV_Nad'
 mode_info = {
     'Extube': {
         'PSV':
@@ -73,12 +73,12 @@ def main():
 
 
 def PIDTest(gp, pids):
-    pid_obj_s = []
+    pid_dr_s = []
 
     for pid in pids:
         t_s = datetime.now()
         pid_obj = DataGen(gp, pid)
-        pid_obj_s.append(pid_obj)
+        pid_dr_s.append({'validy': pid_obj.validy, 'end': pid_obj.end_i})
         if not pid_obj.resp_l:
             print('{0}\' has no valid data'.format(pid))
             continue
@@ -89,7 +89,7 @@ def PIDTest(gp, pids):
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
 
-    return pid_obj_s
+    return pid_dr_s
 
 
 def DataGen(gp, pid):
@@ -116,21 +116,34 @@ def DataGen(gp, pid):
     return pid_o
 
 
-def PInfoCollect(pid_o_l: list):
+def PInfoCollect(pid_dr_l: list):
     save_path = s_g_fold / 'process_info.txt'
-    save_param = {'succ_n': 0, 'fail_n': 0, 'data_inval': 0, 'mode_inval': 0}
+    save_param = {
+        'val_succ_n': 0,
+        'val_fail_n': 0,
+        'data_inval': 0,
+        'mode_inval': 0,
+        'mode_inval_succ': 0,
+        'mode_inval_fail': 0
+    }
     repr_gen = lambda dict_: ('\n').join(k + ':\t' + str(v)
                                          for k, v in dict_.items())
-    for p_o in pid_o_l:
-        p_o_val = reduce(lambda x, y: x & y, list(p_o.validy.values()))
-        if p_o_val:
-            save_param['succ_n'] += 1 if not p_o.end_i else 0
-            save_param['fail_n'] += 1 if p_o.end_i else 0
+    for p_dr in pid_dr_l:
+        p_dr_val = reduce(lambda x, y: x & y, list(p_dr['validy'].values()))
+
+        end_con_0 = not p_dr['end']
+        end_con_1 = p_dr['end']
+        data_con = sum(p_dr['validy'].values()) == 2
+        mode_con = sum(p_dr['validy'].values()) == 1
+
+        if p_dr_val:
+            save_param['val_succ_n'] += 1 if end_con_0 else 0
+            save_param['val_fail_n'] += 1 if end_con_1 else 0
         else:
-            save_param['data_inval'] += 1 if sum(
-                p_o.validy.values()) == 2 else 0
-            save_param['mode_inval'] += 1 if sum(
-                p_o.validy.values()) == 1 else 0
+            save_param['data_inval'] += 1 if data_con else 0
+            save_param['mode_inval'] += 1 if mode_con else 0
+            save_param['mode_inval_succ'] += 1 if mode_con and end_con_0 else 0
+            save_param['mode_inval_fail'] += 1 if mode_con and end_con_1 else 0
 
     param_repr = repr_gen(save_param)
 
