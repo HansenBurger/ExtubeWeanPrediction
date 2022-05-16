@@ -1,10 +1,11 @@
-import xgboost as xgb
+from sklearn.svm import SVC
+from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import classification_report
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
+
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import classification_report
 
 
 class Basic:
@@ -100,6 +101,12 @@ class SupportVector():
         rocauc = roc_auc_score(y_in, pred_p)
         self.predict_d = {'label': pred_l, 'prob': pred_p}
         self.perform_d = {'score': score, 'report': report, 'rocauc': rocauc}
+
+
+class XGBoosterClassify(Basic):
+    def __init__(self) -> None:
+        super().__init__()
+        self.__model = XGBoosterClassify
 
 
 class KFold(Basic):

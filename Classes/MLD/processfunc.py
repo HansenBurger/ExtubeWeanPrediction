@@ -11,23 +11,10 @@ class Basic:
 
 
 class PreProcess(Basic):
-    def __init__(self, col_label, file_loc):
+    def __init__(self, df: pd.DataFrame, col_lab: str):
         super().__init__()
-        self.__col_l = col_label
-        self.__df = pd.read_csv(file_loc)
-        self.__ds = {}
-
-    @property
-    def df(self):
-        return self.__df
-
-    @property
-    def ds(self):
-        return self.__ds
-
-    def FeatureFilt(self, targets, methods):
-        col_n_s = [x + '_' + y for y in methods for x in targets]
-        self.__df = self.__df[[self.__col_l] + col_n_s]
+        self.__df = df
+        self.__col_l = col_lab
 
     def DataSplit(self, test_size_st):
         data = self.__df
@@ -35,7 +22,7 @@ class PreProcess(Basic):
         y = data.loc[:, data.columns == self.__col_l].values.ravel()
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size_st, random_state=0)
-        self.__ds = {
+        ds = {
             'train': {
                 'X': X_train,
                 'y': y_train
@@ -45,6 +32,7 @@ class PreProcess(Basic):
                 'y': y_test
             }
         }
+        return ds
 
 
 class ResultGen(Basic):

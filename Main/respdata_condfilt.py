@@ -57,8 +57,9 @@ def main() -> None:
     process.DistInfo('vmd', s_f_p, s_g_p)
     process.DistInfo('spd', s_f_p, s_g_p)
 
+    TableDistGet(s_f_p)
 
-@measure
+
 def ParaDistGet(que_o: any) -> dict:
     dst_c_d = mode_info[mode_]['dst_c']
     classifier = RecTransmit(que_o, 1800)
@@ -69,6 +70,22 @@ def ParaDistGet(que_o: any) -> dict:
     classifier.PSVSumPInsert(dst_c_d['Sump10'], psv_vm, 10)
 
     return classifier.p_d
+
+
+def TableDistGet(save_path: Path) -> None:
+    src_l = list(mode_info[mode_]['dst_c'].values())
+    table_info = save_path / ('ProcessInfo.txt')
+    with open(table_info, 'w') as f:
+        for src in src_l:
+            f.write(str(src.__name__ + ':\n'))
+            col_group = [src.pid]
+            cond_succ = src.e_s.contains('成功')
+            cond_fail = src.e_s.contains('失败')
+            tot_len = len(src.group_by(*col_group))
+            succ_len = len(src.where(cond_succ).group_by(*col_group))
+            fail_len = len(src.where(cond_fail).group_by(*col_group))
+            f.write('\ttot: {0}, succ: {1} | fail: {2}\n'.format(
+                tot_len, succ_len, fail_len))
 
 
 if __name__ == '__main__':
