@@ -8,7 +8,7 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func import CalculatePart, DiagramsGen, KitTools
 
 mode_name = 'Wean_SumP12_Nad'
-folder_name = r'C:\Main\Data\_\Result\Form\20220516_18_Wean_PSV_Nad'
+folder_name = r'C:\Main\Data\_\Result\Form\20220516_19_Wean_SumP12_Nad'
 
 
 def main():
