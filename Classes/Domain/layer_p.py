@@ -90,11 +90,12 @@ class Patient(func):
         self.__result = v
 
 
-class VarPiLoad(func):
+class PatientVar(func):
     def __init__(self) -> None:
         super().__init__()
         self.__pid = 0
         self.__end = -1
+        self.__icu = ''
         self.__data = None
 
     @property
@@ -112,6 +113,14 @@ class VarPiLoad(func):
     @end.setter
     def end(self, v):
         self.__end = v
+
+    @property
+    def icu(self):
+        return self.__icu
+
+    @icu.setter
+    def icu(self, v):
+        self.__icu = v
 
     @property
     def data(self):

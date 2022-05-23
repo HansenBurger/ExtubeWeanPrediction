@@ -81,7 +81,7 @@ def NegPosGet(df, dict_):
     return df_pos, df_neg
 
 
-def FalseBuild(df, dict_):
+def FalseBuild(df: pd.DataFrame, dict_: dict):
     df['rsbi'] = dict_['med']['rsbi']
     rsbi_pos = df.rsbi > 105
     rsbi_neg = df.rsbi < 105
