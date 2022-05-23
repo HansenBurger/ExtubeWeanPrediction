@@ -2,8 +2,6 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
-from regex import R
-
 sys.path.append(str(Path.cwd()))
 
 from operator import add, mul

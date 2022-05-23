@@ -19,26 +19,26 @@ class VarResultsGen(basic):
         super().__init__()
         self.__pid = patient  # layer3 Patient class
 
-    def __SaveNaming(self):
+    def __SaveNaming(self) -> str:
         pid = self.__pid.pid
         end_i = self.__pid.end_i
         rid = self.__pid.rid_s.zif.name.split('.')[0]
         save_n = '{0}_{1}_{2}'.format(pid, end_i, rid)
         return save_n
 
-    def VarRsGen(self, methods_l):
+    def VarRsGen(self, methods_l: list) -> None:
         resp_l = self.__pid.resp_l
         res_p = ResultStatistical(resp_l)
         res_p.CountAggr(methods_l)
         self.__pid.result = res_p.rec
 
-    def ParaTrendsPlot(self, folder, col_sel):
+    def ParaTrendsPlot(self, folder: Path, col_sel: list) -> None:
         save_n = self.__SaveNaming() + '_para'
         para_d = self.__pid.para_d
         df = pd.DataFrame(para_d)
         PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
 
-    def RespTrendsPlot(self, folder, col_sel):
+    def RespTrendsPlot(self, folder: Path, col_sel: list) -> None:
         resp_l = self.__pid.resp_l
         save_n = self.__SaveNaming() + '_wave'
         wid_l = [i.wid for i in resp_l]
@@ -47,7 +47,7 @@ class VarResultsGen(basic):
         df['ind'] = stl_l
         PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
 
-    def TensorStorage(self, folder):
+    def TensorStorage(self, folder: Path) -> None:
         save_n = self.__SaveNaming()
 
         var_rs = self.__pid.result
