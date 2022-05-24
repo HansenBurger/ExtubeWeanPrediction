@@ -12,7 +12,7 @@ class Basic:
         return u_d
 
 
-class SMOTE_(Basic):
+class BalanSMOTE(Basic):
     def __init__(self, X, y) -> None:
         super().__init__()
         self.__os = SMOTE(random_state=0)

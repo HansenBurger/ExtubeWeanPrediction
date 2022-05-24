@@ -5,43 +5,44 @@ from pathlib import Path
 sys.path.append(str(Path.cwd()))
 
 from Classes.Domain.layer_p import PatientVar
-from Classes.Func.CalculatePart import PerfomAssess
-from Classes.Func.KitTools import SaveGen, PathVerify
-from Classes.ORM.expr import PatientInfo, LabExtube, LabWean
-from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
+from Classes.Func.KitTools import PathVerify
+from Classes.MLD.processfunc import DataSetProcess
+from Classes.MLD.balancefunc import BalanSMOTE
+from Classes.MLD.algorithm import LogisiticReg
 
 
 class Basic():
     def __init__(self) -> None:
         pass
 
+    def __TableLoad(self, load_path: Path):
+        obj_s = []
+        load_path = PathVerify(load_path)
+        for file in load_path.iterdir():
+            if not file.is_file():
+                pass
+            elif file.suffix == '.csv':
+                obj = PatientVar()
+                info_ = file.name.split('_')
+                obj.pid = info_[0]
+                obj.end = info_[1]
+                obj.icu = info_[2]
+                obj.data = pd.read_csv(file, index_col='method')
+                obj_s.append(obj)
 
-class DataLoader(Basic):
-    def __init__(self) -> None:
+        return obj_s
+
+
+class FeatureLoader(Basic):
+    def __init__(self, local_p: Path):
         super().__init__()
-        self.__samples = []
+        self.__samples = self._Basic__TableLoad(local_p)
 
     @property
     def samples(self):
         return self.__samples
 
-    def SampleInit(self, local_p: Path):
-        local_p = PathVerify(local_p)
-        for p in local_p.iterdir():
-            if not p.is_file():
-                pass
-            elif p.suffix == '.csv':
-                p_obj = PatientVar()
-                p_info = p.name.split('_')
-                p_obj.pid = p_info[0]
-                p_obj.end = p_info[1]
-                p_obj.icu = p_info[2]
-                p_obj.data = pd.read_csv(p, index_col='method')
-                self.__samples.append(p_obj)
-
-    def VarFeatLoad(self,
-                    met_s: list(str) = [],
-                    ind_s: list(str) = []) -> pd.DataFrame:
+    def VarFeatLoad(self, met_s: list = [], ind_s: list = []) -> pd.DataFrame:
 
         df_var = pd.DataFrame()
         met_s = met_s if met_s else self.__samples[0].data.index.to_list()
@@ -76,3 +77,14 @@ class DataLoader(Basic):
         df_que = pd.DataFrame(list(que_l.dicts()))
 
         return df_que
+
+
+class FeatureFilter(Basic):
+    def __init__(self, data_: pd.DataFrame) -> None:
+        super().__init__()
+        self.__feat_col = [
+            'met', 'end', 'P', 'AUC', 'LogReg', 'LogRegDiff', 'rs_0', 'size_0',
+            'rs_1', 'size_1'
+        ]
+        self.__data = data_
+        self.__feat = pd.DataFrame(dict().fromkeys(self.__feat_col))

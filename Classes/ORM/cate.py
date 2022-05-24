@@ -2,6 +2,8 @@ import sys
 from peewee import *
 from pathlib import Path
 
+from sqlalchemy import Text
+
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead
@@ -13,6 +15,7 @@ class ExtubePSV(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -44,6 +47,7 @@ class ExtubeNotPSV(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -61,6 +65,7 @@ class ExtubeSumP10(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -78,6 +83,7 @@ class ExtubeSumP12(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -95,6 +101,7 @@ class WeanPSV(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -112,6 +119,7 @@ class WeanNotPSV(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -129,6 +137,7 @@ class WeanSumP10(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')
@@ -146,6 +155,7 @@ class WeanSumP12(Model):
 
     index = AutoField()
     pid = IntegerField(column_name='PID')
+    icu = TextField(column_name='ICU')
     e_t = DateTimeField(column_name='END_t')
     e_s = TextField(column_name='END_s')
     rid = TextField(column_name='RID')

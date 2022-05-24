@@ -164,6 +164,7 @@ class RecTransmit(Basic):
     def __RecGen(self, dst, row: pd.Series):
         rec = {}
         rec['pid'] = row.pid
+        rec['icu'] = row.icu
         rec['e_t'] = row.e_t.to_pydatetime()
         rec['e_s'] = row.e_s
         rec['rid'] = row.rid

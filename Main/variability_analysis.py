@@ -16,7 +16,7 @@ from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_ = 'Wean_SumP12_Nad'
+mode_ = 'Extube_PSV_Nad'
 mode_info = {
     'Extube': {
         'PSV':
@@ -99,6 +99,7 @@ def DataGen(gp, pid):
 
     pid_o = layer_p.Patient()
     pid_o.pid = pid
+    pid_o.icu = df.icu[0]
     pid_o.end_t = df.e_t[0]
     pid_o.end_i = df.e_s[0]
 

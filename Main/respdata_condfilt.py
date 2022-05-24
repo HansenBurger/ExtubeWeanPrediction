@@ -8,7 +8,7 @@ from Classes.Func.KitTools import measure, ConfigRead, SaveGen
 from Classes.ORM.basic import OutcomeExWean, ExtubePrep, WeanPrep
 from Classes.ORM.cate import db, ExtubePSV, ExtubeSumP10, ExtubeSumP12, ExtubeNotPSV, WeanPSV, WeanSumP10, WeanSumP12, WeanNotPSV
 
-mode_ = 'Wean'
+mode_ = 'Extube'
 save_name = mode_ + '_datafilt'
 mode_info = {
     'Extube': {
@@ -44,7 +44,10 @@ def main() -> None:
     s_f_p = SaveGen(Path(ConfigRead('ResultSave', 'Form')), save_name)
     s_g_p = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), save_name)
 
-    if list(dst_d.keys()) < db.get_tables():
+    dst_table = list(i.__name__ for i in dst_d.values())
+    ext_table = db.get_tables()
+
+    if dst_table < ext_table:
         db.drop_tables(dst_d.values())
     db.create_tables(dst_d.values())
 
@@ -81,9 +84,9 @@ def TableDistGet(save_path: Path) -> None:
             col_group = [src.pid]
             cond_succ = src.e_s.contains('成功')
             cond_fail = src.e_s.contains('失败')
-            tot_len = len(src.group_by(*col_group))
-            succ_len = len(src.where(cond_succ).group_by(*col_group))
-            fail_len = len(src.where(cond_fail).group_by(*col_group))
+            tot_len = len(src.select().group_by(*col_group))
+            succ_len = len(src.select().where(cond_succ).group_by(*col_group))
+            fail_len = len(src.select().where(cond_fail).group_by(*col_group))
             f.write('\ttot: {0}, succ: {1} | fail: {2}\n'.format(
                 tot_len, succ_len, fail_len))
 
