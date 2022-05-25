@@ -11,7 +11,7 @@ from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
-from Classes.Func.KitTools import ConfigRead, TimeShift, SaveGen, measure
+from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
@@ -118,7 +118,7 @@ def DataGen(gp, pid):
 
 
 def PInfoCollect(pid_dr_l: list):
-    save_path = s_g_fold / 'process_info.txt'
+    save_path = s_f_fold / 'process_info.txt'
     save_param = {
         'val_succ_n': 0,
         'val_fail_n': 0,

@@ -14,6 +14,10 @@
         "Form": "C:\\Main\\Data\\_\\Result\\Form",
         "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
     },
+    "VarData": {
+        "Extube_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220524_20_Extube_PSV_Nad",
+        "Extube_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220524_19_Extube_SumP12_Nad"
+    },
     "Server": {
         "host_s": "172.16.31.40",
         "port_n": 81,

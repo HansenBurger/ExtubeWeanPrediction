@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 
 from sklearn.svm import SVC
@@ -8,6 +9,8 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import classification_report
+
+warnings.filterwarnings('ignore')
 
 
 class SKLBasic:

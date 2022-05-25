@@ -476,8 +476,8 @@ class PerfomAssess(Basic):
 
     def PAssess(self, alpha: float = 0.05):
         pos_, neg_ = self.__PosNegSep()
-        _, p_1 = normaltest(pos_)
-        _, p_2 = normaltest(neg_)
+        _, p_1 = normaltest(pos_) if pos_.shape[0] >= 8 else None, 0
+        _, p_2 = normaltest(neg_) if neg_.shape[0] >= 8 else None, 0
 
         if p_1 > alpha and p_2 > alpha:
             len_euqal = len(pos_) == len(neg_)
