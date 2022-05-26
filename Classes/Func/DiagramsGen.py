@@ -1,5 +1,6 @@
 import pandas as pd
 import seaborn as sns
+from numpy import ndarray
 from pathlib import Path, PurePath
 from matplotlib import pyplot as plt
 from sklearn.metrics import roc_curve
@@ -73,8 +74,8 @@ class PlotMain():
         # plt.savefig(save_loc)
         plt.close()
 
-    def RocPlot(self, x_labels: list, y_label: str, df: pd.DataFrame,
-                fig_n: str) -> None:
+    def RocMultiPlot(self, x_labels: list, y_label: str, df: pd.DataFrame,
+                     fig_n: str) -> None:
         save_loc = self.__SaveRouteGen(fig_n)
         x_labels = [x_labels] if type(x_labels) is not list else x_labels
         fig_dims = (6, 6)
@@ -91,6 +92,27 @@ class PlotMain():
             plt.plot(fpr,
                      tpr,
                      label='ROC: {0} (AUC = {1})'.format(x_label, roc_auc))
+        plt.legend(loc="lower right")
+        plt.tight_layout()
+        plt.savefig(save_loc)
+        plt.close()
+
+    def RocSinglePlot(self,
+                      true_l: ndarray,
+                      pred_l: ndarray,
+                      fig_n: str,
+                      fig_dims: tuple = (6, 6)) -> None:
+        save_loc = self.__SaveRouteGen(fig_n)
+        fpr, tpr, _ = roc_curve(true_l, pred_l)
+        auc = round(roc_auc_score(true_l, pred_l), 3)
+        plt.subplots(figsize=fig_dims)
+        plt.title('Receiver operating characteristic')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.plot([0, 1], [0, 1], 'r--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.plot(fpr, tpr, label='ROC AUC = {0}'.format(auc))
         plt.legend(loc="lower right")
         plt.tight_layout()
         plt.savefig(save_loc)

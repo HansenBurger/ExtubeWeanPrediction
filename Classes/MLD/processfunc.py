@@ -1,7 +1,7 @@
 import pandas as pd
 # from sklearn.impute import IterativeImputer
 from sklearn.impute import KNNImputer
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split, KFold, StratifiedKFold
 
 
 class Basic:
@@ -39,16 +39,16 @@ class DataSetProcess(Basic):
             X, y, test_size=test_size_st, random_state=0, stratify=y)
         return X_train, y_train, X_test, y_test
 
-    def KFoldSplit(self, split_n: int = 5, rand_n: int = 104):
+    def KFoldSplit(self, split_n: int, rand_n: int = 0):
         data_l = []
         X, y = self.__GetXy()
-        kf = KFold(n_splits=split_n,
-                   random_state=rand_n,
-                   shuffle=True if rand_n > 0 else False)
+        kf = StratifiedKFold(n_splits=split_n,
+                             random_state=rand_n,
+                             shuffle=True if rand_n > 0 else False)
 
-        for train_i, test_i in kf.split(X):
-            X_train, y_train = X[train_i], y[train_i]
-            X_test, y_test = y[test_i], y[test_i]
+        for train_i, test_i in kf.split(X, y):
+            X_train, y_train = X.iloc[train_i], y[train_i]
+            X_test, y_test = X.iloc[test_i], y[test_i]
             data_l.append([X_train, y_train, X_test, y_test])
 
         return data_l

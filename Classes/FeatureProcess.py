@@ -11,7 +11,6 @@ from Classes.Func.CalculatePart import PerfomAssess
 from Classes.MLD.processfunc import DataSetProcess
 from Classes.MLD.balancefunc import BalanSMOTE
 from Classes.MLD.algorithm import LogisiticReg
-from Classes.ORM.expr import LabExtube, PatientInfo
 
 
 class Basic():
@@ -157,60 +156,29 @@ class FeatureProcess(Basic):
                             index=False)
 
     def DataSelect(self,
-                   p_v_max: float = 0.05,
-                   diff_min: float = 0.01,
+                   p_max: float = 0.05,
+                   diff_min: float = 0.1,
                    feat_lack_max: float = 0.4,
-                   recs_lack_max: float = 0.8):
+                   recs_lack_max: float = 0.2) -> pd.DataFrame:
 
-        p_v_filt = self.__feat.P < p_v_max
+        p_v_filt = self.__feat.P < p_max
         diff_filt = self.__feat.LogRegDiff > diff_min
         feats_all = self.__feat[p_v_filt & diff_filt].met.tolist()
 
         data_ = self.__data[[self.__col_l] + feats_all]
-        recs_filt = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
-        feat_filt = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
+        recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
+        feat_val = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
 
-        a = self.__data.loc[recs_filt, feat_filt]
-        b = 1
+        feats_slt = self.__feat[self.__feat.met.isin(feat_val[feat_val].index)]
+        feats_slt = feats_slt.reset_index(drop=True)
+        pd.DataFrame.to_csv(feats_slt,
+                            self.__save_p / 'feature_attr_slt.csv',
+                            index=False)
+
+        data_ = data_.loc[recs_val, feat_val]
+
+        return data_
 
         # combine = lambda x, y: [i for i in combinations(x, y)]
         # for i in range(1, len(feats_select) + 1):
         #     mets_l = combine(feats_select, i)
-
-
-file_rot = r'C:\Main\Data\_\Result\Form\20220524_20_Extube_PSV_Nad'
-file_rot_ = r'C:\Main\Data\_\Result\Form\20220524_19_Extube_SumP12_Nad'
-
-get_feat = FeatureLoader(file_rot)
-# df_var = get_feat.VarFeatLoad()
-df_que = get_feat.LabFeatLoad(PatientInfo, LabExtube)
-
-col_n = df_que.columns.drop(['icu', 'pid', 'end']).to_list()
-process_feat = FeatureProcess(df_que, 'end')
-feat_p = FeatureProcess(df_que, 'end')
-feat_p.FeatPerformance(col_n)
-feat_p.DataSelect(0.5, 0.03)
-b = feat_p.feat
-a = feat_p.feat.loc[feat_p.feat.P < 0.05]
-
-a = 1
-
-# df_xs = df_var.loc[df_var.icu.str.contains('xs')]
-# df_qc = df_var.loc[~df_var.icu.str.contains('xs')]
-
-# df_3f = df_var.loc[df_var.icu == 'ICU3F']
-# df_4f = df_var.loc[df_var.icu == 'ICU4F']
-# df_xs3f = df_var.loc[df_var.icu == 'xsICU3F']
-# df_xs4f = df_var.loc[df_var.icu == 'xsICU4F']
-# df_eicu = df_var.loc[df_var.icu == 'EICU']
-
-# col_n = df_var.columns.drop(['icu', 'pid', 'end']).to_list()
-# feat_p = FeatureProcess(df_eicu, 'end')
-# feat_p.FeatPerformance(col_n)
-
-col_n = df_que.columns.drop(['pid'])
-
-b = feat_p.feat
-a = feat_p.feat.loc[feat_p.feat.P < 0.05]
-
-b = 1
