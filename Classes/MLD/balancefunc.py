@@ -1,5 +1,5 @@
 from numpy import unique
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 
 
 class Basic:
@@ -44,3 +44,22 @@ class BalanSMOTE(Basic):
         '''
         self.__X, self.__y = self.__os.fit_resample(self.__X, self.__y)
         #TODO data format switching process
+
+
+class BalanRandOS(Basic):
+    def __init__(self, X, y) -> None:
+        super().__init__()
+        self.__os = RandomOverSampler(random_state=0)
+        self.__X = X
+        self.__y = y
+
+    @property
+    def X(self):
+        return self.__X
+
+    @property
+    def y(self):
+        return self.__y
+
+    def OverSample(self):
+        self.__X, self.__y = self.__os.fit_resample(self.__X, self.__y)

@@ -9,37 +9,54 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd'
-mode_s = ['Extube_SumP12_Nad']
+p_name = 'MultiInd-Var-Type1'
+mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
 
 algorithm_set = {
-    # 'LogReg': {
-    #     'class': LogisiticReg,
-    #     'split': 5,
-    #     's_param': {
-    #         'C': [0.001, 0.1, 1, 100, 1000],
-    #         'penalty': ['l2', 'elasticnet'],
-    #         'solver': ['liblinear', 'lbfgs'],
-    #         'max_iter': [1, 10, 100, 1000, 2000]
-    #     },
-    #     'eval_set': False,
-    #     'param_init': {},
-    #     'param_deduce': {},
-    #     're_select': False
-    # },
-    # 'RF': {
-    #     'class': RandomForest,
-    #     'split': 5,
-    #     's_param': {
-    #         'max_depth': range(10, 50, 3),
-    #         'penalty': ['l1', 'l2'],
-    #         'max_iter': [100, 500, 1000, 2000]
-    #     },
-    #     'eval_set': False,
-    #     'param_init': {},
-    #     'param_deduce': {},
-    #     're_select': False
-    # },
+    'LR': {
+        'class': LogisiticReg,
+        'split': 5,
+        's_param': {
+            'C': [0.001, 0.1, 1, 100, 1000],
+            'penalty': ['l2', 'elasticnet'],
+            'solver': ['liblinear'],
+            'max_iter': [1, 10, 100, 1000, 2000]
+        },
+        'eval_set': False,
+        'param_init': {},
+        'param_deduce': {},
+        're_select': False
+    },
+    'RF': {
+        'class': RandomForest,
+        'split': 5,
+        's_param': {
+            'max_depth': range(10, 80, 5),
+            'n_estimators': range(100, 2000, 100),
+            'max_features': ['auto', 'sqrt', 'log2'],
+            'max_depth': [2, 4, 8, 16],
+            'bootstrap': [True, False],
+            'criterion': ['entropy']
+        },
+        'eval_set': False,
+        'param_init': {},
+        'param_deduce': {},
+        're_select': False
+    },
+    'SV': {
+        'class': SupportVector,
+        'split': 5,
+        's_param': {
+            'C': [0.1, 1, 10, 100, 1000],
+            'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
+            'kernel': ['rbf'],
+            'probability': [True]
+        },
+        'eval_set': False,
+        'param_init': {},
+        'param_deduce': {},
+        're_select': False
+    },
     'XGB': {
         'class': XGBoosterClassify,
         'split': 5,
@@ -72,6 +89,7 @@ algorithm_set = {
 }
 
 
+@measure
 def main(mode_name):
     data_rot = Path(ConfigRead('VarData', mode_name))
     s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')),
@@ -79,10 +97,17 @@ def main(mode_name):
     s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')),
                        '-'.join([p_name, mode_name]))
 
-    data_var = FeatureLoader(data_rot).VarFeatLoad()
+    load_p = FeatureLoader(data_rot)
+    data_var = load_p.VarFeatLoad()
+    # data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
+    # data_concat = load_p.WholeFeatLoad(data_var, data_que)
     data_group = GetGroupByICU(data_var)
 
+    #TODO: add combine data_var with data_que to do test
+
     for group_, data_ in data_group.items():
+        if not group_ in ['ICU4F', 'QC', 'TOT', 'XS']:
+            continue
         save_p_f = s_f_fold / group_
         save_p_f.mkdir(parents=True, exist_ok=True)
         save_p_g = s_g_fold / group_
@@ -91,9 +116,14 @@ def main(mode_name):
         feature_p = FeatureProcess(data_, 'end', save_p_f)
         feature_p.FeatPerformance(
             data_.columns.drop(['pid', 'icu', 'end']).tolist())
-        data_slt = feature_p.DataSelect(0.05, 0.1, 0.4, 0.2)
+        data_slt = feature_p.DataSelect()
 
-        if feature_p.feat.empty:
+        # type_1: Default (only the Imp P-Feature)
+        # type_2: diff_min = 0.1 (POS/NEG GreatImp Feature)
+        # type_3: auc_min = 0.5, diff_min = 0.01 (PosImp Feature)
+        # type_4: auc_min = 0.5, diff_min = 0.1 (PosGreatImp Feature)
+
+        if data_slt.empty:
             print('{0} lack valid data'.format(group_))
             continue
 
@@ -116,13 +146,15 @@ def GetGroupByICU(data_in: any) -> dict:
     }
 
     for icu in data_in.icu.unique():
-        group_s[icu] = data_in.loc[data_in.icu == icu]
+        group_data = data_in.loc[data_in.icu == icu]
+        group_dist = group_data.end.unique()
+        if len(group_dist) == 1:
+            continue
+        else:
+            group_s[icu] = group_data
 
     return group_s
 
-
-# def KFoldCV(data_, save_path: Path):
-#     pass
 
 if __name__ == '__main__':
     for mode_ in mode_s:

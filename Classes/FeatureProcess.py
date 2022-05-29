@@ -71,6 +71,10 @@ class FeatureLoader(Basic):
         return data_var
 
     def LabFeatLoad(self, src_0: any, src_1: any) -> pd.DataFrame:
+        '''
+        src_0: Patient static data
+        src_1: Clinical and physiological data
+        '''
         data_lab = self.__GetSampleData()
 
         join_info = {
@@ -89,6 +93,13 @@ class FeatureLoader(Basic):
         data_lab = pd.concat([data_lab, data_que], axis=1)
 
         return data_lab
+
+    def WholeFeatLoad(self, data_0: pd.DataFrame,
+                      data_1: pd.DataFrame) -> pd.DataFrame:
+        data_1 = data_1.drop(['pid', 'end', 'icu'], axis=1)
+        data_ = pd.concat([data_0, data_1], axis=1)
+
+        return data_
 
 
 class FeatureProcess(Basic):
@@ -130,6 +141,10 @@ class FeatureProcess(Basic):
             # Get feature attributes
             n_neg = len(df_tmp[df_tmp[self.__col_l] == 0])
             n_pos = len(df_tmp[df_tmp[self.__col_l] == 1])
+
+            if n_neg < 2 or n_pos < 2:
+                continue
+
             process = PerfomAssess(df_tmp[self.__col_l], df_tmp[col_met])
             auc, _, _, = process.AucAssess()
             p, rs_pos, rs_neg = process.PAssess()
@@ -157,13 +172,17 @@ class FeatureProcess(Basic):
 
     def DataSelect(self,
                    p_max: float = 0.05,
-                   diff_min: float = 0.1,
+                   auc_min: float = 0.0,
+                   diff_min: float = 0.00,
                    feat_lack_max: float = 0.4,
                    recs_lack_max: float = 0.2) -> pd.DataFrame:
 
         p_v_filt = self.__feat.P < p_max
+        auc_filt = self.__feat.LogReg > auc_min
         diff_filt = self.__feat.LogRegDiff > diff_min
-        feats_all = self.__feat[p_v_filt & diff_filt].met.tolist()
+
+        filt_cond = p_v_filt & auc_filt & diff_filt
+        feats_all = self.__feat[filt_cond].met.tolist()
 
         data_ = self.__data[[self.__col_l] + feats_all]
         recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
@@ -175,7 +194,10 @@ class FeatureProcess(Basic):
                             self.__save_p / 'feature_attr_slt.csv',
                             index=False)
 
-        data_ = data_.loc[recs_val, feat_val]
+        if feats_slt.empty or len(data_.end.unique()) == 1:
+            data_ = pd.DataFrame()
+        else:
+            data_ = data_.loc[recs_val, feat_val]
 
         return data_
 

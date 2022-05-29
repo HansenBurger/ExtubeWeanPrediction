@@ -1,10 +1,11 @@
 import sys
+import pandas as pd
 from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.DiagramsGen import PlotMain
-from Classes.MLD.balancefunc import BalanSMOTE
+from Classes.MLD.balancefunc import BalanSMOTE, BalanRandOS
 from Classes.MLD.processfunc import DataSetProcess
 from Classes.MLD.algorithm import ParaSel_Grid, ParaSel_Rand
 
@@ -32,9 +33,14 @@ class KFoldMain(Basic):
 
         # data balance (SMOTE)
         for data_ in data_l:
-            balance_p = BalanSMOTE(data_[0], data_[1])
-            balance_p.OverSample()
-            data_[0], data_[1] = balance_p.X, balance_p.y
+            try:
+                balance_p = BalanSMOTE(data_[0], data_[1])
+                balance_p.OverSample()
+                data_[0], data_[1] = balance_p.X, balance_p.y
+            except:
+                balance_p = BalanRandOS(data_[0], data_[1])
+                balance_p.OverSample()
+                data_[0], data_[1] = balance_p.X, balance_p.y
 
             self.__fold_data.append(data_)
 
@@ -87,6 +93,8 @@ class KFoldMain(Basic):
                 main_p.Deduce(para_deduce)
                 _ = main_p.GetFeatureImportance()
 
+                # if main_p.dataset['X_train']
+
                 para_deduce['eval_set'] = self.__GetEvalSet(main_p.dataset)
                 para_deduce['early_stopping_rounds'] = 50
                 main_p.Deduce(para_deduce)
@@ -96,24 +104,25 @@ class KFoldMain(Basic):
         repr_gen = lambda dict_: ('\n').join(k + ':\t' + str(v)
                                              for k, v in dict_.items())
 
+        ave_auc = sum([fold['rocauc']
+                       for fold in self.__fold_pred]) / self.__fold_num
+        ave_r2 = sum([fold['score']
+                      for fold in self.__fold_pred]) / self.__fold_num
+
         with open(save_path / 'pred_result.txt', 'w') as f:
             for i in range(self.__fold_num):
                 fold_info = self.__fold_pred[i]
                 fold_para = self.__fold_para[i]
 
                 f.write('\n{0}-Fold:\n'.format(i))
-                f.write('FSCORE: \t {0} \n'.format(fold_info['score']))
+                f.write('SCORE: \t {0} \n'.format(fold_info['score']))
                 f.write('ROCAUC: \t {0} \n'.format(fold_info['rocauc']))
                 f.write('REPORT: \n {0} \n'.format(fold_info['report']))
                 f.write('PARAMS: \n {0} \n'.format(repr_gen(fold_para)))
 
-            ave_auc = sum([fold['rocauc']
-                           for fold in self.__fold_pred]) / self.__fold_num
-            ave_score = sum([fold['score']
-                             for fold in self.__fold_pred]) / self.__fold_num
             f.write('\nAVE Performance:\n')
-            f.write('AUC:\t{0}\n'.format(ave_auc))
-            f.write('F1SCORE:\t{0}\n'.format(ave_score))
+            f.write('SCORE:\t{0}\n'.format(ave_r2))
+            f.write('ROCAUC:\t{0}\n'.format(ave_auc))
 
         for i in range(self.__fold_num):
             fold_info = self.__fold_pred[i]
@@ -121,3 +130,17 @@ class KFoldMain(Basic):
             save_name = '{0}-Fold_ROC.png'.format(i)
             main_p = PlotMain(save_path)
             main_p.RocSinglePlot(fold_data[3], fold_info['prob'], save_name)
+
+        pred_df = pd.DataFrame()
+        pred_df['mode'] = [
+            'fold_' + str(i + 1) for i in range(self.__fold_num)
+        ] + ['ave']
+        pred_df['auc'] = [round(i['rocauc'], 2)
+                          for i in self.__fold_pred] + [round(ave_auc, 2)]
+        pred_df['r2'] = [round(i['score'], 2)
+                         for i in self.__fold_pred] + [round(ave_r2, 2)]
+
+        pred_df.set_index('mode', drop=True)
+        pd.DataFrame.to_csv(pred_df,
+                            save_path / 'pred_result.csv',
+                            index=False)

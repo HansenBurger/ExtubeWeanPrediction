@@ -129,7 +129,12 @@ class XGBoosterClassify(ModelBasic):
             self._ModelBasic__model.get_booster().get_fscore())
         attr_select = attr_imp.loc[attr_imp > 0].index
 
-        self._ModelBasic__dataset['X_train'] = data_set['X_train'][attr_select]
-        self._ModelBasic__dataset['X_test'] = data_set['X_test'][attr_select]
+        if attr_select.empty:
+            pass
+        else:
+            self._ModelBasic__dataset['X_train'] = data_set['X_train'][
+                attr_select]
+            self._ModelBasic__dataset['X_test'] = data_set['X_test'][
+                attr_select]
 
         return attr_imp

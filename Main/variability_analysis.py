@@ -16,7 +16,7 @@ from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_ = 'Extube_PSV_Nad'
+mode_ = 'Extube_SumP12'
 mode_info = {
     'Extube': {
         'PSV':
