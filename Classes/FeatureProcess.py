@@ -11,6 +11,7 @@ from Classes.Func.CalculatePart import PerfomAssess
 from Classes.MLD.processfunc import DataSetProcess
 from Classes.MLD.balancefunc import BalanSMOTE
 from Classes.MLD.algorithm import LogisiticReg
+from Classes.ORM.expr import PatientInfo
 
 
 class Basic():
@@ -46,17 +47,25 @@ class FeatureLoader(Basic):
 
     def __GetSampleData(self) -> pd.DataFrame:
 
+        src = PatientInfo
         data_ = pd.DataFrame()
         data_['pid'] = [samp.pid for samp in self.__samples]
         data_['end'] = [samp.end for samp in self.__samples]
         data_['icu'] = [samp.icu for samp in self.__samples]
+        c_rmk = src.pid.in_(data_.pid.tolist())
+        rmk_ = pd.DataFrame(list(src.select(src.rmk_t).where(c_rmk).dicts()))
+        data_ = pd.concat([data_, rmk_], axis=1)
+        data_ = data_.rename(columns={'rmk_t': 'rmk'})
         data_ = data_.sort_values('pid')
         data_ = data_.reset_index(drop=True)
 
         return data_
 
     def VarFeatLoad(self, met_s: list = [], ind_s: list = []) -> pd.DataFrame:
-
+        '''
+        met_s: methods select
+        ind_s: indicators select
+        '''
         data_var = self.__GetSampleData()
         met_s = met_s if met_s else self.__samples[0].data.index.to_list()
         ind_s = ind_s if ind_s else self.__samples[0].data.columns.to_list()
@@ -132,6 +141,10 @@ class FeatureProcess(Basic):
     def FeatPerformance(self, col_methods: list):
 
         row_s = []
+        bin_cols = ['sex', 'gender']
+        pd.DataFrame.to_csv(self.__data,
+                            self.__save_p / 'sample_data_tot.csv',
+                            index=False)
 
         for col_met in col_methods:
 
@@ -147,7 +160,9 @@ class FeatureProcess(Basic):
 
             process = PerfomAssess(df_tmp[self.__col_l], df_tmp[col_met])
             auc, _, _, = process.AucAssess()
-            p, rs_pos, rs_neg = process.PAssess()
+
+            p_cate = 'binary' if col_met in bin_cols else 'continuous'
+            p, rs_pos, rs_neg = process.PAssess(cate=p_cate)
             log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {
@@ -166,23 +181,37 @@ class FeatureProcess(Basic):
             row_s.append(row)
 
         self.__feat = pd.DataFrame(row_s)
-        pd.DataFrame.to_csv(self.__feat,
-                            self.__save_p / 'feature_attr_tot.csv',
-                            index=False)
+        if self.__feat.empty:
+            pass
+        else:
+            pd.DataFrame.to_csv(self.__feat,
+                                self.__save_p / 'feature_attr_tot.csv',
+                                index=False)
 
     def DataSelect(self,
                    p_max: float = 0.05,
                    auc_min: float = 0.0,
                    diff_min: float = 0.00,
+                   feats_spe: list = [],
                    feat_lack_max: float = 0.4,
                    recs_lack_max: float = 0.2) -> pd.DataFrame:
 
-        p_v_filt = self.__feat.P < p_max
-        auc_filt = self.__feat.LogReg > auc_min
-        diff_filt = self.__feat.LogRegDiff > diff_min
+        if self.__feat.empty:
+            return pd.DataFrame()
 
-        filt_cond = p_v_filt & auc_filt & diff_filt
-        feats_all = self.__feat[filt_cond].met.tolist()
+        # Features select
+
+        if not feats_spe:
+            p_v_filt = self.__feat.P < p_max
+            auc_filt = self.__feat.LogReg > auc_min
+            diff_filt = self.__feat.LogRegDiff > diff_min
+
+            filt_cond = p_v_filt & auc_filt & diff_filt
+            feats_all = self.__feat[filt_cond].met.tolist()
+        else:
+            feats_all = feats_spe
+
+        # Data select
 
         data_ = self.__data[[self.__col_l] + feats_all]
         recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
@@ -198,9 +227,12 @@ class FeatureProcess(Basic):
             data_ = pd.DataFrame()
         else:
             data_ = data_.loc[recs_val, feat_val]
+            for feat_col in feats_slt.met:
+                if data_[feat_col].dtype == 'bool':
+                    data_[feat_col] = data_[feat_col].astype(int)
+                    
+        pd.DataFrame.to_csv(data_,
+                            self.__save_p / 'sample_data_slt.csv',
+                            index=False)
 
         return data_
-
-        # combine = lambda x, y: [i for i in combinations(x, y)]
-        # for i in range(1, len(feats_select) + 1):
-        #     mets_l = combine(feats_select, i)

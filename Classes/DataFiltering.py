@@ -34,7 +34,7 @@ class TablePrepFilt(Basic):
         col: column obj
         '''
         cond_0 = col.contains('成功')
-        cond_1 = col.contains('失败')
+        cond_1 = (col.contains('失败')) | (col.contains('死亡'))
         return cond_0, cond_1
 
     def __InitialQue(self) -> ModelSelect:
@@ -54,7 +54,8 @@ class TablePrepFilt(Basic):
             'on': (self.__src_0.pid == self.__src_1.pid),
             'attr': 'binfo'
         }
-        que = self.__src_1.select().join(**join_d)
+        cond = ~self.__end_s.contains('其他模式结束通气')
+        que = self.__src_1.select().join(**join_d).where(cond)
         return que
 
     def __GetVmCond(self, vm_l: list, func: any) -> Expression:
@@ -76,7 +77,9 @@ class TablePrepFilt(Basic):
 
         # src_0 filt condition(mainly about opreation exist)
         gp_0 = [src_0.pid]
-        c_op = ~self.__end_s.is_null()
+        c_op_null = ~self.__end_s.is_null()
+        c_op_fake = ~self.__end_s.contains('其他模式结束通气')
+        c_op = c_op_null & c_op_fake
         c_op_0, c_op_1 = self.__PosNegCond(self.__end_s)
 
         tot = self.__QueOnConds(que_0, [c_op])

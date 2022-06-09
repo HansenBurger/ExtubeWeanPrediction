@@ -8,8 +8,9 @@ from Classes.Func.KitTools import measure, ConfigRead, SaveGen
 from Classes.ORM.basic import OutcomeExWean, ExtubePrep, WeanPrep
 from Classes.ORM.cate import db, ExtubePSV, ExtubeSumP10, ExtubeSumP12, ExtubeNotPSV, WeanPSV, WeanSumP10, WeanSumP12, WeanNotPSV
 
-mode_ = 'Extube'
-save_name = mode_ + '_datafilt'
+mode_ = 'Wean'
+p_name = 'datafilt'
+save_name = '_'.join([mode_, p_name])
 mode_info = {
     'Extube': {
         'class': ExtubePrep,

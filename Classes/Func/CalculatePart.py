@@ -458,7 +458,11 @@ class VarAnalysis(Basic):
 
 
 class PerfomAssess(Basic):
-    def __init__(self, ture_l: list, pred_l: list) -> None:
+    def __init__(
+        self,
+        ture_l: list,
+        pred_l: list,
+    ) -> None:
         super().__init__()
         self.__true_a: np.ndarray = np.array(ture_l)
         self.__pred_a: np.ndarray = np.array(pred_l)
@@ -474,26 +478,53 @@ class PerfomAssess(Basic):
         auc = round(roc_auc_score(self.__true_a, self.__pred_a), v_ran)
         return auc, fpr, tpr
 
-    def PAssess(self, alpha: float = 0.05):
+    def PAssess(self, alpha: float = 0.05, cate: str = 'continuous'):
+        # Perform type: binary, continuous
+
         pos_, neg_ = self.__PosNegSep()
         _, p_1 = normaltest(pos_) if pos_.shape[0] >= 8 else None, 0
         _, p_2 = normaltest(neg_) if neg_.shape[0] >= 8 else None, 0
 
+        def GetDist_0(arr):
+            ave = round(np.mean(arr), 3)
+            std = round(np.std(arr), 3)
+            dist_ = '{0} +- {1}'.format(ave, std)
+            return dist_
+
+        def GetDist_1(arr):
+            med = round(np.median(arr), 3)
+            qua = round(np.percentile(arr, 25), 3)
+            tqua = round(np.percentile(arr, 75), 3)
+            dist_ = '{0} ({1}, {2})'.format(med, qua, tqua)
+            return dist_
+
+        def GetDist_2(arr):
+            len_0 = np.sum(arr == 0)
+            len_1 = np.sum(arr == 1)
+            ratio = round(len_0 / len(arr), 3)
+            dist_ = '{0} ({1})'.format(len_0, ratio)
+            return dist_
+
         if p_1 > alpha and p_2 > alpha:
             len_euqal = len(pos_) == len(neg_)
             _, p = ttest_ind(pos_, neg_, equal_var=len_euqal)
-            rs_pos = '{0} +- {1}'.format(round(np.mean(pos_), 3),
-                                         round(np.std(pos_), 3))
-            rs_neg = '{0} +- {1}'.format(round(np.mean(neg_), 3),
-                                         round(np.std(neg_), 3))
+            if cate == 'continuous':
+                rs_pos = GetDist_0(pos_)
+                rs_neg = GetDist_0(neg_)
+
+            elif cate == 'binary':
+                rs_pos = GetDist_2(pos_)
+                rs_neg = GetDist_2(neg_)
         else:
             _, p = mannwhitneyu(pos_, neg_)
-            rs_pos = '{0} ({1}, {2})'.format(round(np.median(pos_), 3),
-                                             round(np.percentile(pos_, 25), 3),
-                                             round(np.percentile(pos_, 75), 3))
-            rs_neg = '{0} ({1}, {2})'.format(round(np.median(neg_), 3),
-                                             round(np.percentile(neg_, 25), 3),
-                                             round(np.percentile(neg_, 75), 3))
+            if cate == 'continuous':
+                rs_pos = GetDist_1(pos_)
+                rs_neg = GetDist_1(neg_)
+
+            elif cate == 'binary':
+                rs_pos = GetDist_2(pos_)
+                rs_neg = GetDist_2(neg_)
+
         p = round(p, 4) if not p < 0.0001 else 0.0001
         return p, rs_pos, rs_neg
 

@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 # from sklearn.impute import IterativeImputer
 from sklearn.impute import KNNImputer
@@ -42,6 +43,12 @@ class DataSetProcess(Basic):
     def KFoldSplit(self, split_n: int, rand_n: int = 0):
         data_l = []
         X, y = self.__GetXy()
+        _, counts = np.unique(y, return_counts=True)
+        y_invalid = [count < split_n for count in counts]
+
+        if sum(y_invalid) > 0:
+            return data_l
+
         kf = StratifiedKFold(n_splits=split_n,
                              random_state=rand_n,
                              shuffle=True if rand_n > 0 else False)

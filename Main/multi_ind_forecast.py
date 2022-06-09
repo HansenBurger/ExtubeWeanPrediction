@@ -9,8 +9,8 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-Var-Type1'
-mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
+p_name = 'MultiInd-RMK-Var-Spe'
+mode_s = ['Extube_SumP12']
 
 algorithm_set = {
     'LR': {
@@ -99,25 +99,28 @@ def main(mode_name):
 
     load_p = FeatureLoader(data_rot)
     data_var = load_p.VarFeatLoad()
-    # data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
+    data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
     # data_concat = load_p.WholeFeatLoad(data_var, data_que)
-    data_group = GetGroupByICU(data_var)
-
-    #TODO: add combine data_var with data_que to do test
+    # data_group = GetGroupByICU(data_var)
+    data_group = GetGroupByRMK(data_var, ['cardiac', 'sepsis', 'trauma'])
 
     for group_, data_ in data_group.items():
-        if not group_ in ['ICU4F', 'QC', 'TOT', 'XS']:
-            continue
+
         save_p_f = s_f_fold / group_
         save_p_f.mkdir(parents=True, exist_ok=True)
         save_p_g = s_g_fold / group_
         save_p_g.mkdir(parents=True, exist_ok=True)
 
+        feature_s = data_.columns.drop(['pid', 'icu', 'end', 'rmk']).tolist()
         feature_p = FeatureProcess(data_, 'end', save_p_f)
-        feature_p.FeatPerformance(
-            data_.columns.drop(['pid', 'icu', 'end']).tolist())
-        data_slt = feature_p.DataSelect()
+        feature_p.FeatPerformance(feature_s)
+        feats_spe = [
+            'ave-rr', 'ave-ve', 'ave-rsbi', 'qua-rr', 'tqua-rr', 'tqua-ve',
+            'gi-rr', 'fuzz-rsbi'
+        ]
+        data_slt = feature_p.DataSelect(feats_spe=feats_spe)
 
+        # All_in: p_max = 2 (all value in)
         # type_1: Default (only the Imp P-Feature)
         # type_2: diff_min = 0.1 (POS/NEG GreatImp Feature)
         # type_3: auc_min = 0.5, diff_min = 0.01 (PosImp Feature)
@@ -128,6 +131,8 @@ def main(mode_name):
             continue
 
         for k, v in algorithm_set.items():
+            if not sum(data_slt.end.value_counts() < v['split']) == 0:
+                continue
             save_path = save_p_g / k
             save_path.mkdir(parents=True, exist_ok=True)
             model_p = KFoldMain(v['class'], v['split'])
@@ -138,7 +143,7 @@ def main(mode_name):
             model_p.ResultGenerate(save_path)
 
 
-def GetGroupByICU(data_in: any) -> dict:
+def GetGroupByICU(data_in: any, excludings: list = []) -> dict:
     group_s = {
         'TOT': data_in,
         'QC': data_in.loc[~data_in.icu.str.contains('xs')],
@@ -147,12 +152,29 @@ def GetGroupByICU(data_in: any) -> dict:
 
     for icu in data_in.icu.unique():
         group_data = data_in.loc[data_in.icu == icu]
-        group_dist = group_data.end.unique()
-        if len(group_dist) == 1:
-            continue
-        else:
-            group_s[icu] = group_data
+        group_dist = len(group_data.end.unique())
+        group_s[icu] = group_data if group_dist > 1 else None
 
+    group_s = {
+        k: v
+        for k, v in group_s.items() if v is not None and not k in excludings
+    }
+    return group_s
+
+
+def GetGroupByRMK(data_in: any, excludings: list = []) -> dict:
+    group_s = {}
+
+    for rmk in data_in.rmk.unique():
+        group_data = data_in.loc[data_in.rmk == rmk]
+        group_dist = len(group_data.end.unique())
+        rmk = (',').join(rmk.split('/'))
+        group_s[rmk] = group_data if group_dist > 1 else None
+
+    group_s = {
+        k: v
+        for k, v in group_s.items() if v is not None and not k in excludings
+    }
     return group_s
 
 

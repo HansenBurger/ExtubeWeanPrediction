@@ -24,6 +24,14 @@ class KFoldMain(Basic):
         self.__fold_para = []
         self.__fold_pred = []
 
+    # def DataExistCheck(func):
+    #     def wrapper(self, *args, **kwargs):
+    #         if not self.__fold_data:
+    #             return
+    #         else:
+    #             return func(*args, **kwargs)
+    #     return wrapper
+
     def DataSetBuild(self, data_, col_label):
 
         # Data split
@@ -50,6 +58,7 @@ class KFoldMain(Basic):
         return eval_set
 
     def ParamSelectRand(self, para_pool: dict, eval_set: bool = False):
+
         para_init = {
             'estimator': self.__algo_type().algorithm(),
             'param_distributions': para_pool,

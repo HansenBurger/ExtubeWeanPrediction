@@ -2,8 +2,6 @@ import sys
 from peewee import *
 from pathlib import Path
 
-from sqlalchemy import Text
-
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead

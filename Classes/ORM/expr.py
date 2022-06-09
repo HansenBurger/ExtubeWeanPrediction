@@ -1,5 +1,4 @@
 import sys
-from matplotlib.pyplot import table
 from peewee import *
 from pathlib import Path
 
@@ -14,7 +13,7 @@ class PatientInfo(Model):
 
     pid = IntegerField(column_name='PID', primary_key=True)
     age = FloatField(column_name='age', null=True)
-    sex = BooleanField(column_name='sex', null=True)
+    sex = IntegerField(column_name='sex', null=True)
     bmi = FloatField(column_name='BMI', null=True)
     rmk = TextField(column_name='remark', null=True)
     rmk_i = TextField(column_name='RemarkIn', null=True)
