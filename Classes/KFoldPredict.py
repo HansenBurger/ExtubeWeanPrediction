@@ -24,14 +24,6 @@ class KFoldMain(Basic):
         self.__fold_para = []
         self.__fold_pred = []
 
-    # def DataExistCheck(func):
-    #     def wrapper(self, *args, **kwargs):
-    #         if not self.__fold_data:
-    #             return
-    #         else:
-    #             return func(*args, **kwargs)
-    #     return wrapper
-
     def DataSetBuild(self, data_, col_label):
 
         # Data split
