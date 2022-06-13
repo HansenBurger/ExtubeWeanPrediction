@@ -1,4 +1,5 @@
 import math
+import warnings
 import numpy as np
 import pandas as pd
 import entropy as ent
@@ -9,6 +10,8 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix
 from scipy.stats import normaltest, ttest_ind
+
+warnings.filterwarnings('ignore')
 
 
 class Basic():

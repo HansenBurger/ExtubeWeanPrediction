@@ -9,8 +9,26 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-RMK-Var-Spe'
-mode_s = ['Extube_SumP12']
+p_name = 'MultiInd-60min-RMK-Var'
+mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
+# feats_demand = {'All_in': {'p_max': 2}}
+feats_demand = {
+    'Type1': {},
+    'Type2': {
+        'diff_min': 0.1
+    },
+    'Type3': {
+        'auc_min': 0.5,
+        'diff_min': 0.01
+    },
+    'Type4': {
+        'auc_min': 0.5,
+        'diff_min': 0.1
+    }
+}
+
+s_f_path = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
+s_g_path = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
 
 algorithm_set = {
     'LR': {
@@ -79,7 +97,7 @@ algorithm_set = {
         },
         'eval_set': True,
         'param_init': {
-            'silent': True,
+            'verbosity': 0,
             'nthread': 4,
             'seed': 0
         },
@@ -90,35 +108,33 @@ algorithm_set = {
 
 
 @measure
-def main(mode_name):
+def main(mode_name, filt_type):
     data_rot = Path(ConfigRead('VarData', mode_name))
-    s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')),
-                       '-'.join([p_name, mode_name]))
-    s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')),
-                       '-'.join([p_name, mode_name]))
+    s_f_fold = s_f_path / mode_name
+    s_f_fold.mkdir(parents=True, exist_ok=True)
+    s_g_fold = s_g_path / mode_name
+    s_g_fold.mkdir(parents=True, exist_ok=True)
 
     load_p = FeatureLoader(data_rot)
     data_var = load_p.VarFeatLoad()
     data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
     # data_concat = load_p.WholeFeatLoad(data_var, data_que)
     # data_group = GetGroupByICU(data_var)
-    data_group = GetGroupByRMK(data_var, ['cardiac', 'sepsis', 'trauma'])
+    data_group = GetGroupByRMK(data_var)
+    data_tot = {'Total': data_var}
+    data_group.update(data_tot)
 
     for group_, data_ in data_group.items():
 
-        save_p_f = s_f_fold / group_
+        save_p_f = s_f_fold / group_ / filt_type
         save_p_f.mkdir(parents=True, exist_ok=True)
-        save_p_g = s_g_fold / group_
+        save_p_g = s_g_fold / group_ / filt_type
         save_p_g.mkdir(parents=True, exist_ok=True)
 
         feature_s = data_.columns.drop(['pid', 'icu', 'end', 'rmk']).tolist()
         feature_p = FeatureProcess(data_, 'end', save_p_f)
         feature_p.FeatPerformance(feature_s)
-        feats_spe = [
-            'ave-rr', 'ave-ve', 'ave-rsbi', 'qua-rr', 'tqua-rr', 'tqua-ve',
-            'gi-rr', 'fuzz-rsbi'
-        ]
-        data_slt = feature_p.DataSelect(feats_spe=feats_spe)
+        data_slt = feature_p.DataSelect(**feats_demand[filt_type])
 
         # All_in: p_max = 2 (all value in)
         # type_1: Default (only the Imp P-Feature)
@@ -145,7 +161,6 @@ def main(mode_name):
 
 def GetGroupByICU(data_in: any, excludings: list = []) -> dict:
     group_s = {
-        'TOT': data_in,
         'QC': data_in.loc[~data_in.icu.str.contains('xs')],
         'XS': data_in.loc[data_in.icu.str.contains('xs')]
     }
@@ -180,4 +195,6 @@ def GetGroupByRMK(data_in: any, excludings: list = []) -> dict:
 
 if __name__ == '__main__':
     for mode_ in mode_s:
-        main(mode_)
+        for k in feats_demand.keys():
+            print('round {0}-{1}'.format(mode_, k))
+            main(mode_, k)

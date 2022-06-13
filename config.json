@@ -4,7 +4,7 @@
         "WeanDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespdataWean_2203.db"
     },
     "RespData": {
-        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2205.db"
+        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2206.db"
     },
     "WaveData": {
         "Extube": "C:\\Main\\Data\\_\\Baguan\\Records",
@@ -15,10 +15,10 @@
         "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
     },
     "VarData": {
-        "Extube_PSV": "C:\\Main\\Data\\_\\Result\\Form\\20220527_15_Extube_PSV",
-        "Extube_SumP12": "C:\\Main\\Data\\_\\Result\\Form\\20220527_17_Extube_SumP12",
-        "Extube_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220524_20_Extube_PSV_Nad",
-        "Extube_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220524_19_Extube_SumP12_Nad"
+        "Extube_PSV": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_PSV",
+        "Extube_SumP12": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_SumP12",
+        "Extube_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_PSV_Nad",
+        "Extube_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_SumP12_Nad"
     },
     "Server": {
         "host_s": "172.16.31.40",

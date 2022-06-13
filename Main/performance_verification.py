@@ -8,8 +8,8 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func import DiagramsGen, KitTools
 from Classes.Func.CalculatePart import SenSpecCounter, PerfomAssess
 
-mode_name = 'Wean_SumP12_Nad'
-folder_name = r'C:\Main\Data\_\Result\Form\20220604_14_Wean_SumP12_Nad'
+mode_name = 'PSV_SumP12_Nad'
+folder_name = r'C:\Main\Data\_\Result\Form\20220612_17_VarAnalysis_5min\Extube_SumP12_Nad'
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     pd.DataFrame.to_csv(df_fn, s_g_fold / 'RSBI_105_fn.csv', index=False)
 
 
-def DataCombine(file_loc):
+def DataCombine(file_loc: Path):
     p_r_l = []
     p_i_l = []
 

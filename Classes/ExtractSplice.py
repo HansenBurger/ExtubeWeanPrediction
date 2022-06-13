@@ -187,6 +187,9 @@ class ExtractSplice(basic):
         p_str = 0
         p_end = LocatSimiTerms(ut_s, [t_set])[t_set]
 
+        if p_end <= p_str:
+            return resp_select, resp_info
+
         def GetWindowVMValidity(vm_list):
             vm_val = [val_t(v, vm_cond) > 0 for v in vm_list]
             vm_l_val = reduce(lambda x, y: x & y, vm_val)

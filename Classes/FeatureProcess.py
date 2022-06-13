@@ -1,7 +1,6 @@
 import sys
 import pandas as pd
 from pathlib import Path
-from itertools import combinations
 
 sys.path.append(str(Path.cwd()))
 
@@ -22,9 +21,9 @@ class Basic():
         obj_s = []
         load_path = PathVerify(load_path)
         for file in load_path.iterdir():
-            if not file.is_file():
+            if not file.is_file() or file.suffix != '.csv':
                 pass
-            elif file.suffix == '.csv':
+            else:
                 obj = PatientVar()
                 info_ = file.name.split('_')
                 obj.pid = int(info_[0])
@@ -33,6 +32,7 @@ class Basic():
                 obj.data = pd.read_csv(file, index_col='method')
                 obj_s.append(obj)
 
+        obj_s = sorted(obj_s, key=lambda x: x.pid, reverse=False)
         return obj_s
 
 
@@ -85,6 +85,7 @@ class FeatureLoader(Basic):
         src_1: Clinical and physiological data
         '''
         data_lab = self.__GetSampleData()
+        data_lab = data_lab.sort_values('pid')
 
         join_info = {
             'dest': src_0,
@@ -230,7 +231,7 @@ class FeatureProcess(Basic):
             for feat_col in feats_slt.met:
                 if data_[feat_col].dtype == 'bool':
                     data_[feat_col] = data_[feat_col].astype(int)
-                    
+
         pd.DataFrame.to_csv(data_,
                             self.__save_p / 'sample_data_slt.csv',
                             index=False)
