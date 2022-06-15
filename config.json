@@ -4,11 +4,11 @@
         "WeanDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespdataWean_2203.db"
     },
     "RespData": {
-        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_2206.db"
+        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_220613.db"
     },
     "WaveData": {
-        "Extube": "C:\\Main\\Data\\_\\Baguan\\Records",
-        "Wean": "C:\\Main\\Data\\_\\Weaning\\Records"
+        "Extube": "C:\\Main\\Data\\_\\WaveData\\Extube\\Records",
+        "Wean": "C:\\Main\\Data\\_\\WaveData\\Wean\\Records"
     },
     "ResultSave": {
         "Form": "C:\\Main\\Data\\_\\Result\\Form",

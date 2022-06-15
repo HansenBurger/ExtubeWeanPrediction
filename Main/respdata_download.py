@@ -8,28 +8,31 @@ from Classes.Func.KitTools import ConfigRead, DLToLD, measure
 from Classes.DataDownload import MYFTP, RecordDetect
 from Classes.ORM.basic import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
 
-mode_ = 'Wean'
+mode_s = ['Extube', 'Wean']
 mode_info = {
     'Extube': {
         'class': ExtubePrep,
-        'tag': [3004, 129]
+        'tag': [3004, 129],
+        'mv_t': (24, 2160)
     },
     'Wean': {
         'class': WeanPrep,
-        'tag': []
+        'tag': [],
+        'mv_t': (24, 2160)
     }
 }
 
 
 @measure
-def main() -> None:
+def main(mode_: str) -> None:
     Ftp = __FtpGen()
 
-    dst_class = mode_info[mode_]['class']
-    dst_flag = mode_info[mode_]['tag']
+    mode_set = mode_info[mode_]
+    dst_class = mode_set['class']
+    dst_flag = mode_set['tag']
     data_path = Path(ConfigRead('ServerData'))
     save_path = Path(ConfigRead('WaveData', mode_))
-    quer_list = RidQuery(mode_)
+    quer_list = RidQuery(mode_, mv_still=mode_set['mv_t'])
 
     db.create_tables([dst_class])
 
@@ -68,7 +71,9 @@ def __FtpGen() -> MYFTP:
     return ftp
 
 
-def RidQuery(q_mode: str, p_range: range = None) -> list:
+def RidQuery(q_mode: str,
+             mv_still: tuple = (48, 2160),
+             p_range: range = None) -> list:
     src_0, src_1 = OutcomeExWean, ZresParam
 
     join_info = {
@@ -97,13 +102,15 @@ def RidQuery(q_mode: str, p_range: range = None) -> list:
     pew_time = fn.date_trunc
     col_set = [src_1.pid, src_1.rid]
     col_que = [src_1.pid, src_1.rid, src_0.icu, end_t, end_i]
-    cond_0 = end_t != None
-    cond_1 = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
+    c_op_exist = end_t != None
+    c_same_day = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
+    c_mv_still = (src_0.mv_t >= mv_still[0]) & (src_0.mv_t <= mv_still[1])
     if not p_range:
-        cond_2 = src_1.pid > 0
+        c_pid = src_1.pid > 0
     else:
-        cond_2 = (src_1.pid >= p_range[0]) & (src_1.pid <= p_range[-1])
-    condition = cond_0 & cond_1 & cond_2
+        c_pid = (src_1.pid >= p_range[0]) & (src_1.pid <= p_range[-1])
+
+    condition = c_op_exist & c_same_day & c_mv_still & c_pid
 
     query_list = src_1.select(*col_que).join(
         **join_info).where(condition).group_by(*col_set).order_by(*col_set)
@@ -112,4 +119,5 @@ def RidQuery(q_mode: str, p_range: range = None) -> list:
 
 
 if __name__ == '__main__':
-    main()
+    for mode_ in mode_s:
+        main(mode_)

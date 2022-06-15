@@ -9,7 +9,7 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-60min-RMK-Var'
+p_name = 'MultiInd-60min-Var-ICU'
 mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
 # feats_demand = {'All_in': {'p_max': 2}}
 feats_demand = {
@@ -119,8 +119,8 @@ def main(mode_name, filt_type):
     data_var = load_p.VarFeatLoad()
     data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
     # data_concat = load_p.WholeFeatLoad(data_var, data_que)
-    # data_group = GetGroupByICU(data_var)
-    data_group = GetGroupByRMK(data_var)
+    data_group = GetGroupByICU(data_var)
+    # data_group = GetGroupByRMK(data_var)
     data_tot = {'Total': data_var}
     data_group.update(data_tot)
 

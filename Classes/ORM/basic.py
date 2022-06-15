@@ -26,8 +26,9 @@ class ZresParam(Model):
 
 class OutcomeExWean(Model):
 
-    pid = IntegerField(primary_key=True)
-    icu = TextField()
+    pid = IntegerField(primary_key=True, column_name='PID')
+    icu = TextField(column_name='ICU')
+    mv_t = FloatField(column_name='MVlastTime')
     ex_t = DateTimeField(column_name='ExtubeTime')
     ex_s = TextField(column_name='ExtubeStatus')
     we_t = DateTimeField(column_name='WeanTime')
