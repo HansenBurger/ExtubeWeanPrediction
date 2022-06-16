@@ -9,12 +9,14 @@ from Classes.TypesInstant import RecordInfo
 from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-mode_ = 'Wean'
+mode_s = ['Extube', 'Wean']
 mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
+
+# G-5 ResampleRate: 256 -- 6776243
 
 
 @measure
-def main() -> None:
+def main(mode_: str) -> None:
 
     st_t_ran = [10, 910, 1810, 2710]
     st_paras = ['st_mode', 'st_peep', 'st_ps']
@@ -96,4 +98,5 @@ def RecQuery(q_mode: str, index_range: range = None):
 
 
 if __name__ == '__main__':
-    main()
+    for mode_ in mode_s:
+        main(mode_)
