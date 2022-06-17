@@ -9,18 +9,24 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-60min-Var-ICU'
-mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
+p_name = 'MultiInd-30min-RMK'
+mode_s = [
+    'Extube_PSV_Nad', 'Extube_SumP12_Nad', 'Wean_PSV_Nad', 'Wean_SumP12_Nad'
+]
 # feats_demand = {'All_in': {'p_max': 2}}
 feats_demand = {
+    # type_1: Only the Imp P-Feature
     'Type1': {},
+    # type_2: POS/NEG GreatImp Feature
     'Type2': {
         'diff_min': 0.1
     },
+    # type_3: POSImp Feature
     'Type3': {
         'auc_min': 0.5,
         'diff_min': 0.01
     },
+    # type_4: POS GreatImp Feature
     'Type4': {
         'auc_min': 0.5,
         'diff_min': 0.1
@@ -35,10 +41,10 @@ algorithm_set = {
         'class': LogisiticReg,
         'split': 5,
         's_param': {
-            'C': [0.001, 0.1, 1, 100, 1000],
-            'penalty': ['l2', 'elasticnet'],
+            'C': [0.001, 0.1, 1, 100, 1000, 5000],
+            'penalty': ['l2'],
             'solver': ['liblinear'],
-            'max_iter': [1, 10, 100, 1000, 2000]
+            'max_iter': [1, 10, 100, 1000, 2000, 5000]
         },
         'eval_set': False,
         'param_init': {},
@@ -61,7 +67,7 @@ algorithm_set = {
         'param_deduce': {},
         're_select': False
     },
-    'SV': {
+    'SVM': {
         'class': SupportVector,
         'split': 5,
         's_param': {
@@ -111,36 +117,32 @@ algorithm_set = {
 def main(mode_name, filt_type):
     data_rot = Path(ConfigRead('VarData', mode_name))
     s_f_fold = s_f_path / mode_name
-    s_f_fold.mkdir(parents=True, exist_ok=True)
     s_g_fold = s_g_path / mode_name
-    s_g_fold.mkdir(parents=True, exist_ok=True)
 
     load_p = FeatureLoader(data_rot)
     data_var = load_p.VarFeatLoad()
     data_que = load_p.LabFeatLoad(PatientInfo, LabExtube)
-    # data_concat = load_p.WholeFeatLoad(data_var, data_que)
-    data_group = GetGroupByICU(data_var)
-    # data_group = GetGroupByRMK(data_var)
-    data_tot = {'Total': data_var}
+    data_group = GetGroupByRMK([data_var, data_que])
+    data_tot = {'Total': [data_var, data_que]}
     data_group.update(data_tot)
 
-    for group_, data_ in data_group.items():
+    for group_, data_s in data_group.items():
 
         save_p_f = s_f_fold / group_ / filt_type
         save_p_f.mkdir(parents=True, exist_ok=True)
         save_p_g = s_g_fold / group_ / filt_type
         save_p_g.mkdir(parents=True, exist_ok=True)
 
-        feature_s = data_.columns.drop(['pid', 'icu', 'end', 'rmk']).tolist()
-        feature_p = FeatureProcess(data_, 'end', save_p_f)
-        feature_p.FeatPerformance(feature_s)
-        data_slt = feature_p.DataSelect(**feats_demand[filt_type])
+        info_col_n = ['pid', 'icu', 'end', 'rmk']
 
-        # All_in: p_max = 2 (all value in)
-        # type_1: Default (only the Imp P-Feature)
-        # type_2: diff_min = 0.1 (POS/NEG GreatImp Feature)
-        # type_3: auc_min = 0.5, diff_min = 0.01 (PosImp Feature)
-        # type_4: auc_min = 0.5, diff_min = 0.1 (PosGreatImp Feature)
+        feat_que_s = data_s[1].columns.drop(info_col_n).tolist()
+        feat_que_p = FeatureProcess(data_s[1], 'end', save_p_f)
+        feat_que_p.FeatPerformance(feat_que_s, 'LabFeats')
+
+        feat_var_s = data_s[0].columns.drop(info_col_n).tolist()
+        feat_var_p = FeatureProcess(data_s[0], 'end', save_p_f)
+        feat_var_p.FeatPerformance(feat_var_s, 'VarFeats')
+        data_slt = feat_var_p.DataSelect(**feats_demand[filt_type])
 
         if data_slt.empty:
             print('{0} lack valid data'.format(group_))
@@ -159,7 +161,7 @@ def main(mode_name, filt_type):
             model_p.ResultGenerate(save_path)
 
 
-def GetGroupByICU(data_in: any, excludings: list = []) -> dict:
+def GetGroupByICU(data_in: list, excludings: list = []) -> dict:
     group_s = {
         'QC': data_in.loc[~data_in.icu.str.contains('xs')],
         'XS': data_in.loc[data_in.icu.str.contains('xs')]
@@ -177,19 +179,20 @@ def GetGroupByICU(data_in: any, excludings: list = []) -> dict:
     return group_s
 
 
-def GetGroupByRMK(data_in: any, excludings: list = []) -> dict:
+def GetGroupByRMK(data_s: list, excludings: list = []) -> dict:
     group_s = {}
 
-    for rmk in data_in.rmk.unique():
-        group_data = data_in.loc[data_in.rmk == rmk]
+    for rmk in data_s[0].rmk.unique():
+        group_data = data_s[0].loc[data_s[0].rmk == rmk]
         group_dist = len(group_data.end.unique())
         rmk = (',').join(rmk.split('/'))
-        group_s[rmk] = group_data if group_dist > 1 else None
+        group_s[rmk] = group_data.index if group_dist > 1 else None
 
     group_s = {
-        k: v
+        k: [data.iloc[v] for data in data_s]
         for k, v in group_s.items() if v is not None and not k in excludings
     }
+
     return group_s
 
 

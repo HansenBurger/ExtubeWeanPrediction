@@ -68,7 +68,7 @@ class TablePrepFilt(Basic):
         cond = reduce(func, cond_l)
         return cond
 
-    def ValQueGen(self, save_path: Path) -> ModelSelect:
+    def ValQueGen(self, save_path: Path, mv_t_range: tuple) -> ModelSelect:
         src_0 = self.__src_0
         src_1 = self.__src_1
 
@@ -81,10 +81,11 @@ class TablePrepFilt(Basic):
         c_op_fake = ~self.__end_s.contains('其他模式结束通气')
         c_op = c_op_null & c_op_fake
         c_op_0, c_op_1 = self.__PosNegCond(self.__end_s)
+        c_mv_t = (src_0.mv_t >= mv_t_range[0]) & (src_0.mv_t <= mv_t_range[1])
 
-        tot = self.__QueOnConds(que_0, [c_op])
-        tot_0 = self.__QueOnConds(que_0, [c_op, c_op_0])
-        tot_1 = self.__QueOnConds(que_0, [c_op, c_op_1])
+        tot = self.__QueOnConds(que_0, [c_op, c_mv_t])
+        tot_0 = self.__QueOnConds(que_0, [c_op, c_mv_t, c_op_0])
+        tot_1 = self.__QueOnConds(que_0, [c_op, c_mv_t, c_op_1])
 
         # src_1 filt condition(mainly about rec validation)
         gp_1 = [src_1.pid]

@@ -8,12 +8,14 @@ from Classes.Func.KitTools import measure, ConfigRead, SaveGen
 from Classes.ORM.basic import OutcomeExWean, ExtubePrep, WeanPrep
 from Classes.ORM.cate import db, ExtubePSV, ExtubeSumP10, ExtubeSumP12, ExtubeNotPSV, WeanPSV, WeanSumP10, WeanSumP12, WeanNotPSV
 
-mode_ = 'Wean'
-p_name = 'datafilt'
-save_name = '_'.join([mode_, p_name])
+mode_s = ['Extube', 'Wean']
+p_name = 'DataFilt'
+form_save = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
+graph_save = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
 mode_info = {
     'Extube': {
         'class': ExtubePrep,
+        'mv_t': (24, 2160),
         'd_e_s': OutcomeExWean.ex_s,
         'dst_c': {
             'PSV': ExtubePSV,
@@ -24,6 +26,7 @@ mode_info = {
     },
     'Wean': {
         'class': WeanPrep,
+        'mv_t': (24, 2160),
         'd_e_s': OutcomeExWean.we_s,
         'dst_c': {
             'PSV': WeanPSV,
@@ -37,13 +40,15 @@ psv_vm = ['SPONT', 'CPAP', 'APNEA VENTILATION']
 
 
 @measure
-def main() -> None:
+def main(mode_: str) -> None:
 
     src_0 = OutcomeExWean
     src_1 = mode_info[mode_]['class']
     dst_d = mode_info[mode_]['dst_c']
-    s_f_p = SaveGen(Path(ConfigRead('ResultSave', 'Form')), save_name)
-    s_g_p = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), save_name)
+    s_f_p = form_save / mode_
+    s_f_p.mkdir(parents=True, exist_ok=True)
+    s_g_p = graph_save / mode_
+    s_g_p.mkdir(parents=True, exist_ok=True)
 
     dst_table = list(i.__name__ for i in dst_d.values())
     ext_table = db.get_tables()
@@ -53,18 +58,18 @@ def main() -> None:
     db.create_tables(dst_d.values())
 
     filter = TablePrepFilt(src_0, src_1, mode_info[mode_]['d_e_s'])
-    que_val, p_val = filter.ValQueGen(s_f_p)
+    que_val, p_val = filter.ValQueGen(s_f_p, mode_info[mode_]['mv_t'])
 
-    pid_ld = [ParaDistGet(que_val.where(src_1.pid == i)) for i in p_val]
+    pid_ld = [ParaDistGet(mode_, que_val.where(src_1.pid == i)) for i in p_val]
 
     process = DistGenerate(pid_ld)
     process.DistInfo('vmd', s_f_p, s_g_p)
     process.DistInfo('spd', s_f_p, s_g_p)
 
-    TableDistGet(s_f_p)
+    TableDistGet(mode_, s_f_p)
 
 
-def ParaDistGet(que_o: any) -> dict:
+def ParaDistGet(mode_: str, que_o: any) -> dict:
     dst_c_d = mode_info[mode_]['dst_c']
     classifier = RecTransmit(que_o, 1800)
     classifier.PDistBuilt()
@@ -76,7 +81,7 @@ def ParaDistGet(que_o: any) -> dict:
     return classifier.p_d
 
 
-def TableDistGet(save_path: Path) -> None:
+def TableDistGet(mode_: str, save_path: Path) -> None:
     src_l = list(mode_info[mode_]['dst_c'].values())
     table_info = save_path / ('ProcessInfo.txt')
     with open(table_info, 'w') as f:
@@ -93,4 +98,5 @@ def TableDistGet(save_path: Path) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    for mode_ in mode_s:
+        main(mode_)

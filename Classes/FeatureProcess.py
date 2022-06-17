@@ -11,6 +11,7 @@ from Classes.MLD.processfunc import DataSetProcess
 from Classes.MLD.balancefunc import BalanSMOTE
 from Classes.MLD.algorithm import LogisiticReg
 from Classes.ORM.expr import PatientInfo
+from Classes.ORM.basic import OutcomeExWean
 
 
 class Basic():
@@ -99,8 +100,13 @@ class FeatureLoader(Basic):
         que_l = src_1.select(*col_query).join(
             **join_info).where(cond_pid).order_by(*col_order)
 
+        src_2 = OutcomeExWean
+        c_mvt = src_2.pid.in_(data_lab.pid.tolist())
+        mvt_ = pd.DataFrame(list(
+            src_2.select(src_2.mv_t).where(c_mvt).dicts()))
+
         data_que = pd.DataFrame(list(que_l.dicts())).drop(['pid'], axis=1)
-        data_lab = pd.concat([data_lab, data_que], axis=1)
+        data_lab = pd.concat([data_lab, data_que, mvt_], axis=1)
 
         return data_lab
 
@@ -139,13 +145,12 @@ class FeatureProcess(Basic):
 
         return auc_v, auc_diff
 
-    def FeatPerformance(self, col_methods: list):
+    def FeatPerformance(self, col_methods: list, save_name: str):
 
         row_s = []
         bin_cols = ['sex', 'gender']
-        pd.DataFrame.to_csv(self.__data,
-                            self.__save_p / 'sample_data_tot.csv',
-                            index=False)
+        data_csv = self.__save_p / (save_name + '_data_tot.csv')
+        pd.DataFrame.to_csv(self.__data, data_csv, index=False)
 
         for col_met in col_methods:
 
@@ -185,9 +190,8 @@ class FeatureProcess(Basic):
         if self.__feat.empty:
             pass
         else:
-            pd.DataFrame.to_csv(self.__feat,
-                                self.__save_p / 'feature_attr_tot.csv',
-                                index=False)
+            attr_csv = self.__save_p / (save_name + '_attr_tot.csv')
+            pd.DataFrame.to_csv(self.__feat, attr_csv, index=False)
 
     def DataSelect(self,
                    p_max: float = 0.05,
