@@ -10,7 +10,7 @@ file_ = [
 ]
 
 df = pd.read_csv(fold / file_[0])
-mode_col = ['ExtubeStatus', 'WeanStatus']
+mode_col = ['ExtubeStatus_psv', 'WeanStatus_psv']
 
 
 def main():
@@ -41,6 +41,7 @@ def main():
 
 
 def GetCateByHours(df: pd.DataFrame, type_col: str) -> str:
+    type_col = type_col.split('_')[0]
     mv_st = df[~df[type_col].isnull()]
     mv_st = mv_st[['PID', 'MVlastTime', type_col]]
     mv_st = mv_st.rename({
@@ -49,6 +50,7 @@ def GetCateByHours(df: pd.DataFrame, type_col: str) -> str:
         type_col: 'end'
     },
                          axis=1)
+    mv_st = mv_st[~mv_st.end.str.contains('其他模式')]
     mv_st['end'] = [0 if '成功' in i else 1 for i in mv_st.end]
     mv_st['cate'] = pd.Series([], dtype='str')
 
