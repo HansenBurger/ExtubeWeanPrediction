@@ -1,0 +1,57 @@
+{
+    "Source": {
+        "Extube_30_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220606_21_VarAnalysis_30min\\Extube_PSV_Nad",
+        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220606_21_VarAnalysis_30min\\Extube_SumP12_Nad",
+        "Extube_60_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_PSV_Nad",
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_SumP12_Nad"
+    },
+    "LabFeatNameMap": {
+        "Statistics": {
+            "age": "Age (yr)",
+            "sex": "Male (ratio)",
+            "bmi": "BMI",
+            "mv_t": "MV Still Time (h)"
+        },
+        "BG-AcidAlkaline": {
+            "nph": "NpH",
+            "npco2": "NPaCO_2",
+            "hco3": "HCO_3",
+            "be": "BE"
+        },
+        "BG-Electrolytes": {
+            "K": "K^+",
+            "na": "Na^+",
+            "Cl": "Cl^-"
+        },
+        "BG-Oxygenation": {
+            "o2": "O_2",
+            "co2": "CO_2",
+            "po2": "PaO_2",
+            "npo2": "NPaO_2",
+            "fio2": "FiO_2"
+        },
+        "BG-Other": {
+            "hemo": "Hb",
+            "mhb": "MHb",
+            "lac": "Lac",
+            "wbg": "WBG",
+            "temp": "Temp"
+        },
+        "Biochem": {
+            "ga": "GA",
+            "cr": "Cre",
+            "crp": "CRP",
+            "tbil": "TBIL"
+        },
+        "Unkown": {
+            "osp": "OsP",
+            "pcv": "PCV",
+            "pf": "PF",
+            "rhs": "RHS"
+        },
+        "MedicalScore": {
+            "sofa": "SOFA",
+            "apache": "APACHE"
+        }
+    }
+}

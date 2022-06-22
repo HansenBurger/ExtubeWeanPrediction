@@ -1,3 +1,5 @@
+from cProfile import label
+from turtle import color
 import pandas as pd
 import seaborn as sns
 from numpy import ndarray
@@ -16,17 +18,24 @@ class PlotMain():
         s_l = self.__safe_loc / (fig_n + '.png')
         return s_l
 
-    def lmplot(self, x_label, y_label, df, fig_name):
+    def lmplot(self, x_label, y_labels, df, fig_name):
         #s ave_loc = self.__safe_loc / (fig_name + '.png')
+        save_loc = self.__SaveRouteGen(fig_name)
         sns.set_theme(style='whitegrid')
-        sns.lmplot(x=x_label,
-                   y=y_label,
-                   data=df,
-                   fit_reg=False,
-                   height=3.3,
-                   aspect=5.5)
+        plt.figure(figsize=(1 * df.shape[0], 6))
+        plt.plot([0, df.shape[0]], [0.7, 0.7], 'k--')
+        plt.ylim([0.0, 1.0])
+        plt.xlim([1, df.shape[0]])
+        color = ['r', 'g', 'b', 'c', 'm']
+        for i in range(len(y_labels)):
+            plt.plot(df[x_label].tolist(),
+                     df[y_labels[i]].tolist(),
+                     color[i],
+                     label=y_labels[i].split('_')[0])
+        plt.legend(loc='best')
         plt.title(fig_name, fontsize=12)
-        plt.show()
+        plt.tight_layout()
+        plt.savefig(save_loc)
         plt.close()
 
     def MultiLineplot(self, x_label, y_labels, df, fig_n):

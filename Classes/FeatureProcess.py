@@ -140,12 +140,12 @@ class FeatureProcess(Basic):
         model = LogisiticReg(train_test, {'C': 1, 'max_iter': 2000})
         model.Deduce()
         perform_rs = model.Predict()
-        auc_v = round(perform_rs['rocauc'], 3)
+        auc_v = round(perform_rs['auc'], 3)
         auc_diff = round(abs(auc_v - 0.5), 4)
 
         return auc_v, auc_diff
 
-    def FeatPerformance(self, col_methods: list, save_name: str):
+    def FeatPerformance(self, col_methods: list, save_name: str = ''):
 
         row_s = []
         bin_cols = ['sex', 'gender']
@@ -169,14 +169,14 @@ class FeatureProcess(Basic):
 
             p_cate = 'binary' if col_met in bin_cols else 'continuous'
             p, rs_pos, rs_neg = process.PAssess(cate=p_cate)
-            log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
+            # log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {
                 'met': col_met,
                 'P': p,
                 'AUC': auc,
-                'LogReg': log_auc,
-                'LogRegDiff': log_diff,
+                # 'LogReg': log_auc,
+                # 'LogRegDiff': log_diff,
                 'rs_0': rs_neg,
                 'size_0': n_neg,
                 'rs_1': rs_pos,
@@ -223,7 +223,9 @@ class FeatureProcess(Basic):
         feat_val = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
 
         feats_slt = self.__feat[self.__feat.met.isin(feat_val[feat_val].index)]
+        feats_slt = feats_slt.sort_values(by=['P'], ascending=True)
         feats_slt = feats_slt.reset_index(drop=True)
+        self.__feat = feats_slt
         pd.DataFrame.to_csv(feats_slt,
                             self.__save_p / 'feature_attr_slt.csv',
                             index=False)
@@ -241,3 +243,9 @@ class FeatureProcess(Basic):
                             index=False)
 
         return data_
+
+    def DataSelect_Multi(self,
+                         p_max: float = 0.05,
+                         feat_lack_max: float = 0.4,
+                         recs_lack_max: float = 0.2):
+        pass

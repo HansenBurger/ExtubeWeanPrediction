@@ -79,13 +79,15 @@ def LocatSimiTerms(l_main: list, l_depend: list):
     return index_dict
 
 
-def ConfigRead(cate: str, name: str = '') -> str:
-    p = Path('config.json')
-    if not p.is_file():
+def ConfigRead(cate: str,
+               name: str = '',
+               file: Path = Path('config.json')) -> str:
+
+    if not file.is_file():
         print('Json File Not Exist !')
         return None
     else:
-        with open(str(p)) as f:
+        with open(str(file)) as f:
             data = json.load(f)
 
         if not name:

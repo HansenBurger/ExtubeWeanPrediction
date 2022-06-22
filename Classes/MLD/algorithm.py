@@ -7,7 +7,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
+from sklearn.metrics import f1_score
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 
 warnings.filterwarnings('ignore')
@@ -59,16 +62,24 @@ class ModelBasic:
 
         pred_l = self.__model.predict(X_in)
         pred_p = self.__model.predict_proba(X_in)[:, 1]
-        score = round(self.__model.score(X_in, y_in), 2)
+
+        tn, fp, fn, tp = confusion_matrix(y_in, pred_l, labels=[0, 1]).ravel()
+        sens = tp / (tp + fn)
+        spec = tn / (fp + tn)
+        r2 = round(self.__model.score(X_in, y_in), 4)
+        f1 = round(f1_score(y_in, pred_l, average='binary'), 4)
+        auc = round(roc_auc_score(y_in, pred_p), 4)
         report = classification_report(y_in, pred_l)
-        rocauc = roc_auc_score(y_in, pred_p)
 
         perform_rs = {
             'label': pred_l,
             'prob': pred_p,
-            'score': score,
+            'f1': f1,
+            'r2': r2,
+            'sens': sens,
+            'spec': spec,
+            'auc': auc,
             'report': report,
-            'rocauc': rocauc
         }
 
         return perform_rs

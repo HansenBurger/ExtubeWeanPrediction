@@ -23,6 +23,11 @@ class KFoldMain(Basic):
         self.__fold_data = []
         self.__fold_para = []
         self.__fold_pred = []
+        self.__ave_result = {}
+
+    @property
+    def ave_result(self):
+        return self.__ave_result
 
     def DataSetBuild(self, data_, col_label):
 
@@ -105,10 +110,24 @@ class KFoldMain(Basic):
         repr_gen = lambda dict_: ('\n').join(k + ':\t' + str(v)
                                              for k, v in dict_.items())
 
-        ave_auc = sum([fold['rocauc']
+        ave_auc = sum([fold['auc']
                        for fold in self.__fold_pred]) / self.__fold_num
-        ave_r2 = sum([fold['score']
+        ave_f1 = sum([fold['f1']
                       for fold in self.__fold_pred]) / self.__fold_num
+        ave_r2 = sum([fold['r2']
+                      for fold in self.__fold_pred]) / self.__fold_num
+        ave_sens = sum([fold['sens']
+                        for fold in self.__fold_pred]) / self.__fold_num
+        ave_spec = sum([fold['spec']
+                        for fold in self.__fold_pred]) / self.__fold_num
+
+        self.__ave_result = {
+            'auc': ave_auc,
+            'f1': ave_f1,
+            'r2': ave_r2,
+            'sens': ave_sens,
+            'spec': ave_spec
+        }
 
         with open(save_path / 'pred_result.txt', 'w') as f:
             for i in range(self.__fold_num):
@@ -116,8 +135,9 @@ class KFoldMain(Basic):
                 fold_para = self.__fold_para[i]
 
                 f.write('\n{0}-Fold:\n'.format(i))
-                f.write('SCORE: \t {0} \n'.format(fold_info['score']))
-                f.write('ROCAUC: \t {0} \n'.format(fold_info['rocauc']))
+                f.write('ROCAUC: \t {0} \n'.format(fold_info['auc']))
+                f.write('F1-SCORE: \t {0} \n'.format(fold_info['f1']))
+                f.write('R2-SCORE: \t {0} \n'.format(fold_info['r2']))
                 f.write('REPORT: \n {0} \n'.format(fold_info['report']))
                 f.write('PARAMS: \n {0} \n'.format(repr_gen(fold_para)))
 
@@ -136,10 +156,16 @@ class KFoldMain(Basic):
         pred_df['mode'] = [
             'fold_' + str(i + 1) for i in range(self.__fold_num)
         ] + ['ave']
-        pred_df['auc'] = [round(i['rocauc'], 2)
-                          for i in self.__fold_pred] + [round(ave_auc, 2)]
-        pred_df['r2'] = [round(i['score'], 2)
-                         for i in self.__fold_pred] + [round(ave_r2, 2)]
+        pred_df['auc'] = [round(i['auc'], 3)
+                          for i in self.__fold_pred] + [round(ave_auc, 3)]
+        pred_df['f1'] = [round(i['f1'], 3)
+                         for i in self.__fold_pred] + [round(ave_f1, 3)]
+        pred_df['r2'] = [round(i['r2'], 3)
+                         for i in self.__fold_pred] + [round(ave_r2, 3)]
+        pred_df['sens'] = [round(i['sens'], 3)
+                           for i in self.__fold_pred] + [round(ave_sens, 3)]
+        pred_df['spec'] = [round(i['spec'], 3)
+                           for i in self.__fold_pred] + [round(ave_spec, 3)]
 
         pred_df.set_index('mode', drop=True)
         pd.DataFrame.to_csv(pred_df,
