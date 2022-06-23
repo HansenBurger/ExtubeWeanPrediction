@@ -6,10 +6,9 @@ Distribution, Bloodgas, Biochemistr, Medical score
 import sys
 import pandas as pd
 from pathlib import Path
-from pylatex import Document, Package, Section, LongTable
-from pylatex.utils import bold, italic, NoEscape
 from pylatex.section import Paragraph
-from matplotlib import pyplot as plt
+from pylatex import Document, Package, LongTable
+from pylatex.utils import bold, italic, NoEscape
 
 sys.path.append(str(Path.cwd()))
 

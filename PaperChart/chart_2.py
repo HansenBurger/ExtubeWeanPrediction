@@ -4,14 +4,13 @@ import seaborn as sns
 from pathlib import Path
 from matplotlib import pyplot as plt
 
-from pylatex import Document, Package, Section, LongTable, Figure, SubFigure, Command
-from pylatex.utils import bold, italic, NoEscape
 from pylatex.section import Paragraph
+from pylatex.utils import bold, NoEscape
+from pylatex import Document, Package, Figure, SubFigure, Command
 
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, SaveGen
-from Classes.ORM.expr import LabExtube, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 
 p_name = 'Chart_2_Heatmap'

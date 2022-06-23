@@ -1,5 +1,3 @@
-from cProfile import label
-from turtle import color
 import pandas as pd
 import seaborn as sns
 from numpy import ndarray
@@ -163,5 +161,20 @@ class PlotMain():
                    colors='teal',
                    label='vline_multiple - partial height')
         plt.title(fig_n, fontdict={'fontsize': 20})
+        plt.savefig(save_loc)
+        plt.close()
+
+    def ViolinPlot(self,
+    x:str,
+                   y: str,
+                   df: pd.DataFrame,
+                   fig_n: str,
+                   hue: str = None):
+        save_loc = self.__SaveRouteGen(fig_n)
+        fig_dims = (5, 8)
+        fig, ax = plt.subplots(figsize=fig_dims)
+        sns.set_theme(style="whitegrid")
+        sns.violinplot(x=x,y=y, data=df, hue=hue)
+        plt.tight_layout()
         plt.savefig(save_loc)
         plt.close()

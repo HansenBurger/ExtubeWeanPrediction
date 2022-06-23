@@ -6,6 +6,7 @@ sys.path.append(str(Path.cwd()))
 
 from Classes.Domain.layer_p import PatientVar
 from Classes.Func.KitTools import PathVerify
+from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import PerfomAssess
 from Classes.MLD.processfunc import DataSetProcess
 from Classes.MLD.balancefunc import BalanSMOTE
@@ -169,14 +170,14 @@ class FeatureProcess(Basic):
 
             p_cate = 'binary' if col_met in bin_cols else 'continuous'
             p, rs_pos, rs_neg = process.PAssess(cate=p_cate)
-            # log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
+            log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {
                 'met': col_met,
                 'P': p,
                 'AUC': auc,
-                # 'LogReg': log_auc,
-                # 'LogRegDiff': log_diff,
+                'LogReg': log_auc,
+                'LogRegDiff': log_diff,
                 'rs_0': rs_neg,
                 'size_0': n_neg,
                 'rs_1': rs_pos,
@@ -237,6 +238,16 @@ class FeatureProcess(Basic):
             for feat_col in feats_slt.met:
                 if data_[feat_col].dtype == 'bool':
                     data_[feat_col] = data_[feat_col].astype(int)
+
+            plot_p = PlotMain(self.__save_p)
+            for feat_col in feats_slt.met:
+                df_tmp = data_[[self.__col_l, feat_col]]
+                df_tmp['all'] = ''
+                plot_p.ViolinPlot(x='all',
+                                  y=feat_col,
+                                  df=df_tmp,
+                                  fig_n=feat_col,
+                                  hue=self.__col_l)
 
         pd.DataFrame.to_csv(data_,
                             self.__save_p / 'sample_data_slt.csv',
