@@ -6,8 +6,9 @@ Distribution, Bloodgas, Biochemistr, Medical score
 import sys
 import pandas as pd
 from pathlib import Path
-from pylatex import Document, Package, Section, NoEscape, LongTabu, LongTable
-from pylatex.utils import bold, NoEscape
+from pylatex import Document, Package, Section, LongTable
+from pylatex.utils import bold, italic, NoEscape
+from pylatex.section import Paragraph
 from matplotlib import pyplot as plt
 
 sys.path.append(str(Path.cwd()))
@@ -16,7 +17,7 @@ from Classes.Func.KitTools import ConfigRead, SaveGen
 from Classes.ORM.expr import LabExtube, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 
-p_name = 'Chart_1_PatientStatic'
+p_name = 'Chart_1_Baseline'
 mode_s = [
     'Extube_30_PSV_Nad', 'Extube_30_SumP12_Nad', "Extube_60_PSV_Nad",
     "Extube_60_SumP12_Nad"
@@ -59,19 +60,16 @@ def main(mode_: str):
     feat_df = feat_df.rename(col_map, axis=1)
     feat_df = feat_df[col_map.values()]
 
-    pd.DataFrame.to_csv(feat_df, save_form / 'dist_table.csv', index=False)
-    pd.DataFrame.to_latex(feat_df,
-                          save_form / 'dist_table.tex',
-                          escape=False,
-                          index=False)
+    feat_df.to_csv(save_form / 'dist_table.csv', index=False)
+    feat_df.to_latex(save_form / 'dist_table.tex', escape=False, index=False)
 
     doc = GenLatexPdf(feat_df)
-    doc.generate_pdf(str(save_form / 'dist_full'), clean_tex=False)
+    doc.generate_pdf(str(save_form / 'chart_1'), clean_tex=False)
 
 
-def GetWholeNameMap():
+def GetWholeNameMap() -> dict:
     tot_map = {}
-    name_map = ConfigRead(cate='LabFeatNameMap', file=json_loc)
+    name_map = ConfigRead(cate='Chart1NameMap', file=json_loc)
 
     for map_ in name_map.keys():
         for k, v in name_map.get(map_).items():
@@ -88,10 +86,19 @@ def GetWholeNameMap():
     return tot_mapping
 
 
-def GenLatexPdf(df: pd.DataFrame):
+def GenLatexPdf(df: pd.DataFrame) -> Document:
     geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
     doc = Document(geometry_options=geometry_options)
     doc.packages.append(Package('booktabs'))
+
+    chart_description = r'''
+    Values are given as mean (± sd), median (IQR), or proportion (\%) and 
+    compared between the two groups using the Mann-Whitney test or using the 
+    students' t-test. '''
+
+    with doc.create(Paragraph('')) as title:
+        title.append(bold('Table.1 '))
+        title.append(italic('Baseline Characters of sample included'))
 
     with doc.create(LongTable('llrlrr', row_height=1.5)) as data_table:
         data_table.add_hline()
@@ -103,6 +110,9 @@ def GenLatexPdf(df: pd.DataFrame):
             row = row.values.flatten().tolist()
             data_table.add_row(row, escape=False)
         data_table.add_hline()
+
+    with doc.create(Paragraph('')) as tail:
+        tail.append(NoEscape(chart_description))
 
     return doc
 

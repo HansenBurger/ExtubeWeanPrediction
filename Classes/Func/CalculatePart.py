@@ -504,7 +504,7 @@ class PerfomAssess(Basic):
         def GetDist_2(arr):
             len_0 = np.sum(arr == 0)
             len_1 = np.sum(arr == 1)
-            ratio = round(len_0 / len(arr), 3)
+            ratio = round(len_0 / len(arr) * 100, 2)
             dist_ = '{0} ({1})'.format(len_0, ratio)
             return dist_
 

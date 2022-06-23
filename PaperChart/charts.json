@@ -5,10 +5,10 @@
         "Extube_60_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_PSV_Nad",
         "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_SumP12_Nad"
     },
-    "LabFeatNameMap": {
+    "Chart1NameMap": {
         "Statistics": {
             "age": "Age (yr)",
-            "sex": "Male (ratio)",
+            "sex": "Male (\\%)",
             "bmi": "BMI",
             "mv_t": "MV Still Time (h)"
         },
@@ -52,6 +52,36 @@
         "MedicalScore": {
             "sofa": "SOFA",
             "apache": "APACHE"
+        }
+    },
+    "Chart2NameMap": {
+        "Indicators": {
+            "rr": "RR",
+            "v_t": "V_t",
+            "ve": "MV",
+            "wob": "WOB",
+            "mp_jl_d": "MP_d(J/L)",
+            "mp_jm_d": "MP_d(J/m)",
+            "mp_jl_t": "MP_t(J/L)",
+            "mp_jm_t": "MP_t(J/m)"
+        },
+        "Methods": {
+            "ave": "AVE",
+            "med": "MED",
+            "std": "STD",
+            "cv": "CV",
+            "qua": "QUA",
+            "tqua": "TQUA",
+            "sd1": "SD_1",
+            "sd2": "SD_2",
+            "pi": "PI",
+            "gi": "GI",
+            "si": "SI",
+            "app": "ApEn",
+            "samp": "SampEn",
+            "fuzz": "FuzzyEn",
+            "ac": "PRSA(AC)",
+            "dc": "PRSA(DC)"
         }
     }
 }
