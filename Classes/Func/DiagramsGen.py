@@ -16,8 +16,19 @@ class PlotMain():
         s_l = self.__safe_loc / (fig_n + '.png')
         return s_l
 
-    def lmplot(self, x_label, y_labels, df, fig_name):
-        #s ave_loc = self.__safe_loc / (fig_name + '.png')
+    def lmplot(self,
+               x_label: str,
+               y_label: str,
+               hue_label: str,
+               df: pd.DataFrame,
+               fig_name: str = '') -> None:
+        sns.set_theme(style='whitegrid')
+        plt.subplots(figsize=(0.01 * df.shape[0], 6))
+        sns.lmplot(x=x_label, y=y_label, data=df, hue=hue_label)
+        plt.tight_layout()
+        plt.show()
+
+    def linesplot(self, x_label, y_labels, df, fig_name):
         save_loc = self.__SaveRouteGen(fig_name)
         sns.set_theme(style='whitegrid')
         plt.figure(figsize=(1 * df.shape[0], 6))
@@ -165,7 +176,7 @@ class PlotMain():
         plt.close()
 
     def ViolinPlot(self,
-    x:str,
+                   x: str,
                    y: str,
                    df: pd.DataFrame,
                    fig_n: str,
@@ -174,7 +185,7 @@ class PlotMain():
         fig_dims = (5, 8)
         fig, ax = plt.subplots(figsize=fig_dims)
         sns.set_theme(style="whitegrid")
-        sns.violinplot(x=x,y=y, data=df, hue=hue)
+        sns.violinplot(x=x, y=y, data=df, hue=hue)
         plt.tight_layout()
         plt.savefig(save_loc)
         plt.close()

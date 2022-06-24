@@ -6,10 +6,8 @@ sys.path.append(str(Path.cwd()))
 from func import LocInit, TableQuery, PidVarCount, VarStatistics, VarInfoCollect
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
-p_name = 'VarAnalysis_60min'
-mode_s = [
-    'Extube_PSV_Nad', 'Extube_SumP12_Nad', 'Wean_PSV_Nad', 'Wean_SumP12_Nad'
-]
+p_name = 'VarAnalysis_60min_add'
+mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
 

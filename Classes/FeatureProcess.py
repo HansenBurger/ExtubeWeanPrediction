@@ -223,9 +223,14 @@ class FeatureProcess(Basic):
         recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
         feat_val = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
 
+        # self.__feat = self.__feat.sort_values(by=['P'], ascending=True)
+        # self.__feat = self.__feat.reset_index(drop=True)
+
         feats_slt = self.__feat[self.__feat.met.isin(feat_val[feat_val].index)]
         feats_slt = feats_slt.sort_values(by=['P'], ascending=True)
         feats_slt = feats_slt.reset_index(drop=True)
+        # feats_slt = self.__feat[feats_slt.shape[0]:feats_slt.shape[0] * 2]
+        # feats_slt = feats_slt.reset_index(drop=True)
         self.__feat = feats_slt
         pd.DataFrame.to_csv(feats_slt,
                             self.__save_p / 'feature_attr_slt.csv',
@@ -234,20 +239,22 @@ class FeatureProcess(Basic):
         if feats_slt.empty or len(data_.end.unique()) == 1:
             data_ = pd.DataFrame()
         else:
+            # data_ = self.__data.loc[recs_val]
+            # data_ = self.__data.loc[:, [self.__col_l] + feats_slt.met.tolist()]
             data_ = data_.loc[recs_val, feat_val]
             for feat_col in feats_slt.met:
                 if data_[feat_col].dtype == 'bool':
                     data_[feat_col] = data_[feat_col].astype(int)
 
-            plot_p = PlotMain(self.__save_p)
-            for feat_col in feats_slt.met:
-                df_tmp = data_[[self.__col_l, feat_col]]
-                df_tmp['all'] = ''
-                plot_p.ViolinPlot(x='all',
-                                  y=feat_col,
-                                  df=df_tmp,
-                                  fig_n=feat_col,
-                                  hue=self.__col_l)
+            # plot_p = PlotMain(self.__save_p)
+            # for feat_col in feats_slt.met:
+            #     df_tmp = data_[[self.__col_l, feat_col]]
+            #     df_tmp['all'] = ''
+            #     plot_p.ViolinPlot(x='all',
+            #                       y=feat_col,
+            #                       df=df_tmp,
+            #                       fig_n=feat_col,
+            #                       hue=self.__col_l)
 
         pd.DataFrame.to_csv(data_,
                             self.__save_p / 'sample_data_slt.csv',

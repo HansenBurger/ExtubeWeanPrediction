@@ -15,6 +15,7 @@ from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, FromkeysReid
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import SenSpecCounter, PerfomAssess
+from FlowCalibration.incators_calculate import RespValStatic
 
 static = StaticData()
 dynamic = DynamicData()
@@ -119,6 +120,7 @@ def PidVarCount(t_set: int, pid_s: list = []):
             print('{0}\' has no valid data'.format(pid))
             continue
         else:
+            RespValStatic(pid_obj.resp_l)
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(static.methods)
             process_1.TensorStorage(dynamic.s_f_fold)
