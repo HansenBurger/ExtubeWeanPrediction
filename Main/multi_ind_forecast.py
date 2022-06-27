@@ -11,7 +11,7 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-30min&60min-FakeFeat'
+p_name = 'MultiInd-30min&60min-STD3'
 mode_s = [
     'Extube_PSV_Nad-30', 'Extube_SumP12_Nad-30', 'Extube_PSV_Nad-60',
     'Extube_SumP12_Nad-60'

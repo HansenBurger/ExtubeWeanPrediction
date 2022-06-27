@@ -4,7 +4,7 @@
         "WeanDB": "C:\\Main\\Data\\_\\Database\\sqlite\\RespdataWean_2203.db"
     },
     "RespData": {
-        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\RespData_220613.db"
+        "Main": "C:\\Main\\Data\\_\\Database\\sqlite\\220613\\RespData.db"
     },
     "WaveData": {
         "Extube": "C:\\Main\\Data\\_\\WaveData\\Extube\\Records",
@@ -15,10 +15,10 @@
         "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
     },
     "VarData": {
-        "Extube_PSV_Nad-30": "C:\\Main\\Data\\_\\Result\\Form\\20220606_21_VarAnalysis_30min\\Extube_PSV_Nad",
-        "Extube_SumP12_Nad-30": "C:\\Main\\Data\\_\\Result\\Form\\20220606_21_VarAnalysis_30min\\Extube_SumP12_Nad",
-        "Extube_PSV_Nad-60": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_PSV_Nad",
-        "Extube_SumP12_Nad-60": "C:\\Main\\Data\\_\\Result\\Form\\20220612_20_VarAnalysis_60min\\Extube_SumP12_Nad",
+        "Extube_PSV_Nad-30": "C:\\Main\\Data\\_\\Result\\Form\\20220627_16_VarAnalysis_30min_IndDist(STD3)\\Extube_PSV_Nad",
+        "Extube_SumP12_Nad-30": "C:\\Main\\Data\\_\\Result\\Form\\20220627_16_VarAnalysis_30min_IndDist(STD3)\\Extube_SumP12_Nad",
+        "Extube_PSV_Nad-60": "C:\\Main\\Data\\_\\Result\\Form\\20220627_17_VarAnalysis_60min_IndDist(STD3)\\Extube_PSV_Nad",
+        "Extube_SumP12_Nad-60": "C:\\Main\\Data\\_\\Result\\Form\\20220627_17_VarAnalysis_60min_IndDist(STD3)\\Extube_SumP12_Nad",
         "Wean_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220616_22_VarAnalysis_30min\\Wean_PSV_Nad",
         "Wean_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220616_22_VarAnalysis_30min\\Wean_SumP12_Nad"
     },

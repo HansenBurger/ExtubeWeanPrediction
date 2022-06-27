@@ -28,6 +28,8 @@ class Basic():
             else:
                 obj = PatientVar()
                 info_ = file.name.split('_')
+                if info_[0] == '1518992':
+                    continue
                 obj.pid = int(info_[0])
                 obj.end = int(info_[1])
                 obj.icu = str(info_[2])
@@ -60,6 +62,7 @@ class FeatureLoader(Basic):
         data_ = data_.rename(columns={'rmk_t': 'rmk'})
         data_ = data_.sort_values('pid')
         data_ = data_.reset_index(drop=True)
+        # data_ = data_[data_.pid != 1518992]
 
         return data_
 
@@ -246,15 +249,18 @@ class FeatureProcess(Basic):
                 if data_[feat_col].dtype == 'bool':
                     data_[feat_col] = data_[feat_col].astype(int)
 
-            # plot_p = PlotMain(self.__save_p)
-            # for feat_col in feats_slt.met:
-            #     df_tmp = data_[[self.__col_l, feat_col]]
-            #     df_tmp['all'] = ''
-            #     plot_p.ViolinPlot(x='all',
-            #                       y=feat_col,
-            #                       df=df_tmp,
-            #                       fig_n=feat_col,
-            #                       hue=self.__col_l)
+            feat_violin = self.__save_p / 'feat_violin'
+            feat_violin.mkdir(parents=True, exist_ok=True)
+
+            plot_p = PlotMain(self.__save_p)
+            for feat_col in feats_slt.met:
+                df_tmp = data_[[self.__col_l, feat_col]]
+                df_tmp['all'] = ''
+                plot_p.ViolinPlot(x='all',
+                                  y=feat_col,
+                                  df=df_tmp,
+                                  fig_n=feat_col,
+                                  hue=self.__col_l)
 
         pd.DataFrame.to_csv(data_,
                             self.__save_p / 'sample_data_slt.csv',

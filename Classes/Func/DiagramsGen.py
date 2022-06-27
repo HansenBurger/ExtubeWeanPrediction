@@ -22,14 +22,25 @@ class PlotMain():
                hue_label: str,
                df: pd.DataFrame,
                fig_name: str = '') -> None:
+        save_loc = self.__SaveRouteGen(fig_name)
+        fig_dims = (14, 6)
+        sns.reset_orig()
         sns.set_theme(style='whitegrid')
-        plt.subplots(figsize=(0.01 * df.shape[0], 6))
-        sns.lmplot(x=x_label, y=y_label, data=df, hue=hue_label)
+        plt.subplots(figsize=fig_dims)
+        df_0 = df[df[hue_label]]
+        df_1 = df[~df[hue_label]]
+        plt.scatter(df_0[x_label], df_0[y_label], c='darkblue', marker='o')
+        plt.scatter(df_1[x_label], df_1[y_label], c='firebrick', marker='x')
+        plt.title(y_label, fontdict={'fontsize': 15})
+        plt.xlabel('Seconds (s)')
+        plt.ylabel('Value')
         plt.tight_layout()
-        plt.show()
+        plt.savefig(save_loc)
+        plt.close()
 
     def linesplot(self, x_label, y_labels, df, fig_name):
         save_loc = self.__SaveRouteGen(fig_name)
+        sns.reset_orig()
         sns.set_theme(style='whitegrid')
         plt.figure(figsize=(1 * df.shape[0], 6))
         plt.plot([0, df.shape[0]], [0.7, 0.7], 'k--')

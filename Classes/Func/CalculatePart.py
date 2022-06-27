@@ -16,6 +16,7 @@ warnings.filterwarnings('ignore')
 
 class Basic():
     def __init__(self) -> None:
+        self.round_i = 4
         pass
 
 
@@ -161,13 +162,13 @@ class IndCalculation(Basic):
         else:
             self.__valid_tag = False
 
-    def __ValRangeCheck(self, vals: list, val_range: range) -> bool:
+    def __ValRangeCheck(self, val_s: list, val_r: tuple) -> bool:
         '''
         Check if the index value is within the range
         '''
-        vals = [vals] if not type(vals) == list else vals
-        vals = [-999 if math.isnan(v) else v for v in vals]
-        tri_l = [True if round(v) in val_range else False for v in vals]
+        val_s = [val_s] if not type(val_s) == list else val_s
+        val_s = [-999 if math.isnan(v) else v for v in val_s]
+        tri_l = [True if val_r[0] <= v <= val_r[1] else False for v in val_s]
         triger = True if not False in tri_l else False
         return triger
 
@@ -178,7 +179,7 @@ class IndCalculation(Basic):
         '''
         vent_len = self.__end_ind - self.__pro_ind
         resp_t = vent_len * 1 / sample_rate
-        return round(resp_t, 2)
+        return round(resp_t, self.round_i)
 
     def RR(self, sample_rate: float) -> list:
         '''
@@ -187,8 +188,8 @@ class IndCalculation(Basic):
         '''
         vent_len = self.__end_ind - self.__pro_ind
         RR = 60 / (vent_len * 1 / sample_rate)
-        RR_val = self.__ValRangeCheck(RR, range(0, 60))
-        return round(RR, 2), RR_val
+        RR_val = self.__ValRangeCheck(RR, (0, 60))
+        return round(RR, self.round_i), RR_val
 
     def V_t(self) -> list:
         '''
@@ -199,8 +200,11 @@ class IndCalculation(Basic):
         v_ex = self.__v_ex
         v_t_i = v_in[-1]
         v_t_e = v_in[-1] + (v_ex[-1] if v_ex[-1] < 0 else -v_ex[-1])
-        v_t = {'v_t_i': round(v_t_i, 2), 'v_t_e': round(v_t_e, 2)}
-        v_t_val = self.__ValRangeCheck([v_t_i, v_t_e], range(0, 2000))
+        v_t = {
+            'v_t_i': round(v_t_i, self.round_i),
+            'v_t_e': round(v_t_e, self.round_i)
+        }
+        v_t_val = self.__ValRangeCheck([v_t_i, v_t_e], (0, 2000))
         return v_t, v_t_val
 
     def WOB(self) -> list:
@@ -222,12 +226,12 @@ class IndCalculation(Basic):
         wob_b = ((p_in[-1] - p_in[0]) * v_in[-1]) / 2000
         wob_a = wob - wob_b
 
-        wob_val = self.__ValRangeCheck([wob, wob_full], range(0, 20))
+        wob_val = self.__ValRangeCheck([wob, wob_full], (0, 20))
         wob_ = {
-            'wob': round(wob, 2),
-            'wob_f': round(wob_full, 2),
-            'wob_a': round(wob_a, 2),
-            'wob_b': round(wob_b, 2)
+            'wob': round(wob, self.round_i),
+            'wob_f': round(wob_full, self.round_i),
+            'wob_a': round(wob_a, self.round_i),
+            'wob_b': round(wob_b, self.round_i)
         }
         return wob_, wob_val
 
@@ -237,8 +241,8 @@ class IndCalculation(Basic):
         Unit: L/min (L/min)
         '''
         VE = rr * (v_t / 1000)
-        val = self.__ValRangeCheck(VE, range(0, 30))
-        return round(VE, 2), val
+        val = self.__ValRangeCheck(VE, (0, 30))
+        return round(VE, self.round_i), val
 
     def RSBI(self, rr: float, v_t: float) -> float:
         '''
@@ -246,7 +250,7 @@ class IndCalculation(Basic):
         Unit: Index (f/L)
         '''
         rsbi = rr / (v_t / 1000)
-        return round(rsbi, 2)
+        return round(rsbi, self.round_i)
 
     def MP_Area(self, rr: float, v_t: float, wob: float) -> list:
         '''
@@ -257,10 +261,10 @@ class IndCalculation(Basic):
         mp_jm_area = 0.098 * rr * wob
         mp_jl_area = 0.098 * wob / (v_t * 0.001)
         mp_area = {
-            'mp_jm': round(mp_jm_area, 2),
-            'mp_jl': round(mp_jl_area, 2)
+            'mp_jm': round(mp_jm_area, self.round_i),
+            'mp_jl': round(mp_jl_area, self.round_i)
         }
-        mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area], range(0, 20))
+        mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area], (0, 20))
         return mp_area, mp_val
 
 
@@ -287,7 +291,7 @@ class VarAnalysis(Basic):
             result_ = -999
             print('No match method')
 
-        return round(result_, 2)
+        return round(result_, self.round_i)
 
     def __Panglais(self, list_: list) -> np.array:
         a_0 = np.array(list_[:len(list_) - 1])
@@ -300,13 +304,15 @@ class VarAnalysis(Basic):
         a_0: Array of IND_i
         a_1: Array of IND_i+1
         '''
-        n = 0
-        m = 0
+        num_upper, num_lower = 0, 0
+        num_judge = lambda x, y: 1 if x < y else 0
+
         for i in range(len(a_0)):
-            n += 1 if a_0[i] < a_1[i] else 0
-            m += 1 if a_0[i] > a_1[i] else 0
-        pi = 100 * m / (n + m)
-        return round(pi, 2)
+            num_upper += num_judge(a_0[i], a_1[i])
+            num_lower += num_judge(a_1[i], a_0[i])
+
+        pi = 100 * num_lower / (num_upper + num_lower)
+        return round(pi, self.round_i)
 
     def __GI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
         '''
@@ -314,29 +320,32 @@ class VarAnalysis(Basic):
         a_0: Array of IND_i
         a_1: Array of IND_i+1
         '''
-        d1 = 0
-        d2 = 0
+        dis_above_sum, dis_below_sum = 0, 0
+        dis_count = lambda x, y: (y - x) / np.sqrt(2) if x < y else 0
+
         for i in range(len(a_0)):
-            d1 += (a_1[i] - a_0[i]) / np.sqrt(2) if a_0[i] < a_1[i] else 0
-            d2 += (a_0[i] - a_1[i]) / np.sqrt(2) if a_0[i] > a_1[i] else 0
-        gi = 100 * d1 / (d1 + d2)
-        return round(gi, 2)
+            dis_above_sum += dis_count(a_0[i], a_1[i])
+            dis_below_sum += dis_count(a_1[i], a_0[i])
+        gi = 100 * dis_above_sum / (dis_above_sum + dis_below_sum)
+        return round(gi, self.round_i)
 
     def __SI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
         '''
         Count SI(the phase angle difference of the points above LI)
-        a_0: Array of IND_i
-        a_1: Array of IND_i+1
+        a_0: Array of IND_i (>=0)
+        a_1: Array of IND_i+1 (>=0)
         '''
-        theta_1 = 0
-        theta_2 = 0
+        theta_above_sum, theta_below_sum = 0, 0
+        a_0, a_1 = np.abs(a_0), np.abs(a_1)  # make sure all positive
+        theta_count = lambda x, y: np.degrees(np.arctan(y / x)
+                                              ) - 45 if x < y else 0
+
         for i in range(len(a_0)):
-            theta_1 += (np.degrees(np.arctan(a_1[i] / a_0[i])) -
-                        45) if a_0[i] < a_1[i] else 0
-            theta_2 += (-np.degrees(np.arctan(a_1[i] / a_0[i])) +
-                        45) if a_0[i] > a_1[i] else 0
-        si = 100 * theta_1 / (theta_1 + theta_2)
-        return round(si, 2)
+            theta_above_sum += theta_count(a_0[i], a_1[i])
+            theta_below_sum += theta_count(a_1[i], a_0[i])
+
+        si = 100 * theta_above_sum / (theta_above_sum + theta_below_sum)
+        return round(si, self.round_i)
 
     def HRA(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
@@ -360,7 +369,7 @@ class VarAnalysis(Basic):
         a_1: Array of IND_i+1
         '''
         sd = np.std(a_1 - a_0) / np.sqrt(2)
-        return round(sd, 2)
+        return round(sd, self.round_i)
 
     def __SD2(self, a_0, a_1):
         '''
@@ -369,7 +378,7 @@ class VarAnalysis(Basic):
         a_1: Array of IND_i+1
         '''
         sd = np.std(a_1 + a_0) / np.sqrt(2)
-        return round(sd, 2)
+        return round(sd, self.round_i)
 
     def HRV(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
@@ -396,7 +405,7 @@ class VarAnalysis(Basic):
             result_ = -999
             print('No match method')
 
-        return round(result_[-1], 2)
+        return round(result_[-1], self.round_i)
 
     def __SpaceGen(self, arr, fs):
         ind_0 = arr.min()
@@ -457,7 +466,7 @@ class VarAnalysis(Basic):
         arr_para_s = np.array([WtJudge(i / s) for i in arr_axis_s])
         prsa_ana = np.sum(arr_prsa_s * arr_para_s / s)
 
-        return round(prsa_ana, 4)
+        return round(prsa_ana, self.round_i)
 
 
 class PerfomAssess(Basic):

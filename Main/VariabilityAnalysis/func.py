@@ -15,7 +15,7 @@ from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, FromkeysReid
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import SenSpecCounter, PerfomAssess
-from FlowCalibration.incators_calculate import RespValStatic
+from FlowCalibration.incators_calculate import RespValStatic, PanglaisScatter
 
 static = StaticData()
 dynamic = DynamicData()
@@ -33,35 +33,53 @@ def LocInit(s_f: Path, s_g: Path, mode_name: str):
     dynamic.pid_dr_s = {}
 
 
-def TableQuery(mode_name: str):
+def TableQuery(mode_name: str, mv_t_ran: tuple):
     '''
     '''
     mode_i = mode_name.split('_')
-    src_0 = static.p_basic_i
-    src_1 = static.cate_info[mode_i[0]][mode_i[1]]
+    src_0 = static.cate_info[mode_i[0]][mode_i[1]]
 
-    def NonAgedIll():
+    # src_2 = static.op_basic_i
+
+    def NonAgedIll(src_1: any) -> list:
         '''
         '''
         join_info = {
-            'dest': src_0,
-            'on': src_0.pid == src_1.pid,
+            'dest': src_1,
+            'on': src_1.pid == src_0.pid,
             'attr': 'pinfo'
         }
         col_rmk = [
-            src_0.rmk, src_0.rmk_i, src_0.rmk_i_, src_0.rmk_o, src_0.rmk_o_
+            src_1.rmk, src_1.rmk_i, src_1.rmk_i_, src_1.rmk_o, src_1.rmk_o_
         ]
-        c_age = src_0.age <= 75
+        c_age = src_1.age <= 75
         c_d = lambda x: (x.is_null()) | (~x.contains('脑') & ~x.contains('神经'))
         c_d_rmk = reduce(lambda x, y: x & y, [c_d(col) for col in col_rmk])
-        que_l = src_1.select(src_1.pid).join(**join_info).where(c_age
+        que_l = src_0.select(src_0.pid).join(**join_info).where(c_age
                                                                 & c_d_rmk)
-        pid_l = [que.pid for que in que_l.group_by(src_1.pid)]
+        pid_l = [que.pid for que in que_l.group_by(src_0.pid)]
         return pid_l
 
-    c_Nad = src_1.pid.in_(NonAgedIll()) if len(mode_i) > 2 else src_1.pid > 0
-    c_Nrid = ~src_1.pid.in_(static.cate_info[mode_i[0]]['multirid'])
-    que = src_1.select().where(c_Nad & c_Nrid)
+    def MVRange(src_1: any) -> list:
+        '''
+        '''
+        join_info = {
+            'dest': src_1,
+            'on': src_1.pid == src_0.pid,
+            'attr': 'pinfo'
+        }
+        c_mv = (src_1.mv_t >= mv_t_ran[0]) & (src_1.mv_t <= mv_t_ran[1])
+        que_l = src_0.select(src_0.pid).join(**join_info).where(c_mv)
+        pid_l = [que.pid for que in que_l.group_by(src_0.pid)]
+        return pid_l
+
+    c_pid_test = src_0.pid > 0
+    c_Nad = src_0.pid.in_(NonAgedIll(
+        static.p_basic_i)) if len(mode_i) > 2 else src_0.pid > 0
+    c_Nrid = ~src_0.pid.in_(static.cate_info[mode_i[0]]['multirid'])
+    c_mv_t = src_0.pid.in_(MVRange(static.op_basic_i))
+
+    que = src_0.select().where(c_Nad & c_Nrid & c_mv_t & c_pid_test)
 
     df = pd.DataFrame(list(que.dicts()))
     df = df.drop('index', axis=1)
@@ -120,7 +138,10 @@ def PidVarCount(t_set: int, pid_s: list = []):
             print('{0}\' has no valid data'.format(pid))
             continue
         else:
-            RespValStatic(pid_obj.resp_l)
+            resp_ind_save = dynamic.s_g_fold / 'IndInfo' / str(pid_obj.pid)
+            resp_ind_save.mkdir(parents=True, exist_ok=True)
+            pid_obj.resp_l = RespValStatic(pid_obj.resp_l, resp_ind_save)
+            # PanglaisScatter(pid_obj.resp_l, '')
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(static.methods)
             process_1.TensorStorage(dynamic.s_f_fold)

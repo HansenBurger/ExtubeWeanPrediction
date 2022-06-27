@@ -3,6 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
+from Classes.ORM.basic import OutcomeExWean
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
@@ -16,27 +17,17 @@ class StaticData(Basic):
     def __init__(self) -> None:
         super().__init__()
         self.__p_basic_i = PatientInfo
+        self.__op_basic_i = OutcomeExWean
         self.__cate_info = {
             'Extube': {
-                'PSV':
-                ExtubePSV,
-                'SumP12':
-                ExtubeSumP12,
-                'multirid': [
-                    2417319, 5597021, 5616583, 5694206, 6447979, 6584930,
-                    6750903, 6828867
-                ]
+                'PSV': ExtubePSV,
+                'SumP12': ExtubeSumP12,
+                'multirid': [6828867, 6750903, 6447979, 3469338, 2417319]
             },
             'Wean': {
-                'PSV':
-                WeanPSV,
-                'SumP12':
-                WeanSumP12,
-                'multirid': [
-                    2417319, 3351693, 4151492, 4281275, 4455851, 5597021,
-                    5628925, 5694206, 6396656, 6447142, 6447979, 6750903,
-                    6828867, 6983384
-                ]
+                'PSV': WeanPSV,
+                'SumP12': WeanSumP12,
+                'multirid': []
             }
         }
         self.__ind_range = {
@@ -56,6 +47,10 @@ class StaticData(Basic):
     @property
     def p_basic_i(self):
         return self.__p_basic_i
+
+    @property
+    def op_basic_i(self):
+        return self.__op_basic_i
 
     @property
     def cate_info(self):

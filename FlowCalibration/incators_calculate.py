@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
-from Classes.Func.DiagramsGen import PlotMain
+from Classes.Func.DiagramsGen import PlotMain, plt
 
 ind_s = [
     'rr', 'v_t_i', 've', 'rsbi', 'wob', 'mp_jm_d', 'mp_jl_d', 'mp_jm_t',
@@ -13,35 +13,46 @@ ind_s = [
 ]
 
 
-def GetOutliers(arr_: np.array, max_d: int = 4):
+def GetOutliers(arr_: np.array, max_d: int = 3):
     dis_mean = arr_ - np.mean(arr_)
     outliers = dis_mean > max_d * np.std(arr_)
     return outliers
 
 
-def OutliersDel(self,
-                array_1: np.array,
-                array_2: np.array,
-                max_deviation: int = 4) -> None:
-
-    arr_1_outs = GetOutliers(array_1, max_deviation)
-    arr_2_outs = GetOutliers(array_2, max_deviation)
-
-    arrs_not_outs = ~(arr_1_outs | arr_2_outs)
-
-    array_1 = array_1[arrs_not_outs]
-    array_2 = array_2[arrs_not_outs]
-
-    return array_1, array_2
-
-
-def RespValStatic(resp_l: list):
+def RespValStatic(resp_l: list, save_loc: Path):
     df = pd.DataFrame()
     wid_l = [resp.wid for resp in resp_l]
+    tot_len = round(sum(wid_l), 2)
+    df['t_wid'] = wid_l
     df['t_ind'] = [sum(wid_l[0:i]) for i in range(len(wid_l))]
-    p_plot = PlotMain()
+    p_plot = PlotMain(save_loc)
     for ind in ind_s:
         df[ind] = [getattr(resp, ind) for resp in resp_l]
         df[ind + '_val'] = ~GetOutliers(df[ind])
-        p_plot.lmplot('t_ind', ind, ind + '_val', df)
-        a = 1
+        p_plot.lmplot('t_ind', ind, ind + '_val', df, 'dist_' + ind)
+    df_val = df[df[[ind + '_val' for ind in ind_s]].all(axis=1)]
+    resp_val_l = [resp_l[i] for i in df_val.index]
+
+    df.to_csv(save_loc / 'resp_ind_all.csv', index=False)
+    df_val.to_csv(save_loc / 'resp_ind_val.csv', index=False)
+    val_len = round(sum(df_val.t_wid), 2)
+
+    with open(save_loc / 'tot_{0},val_{1}.txt'.format(tot_len, val_len),
+              'w') as f:
+        pass
+
+    return resp_val_l
+
+
+def PanglaisScatter(resp_l: list, save_loc: Path):
+    def __Panglais(list_: list) -> np.array:
+        a_0 = np.array(list_[:len(list_) - 1])
+        a_1 = np.array(list_[1:])
+        return a_0, a_1
+
+    mp_jl_t_0, mp_jl_t_1 = __Panglais([resp.mp_jl_t for resp in resp_l])
+    mp_jl_d_0, mp_jl_d_1 = __Panglais([resp.mp_jl_d for resp in resp_l])
+    a = sum([resp.wid for resp in resp_l])
+    plt.plot(mp_jl_d_0, mp_jl_d_1, 'bo')
+    plt.show()
+    plt.close()
