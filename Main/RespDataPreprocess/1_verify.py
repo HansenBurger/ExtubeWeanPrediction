@@ -1,25 +1,24 @@
 import sys
 from pathlib import Path
 from datetime import datetime
+from data import StaticData
 
 sys.path.append(str(Path.cwd()))
 
 from Classes.ExtractSplice import ExtractSplice
 from Classes.TypesInstant import RecordInfo
-from Classes.ORM.basic import ExtubePrep, WeanPrep
 from Classes.Func.KitTools import ConfigRead, measure
 
-mode_s = ['Extube', 'Wean']
-mode_info = {'Extube': {'class': ExtubePrep}, 'Wean': {'class': WeanPrep}}
+static = StaticData()
+mode_info = static.mode_info
+para_t_st = static.verify_st['para_t_st']
+para_n_st = static.verify_st['para_n_st']
 
 # G-5 ResampleRate: 256 -- 6776243
 
 
 @measure
 def main(mode_: str) -> None:
-
-    st_t_ran = [10, 910, 1810, 2710]
-    st_paras = ['st_mode', 'st_peep', 'st_ps']
 
     data_path = Path(ConfigRead('WaveData', mode_))
     query_list = RecQuery(mode_)
@@ -31,7 +30,7 @@ def main(mode_: str) -> None:
         main_p.ParametersInit(data_path, que_o.opt)
         reco_p = ExtractSplice(main_p.rec)
         reco_p.RecBatchesExtract([que_o.zdt], [que_o.rec_t])
-        reco_p.ParaSelecting(st_t_ran, st_paras)
+        reco_p.ParaSelecting(para_t_st, para_n_st)
 
         return main_p.rec
 
@@ -55,7 +54,7 @@ def main(mode_: str) -> None:
         else:
             vent_mode_d = para.st_mode
             peep_ps_sum_d = {}
-            for st_t in st_t_ran:
+            for st_t in para_t_st:
                 st_t_ps = para.st_ps[st_t]
                 st_t_peep = para.st_peep[st_t]
 
@@ -98,5 +97,4 @@ def RecQuery(q_mode: str, index_range: range = None):
 
 
 if __name__ == '__main__':
-    for mode_ in mode_s:
-        main(mode_)
+    main(sys.argv[1])

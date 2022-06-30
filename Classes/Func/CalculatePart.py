@@ -2,7 +2,7 @@ import math
 import warnings
 import numpy as np
 import pandas as pd
-import entropy as ent
+# import entropy as ent
 import EntropyHub as eh
 from scipy import interpolate
 from scipy.stats import mannwhitneyu

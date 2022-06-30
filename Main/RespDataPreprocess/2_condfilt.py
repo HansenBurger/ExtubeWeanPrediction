@@ -1,42 +1,19 @@
 import sys
 from pathlib import Path
+from data import StaticData
+from funcs.data_classifications import TablePrepFilt, RecTransmit, DistGenerate
 
 sys.path.append(str(Path.cwd()))
 
-from Classes.DataFiltering import TablePrepFilt, RecTransmit, DistGenerate
+from Classes.ORM.cate import db
+from Classes.ORM.basic import OutcomeExWean
 from Classes.Func.KitTools import measure, ConfigRead, SaveGen
-from Classes.ORM.basic import OutcomeExWean, ExtubePrep, WeanPrep
-from Classes.ORM.cate import db, ExtubePSV, ExtubeSumP10, ExtubeSumP12, ExtubeNotPSV, WeanPSV, WeanSumP10, WeanSumP12, WeanNotPSV
 
-mode_s = ['Extube', 'Wean']
 p_name = 'DataFilt'
-form_save = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
-graph_save = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
-mode_info = {
-    'Extube': {
-        'class': ExtubePrep,
-        'mv_t': (24, 2160),
-        'd_e_s': OutcomeExWean.ex_s,
-        'dst_c': {
-            'PSV': ExtubePSV,
-            'noPSV': ExtubeNotPSV,
-            'Sump10': ExtubeSumP10,
-            'Sump12': ExtubeSumP12
-        }
-    },
-    'Wean': {
-        'class': WeanPrep,
-        'mv_t': (24, 2160),
-        'd_e_s': OutcomeExWean.we_s,
-        'dst_c': {
-            'PSV': WeanPSV,
-            'noPSV': WeanNotPSV,
-            'Sump10': WeanSumP10,
-            'Sump12': WeanSumP12
-        }
-    }
-}
-psv_vm = ['SPONT', 'CPAP', 'APNEA VENTILATION']
+static = StaticData()
+mode_info = static.mode_info
+psv_vm = static.condfilt_st['psv_vm_names']
+ob_scale = static.condfilt_st['para_t_scale']
 
 
 @measure
@@ -45,9 +22,11 @@ def main(mode_: str) -> None:
     src_0 = OutcomeExWean
     src_1 = mode_info[mode_]['class']
     dst_d = mode_info[mode_]['dst_c']
-    s_f_p = form_save / mode_
+    s_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')),
+                  '_'.join([p_name, mode_]))
+    s_f_p = s_p / 'Form'
     s_f_p.mkdir(parents=True, exist_ok=True)
-    s_g_p = graph_save / mode_
+    s_g_p = s_p / 'Chart'
     s_g_p.mkdir(parents=True, exist_ok=True)
 
     dst_table = list(i.__name__ for i in dst_d.values())
@@ -71,7 +50,7 @@ def main(mode_: str) -> None:
 
 def ParaDistGet(mode_: str, que_o: any) -> dict:
     dst_c_d = mode_info[mode_]['dst_c']
-    classifier = RecTransmit(que_o, 1800)
+    classifier = RecTransmit(que_o, ob_scale)
     classifier.PDistBuilt()
     classifier.PSVInsert(dst_c_d['PSV'], psv_vm)
     classifier.NotPSVInsert(dst_c_d['noPSV'], psv_vm)
@@ -98,5 +77,4 @@ def TableDistGet(mode_: str, save_path: Path) -> None:
 
 
 if __name__ == '__main__':
-    for mode_ in mode_s:
-        main(mode_)
+    main(sys.argv[1])

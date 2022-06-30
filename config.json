@@ -12,7 +12,8 @@
     },
     "ResultSave": {
         "Form": "C:\\Main\\Data\\_\\Result\\Form",
-        "Graph": "C:\\Main\\Data\\_\\Result\\Graph"
+        "Graph": "C:\\Main\\Data\\_\\Result\\Graph",
+        "Mix": "C:\\Main\\Data\\_\\Result\\Mix"
     },
     "VarData": {
         "Extube_PSV_Nad-30": "C:\\Main\\Data\\_\\Result\\Form\\20220627_16_VarAnalysis_30min_IndDist(STD3)\\Extube_PSV_Nad",

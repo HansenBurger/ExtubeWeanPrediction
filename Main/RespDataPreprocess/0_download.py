@@ -1,26 +1,15 @@
 import sys
 from pathlib import Path
 from datetime import datetime
+from data import StaticData
+from funcs.data_detection import MYFTP, RecordDetect
 
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, DLToLD, measure
-from Classes.DataDownload import MYFTP, RecordDetect
-from Classes.ORM.basic import ZresParam, OutcomeExWean, ExtubePrep, WeanPrep, db, fn
+from Classes.ORM.basic import ZresParam, OutcomeExWean, db, fn
 
-mode_s = ['Extube', 'Wean']
-mode_info = {
-    'Extube': {
-        'class': ExtubePrep,
-        'tag': [3004, 129],
-        'mv_t': (24, 2160)
-    },
-    'Wean': {
-        'class': WeanPrep,
-        'tag': [],
-        'mv_t': (24, 2160)
-    }
-}
+mode_info = StaticData().mode_info
 
 
 @measure
@@ -37,6 +26,9 @@ def main(mode_: str) -> None:
     db.create_tables([dst_class])
 
     def __RecDownload(query_obj: any) -> dict:
+        '''
+        Download records in selected rid
+        '''
         ins_d = dst_class().ObjToDict()
         main_p = RecordDetect(query_obj, ins_d, mode_)
         main_p.InfoDetection(ZresParam, fn.MAX, dst_flag)
@@ -45,6 +37,9 @@ def main(mode_: str) -> None:
         return main_p.dst
 
     def __RecRegister(ins_d: dict) -> None:
+        '''
+        Update records info into tabel
+        '''
         ins_l = DLToLD(ins_d)
         dst_class.insert_many(ins_l).on_conflict('replace').execute()
 
@@ -74,6 +69,13 @@ def __FtpGen() -> MYFTP:
 def RidQuery(q_mode: str,
              mv_still: tuple = (48, 2160),
              p_range: range = None) -> list:
+    '''
+    Query the valid Rids in the patients' op-day
+    q_mode: query mode
+    mv_still: machine vent still time as part of filter
+    p_range: patient range
+    return: rid list in op day
+    '''
     src_0, src_1 = OutcomeExWean, ZresParam
 
     join_info = {
@@ -82,20 +84,8 @@ def RidQuery(q_mode: str,
         'attr': 'binfo'  # key value for query B columns from A  
     }
 
-    # Mode Define
-
-    if not type(q_mode) == str:
-        print('Wrong Type Query!')
-        return
-    elif q_mode == 'Extube':
-        end_t = src_0.ex_t
-        end_i = src_0.ex_s
-    elif q_mode == 'Wean':
-        end_t = src_0.we_t
-        end_i = src_0.we_s
-    else:
-        print('No such data collecting mode!')
-        return
+    end_i = mode_info[q_mode]['d_e_s']
+    end_t = mode_info[q_mode]['d_e_t']
 
     # Query requirement
 
@@ -105,6 +95,7 @@ def RidQuery(q_mode: str,
     c_op_exist = end_t != None
     c_same_day = pew_time('day', src_1.rec_t) == pew_time('day', end_t)
     c_mv_still = (src_0.mv_t >= mv_still[0]) & (src_0.mv_t <= mv_still[1])
+
     if not p_range:
         c_pid = src_1.pid > 0
     else:
@@ -119,5 +110,4 @@ def RidQuery(q_mode: str,
 
 
 if __name__ == '__main__':
-    for mode_ in mode_s:
-        main(mode_)
+    main(sys.argv[1])
