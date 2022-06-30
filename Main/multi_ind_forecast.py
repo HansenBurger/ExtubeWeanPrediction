@@ -11,30 +11,30 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
-p_name = 'MultiInd-30min&60min-STD3'
+p_name = 'MultiInd-30min&60min(STD3)'
 mode_s = [
     'Extube_PSV_Nad-30', 'Extube_SumP12_Nad-30', 'Extube_PSV_Nad-60',
     'Extube_SumP12_Nad-60'
 ]
 # feats_demand = {'All_in': {'p_max': 2}}
-# feats_demand = {
-#     # type_1: Only the Imp P-Feature
-#     'Type1': {},
-#     # type_2: POS/NEG GreatImp Feature
-#     'Type2': {
-#         'diff_min': 0.1
-#     },
-#     # type_3: POSImp Feature
-#     'Type3': {
-#         'auc_min': 0.5,
-#         'diff_min': 0.01
-#     },
-#     # type_4: POS GreatImp Feature
-#     'Type4': {
-#         'auc_min': 0.5,
-#         'diff_min': 0.1
-#     }
-# }
+feats_demand = {
+    # type_1: Only the Imp P-Feature
+    # 'Type1': {},
+    # type_2: POS/NEG GreatImp Feature
+    'Type2': {
+        'diff_min': 0.1
+    },
+    # # type_3: POSImp Feature
+    # 'Type3': {
+    #     'auc_min': 0.5,
+    #     'diff_min': 0.01
+    # },
+    # type_4: POS GreatImp Feature
+    'Type4': {
+        'auc_min': 0.5,
+        'diff_min': 0.1
+    }
+}
 
 s_f_path = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
 s_g_path = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
@@ -131,9 +131,9 @@ def main(mode_name, filt_type: str = ''):
 
     for group_, data_s in data_tot.items():
 
-        save_p_f = s_f_fold / group_
+        save_p_f = s_f_fold / filt_type / group_
         save_p_f.mkdir(parents=True, exist_ok=True)
-        save_p_g = s_g_fold / group_
+        save_p_g = s_g_fold / filt_type / group_
         save_p_g.mkdir(parents=True, exist_ok=True)
 
         info_col_n = ['pid', 'icu', 'end', 'rmk']
@@ -145,7 +145,7 @@ def main(mode_name, filt_type: str = ''):
         feat_var_s = data_s[0].columns.drop(info_col_n).tolist()
         feat_var_p = FeatureProcess(data_s[0], 'end', save_p_f)
         feat_var_p.FeatPerformance(feat_var_s, 'VarFeats')
-        data_slt = feat_var_p.DataSelect()
+        data_slt = feat_var_p.DataSelect(**feats_demand[filt_type])
         feat_slt = feat_var_p.feat
 
         if data_slt.empty:
@@ -155,42 +155,55 @@ def main(mode_name, filt_type: str = ''):
         for k, v in algorithm_set.items():
             if not sum(data_slt.end.value_counts() < v['split']) == 0:
                 continue
-            dict_s = []
             save_path = save_p_g / k
             save_path.mkdir(parents=True, exist_ok=True)
-            for ind in range(feat_slt.shape[0]):
-                # if ind != feat_slt.shape[0] - 1:
-                #     continue
-                dict_ = {}
-                feat_s = feat_slt.iloc[0:ind + 1].met.tolist()
-                data_tmp = data_slt.loc[:, ['end'] + feat_s]
-                model_p = KFoldMain(v['class'], v['split'])
-                model_p.DataSetBuild(data_tmp, 'end')
-                model_p.ParamSelectRand(v['s_param'], v['eval_set'])
-                model_p.CrossValidate(v['param_init'], v['param_deduce'],
-                                      v['re_select'])
-                save_ind = save_path / str(ind)
-                save_ind.mkdir(parents=True, exist_ok=True)
-                model_p.ResultGenerate(save_ind)
 
-                dict_['feat_n'] = ind + 1
-                dict_['feats'] = ('|').join(feat_s)
-                dict_['auc_mean'] = model_p.ave_result['auc']
-                dict_['f1_mean'] = model_p.ave_result['f1']
-                dict_['acc_mean'] = model_p.ave_result['r2']
-                dict_['sens_mean'] = model_p.ave_result['sens']
-                dict_['spec_mean'] = model_p.ave_result['spec']
-                dict_s.append(dict_)
+            model_p = KFoldMain(v['class'], v['split'])
+            model_p.DataSetBuild(data_slt, 'end')
+            model_p.ParamSelectRand(v['s_param'], v['eval_set'])
+            model_p.CrossValidate(v['param_init'], v['param_deduce'],
+                                  v['re_select'])
+            model_p.ResultGenerate(save_path)
 
-            df_tot = pd.DataFrame(dict_s)
-            pd.DataFrame.to_csv(df_tot,
-                                save_path / 'tot_performance.csv',
-                                index=False)
-            p_plot = PlotMain(save_path)
-            p_plot.linesplot(
-                'feat_n',
-                ['auc_mean', 'f1_mean', 'acc_mean', 'sens_mean', 'spec_mean'],
-                df_tot, 'performance')
+        # for k, v in algorithm_set.items():
+        #     if not sum(data_slt.end.value_counts() < v['split']) == 0:
+        #         continue
+        #     dict_s = []
+        #     save_path = save_p_g / k
+        #     save_path.mkdir(parents=True, exist_ok=True)
+        #     for ind in range(feat_slt.shape[0]):
+        #         # if ind != feat_slt.shape[0] - 1:
+        #         #     continue
+        #         dict_ = {}
+        #         feat_s = feat_slt.iloc[0:ind + 1].met.tolist()
+        #         data_tmp = data_slt.loc[:, ['end'] + feat_s]
+        #         model_p = KFoldMain(v['class'], v['split'])
+        #         model_p.DataSetBuild(data_tmp, 'end')
+        #         model_p.ParamSelectRand(v['s_param'], v['eval_set'])
+        #         model_p.CrossValidate(v['param_init'], v['param_deduce'],
+        #                               v['re_select'])
+        #         save_ind = save_path / str(ind)
+        #         save_ind.mkdir(parents=True, exist_ok=True)
+        #         model_p.ResultGenerate(save_ind)
+
+        #         dict_['feat_n'] = ind + 1
+        #         dict_['feats'] = ('|').join(feat_s)
+        #         dict_['auc_mean'] = model_p.ave_result['auc']
+        #         dict_['f1_mean'] = model_p.ave_result['f1']
+        #         dict_['acc_mean'] = model_p.ave_result['r2']
+        #         dict_['sens_mean'] = model_p.ave_result['sens']
+        #         dict_['spec_mean'] = model_p.ave_result['spec']
+        #         dict_s.append(dict_)
+
+        #     df_tot = pd.DataFrame(dict_s)
+        #     pd.DataFrame.to_csv(df_tot,
+        #                         save_path / 'tot_performance.csv',
+        #                         index=False)
+        #     p_plot = PlotMain(save_path)
+        #     p_plot.linesplot(
+        #         'feat_n',
+        #         ['auc_mean', 'f1_mean', 'acc_mean', 'sens_mean', 'spec_mean'],
+        #         df_tot, 'performance')
 
 
 def GetGroupByICU(data_in: list, excludings: list = []) -> dict:
@@ -231,4 +244,5 @@ def GetGroupByRMK(data_s: list, excludings: list = []) -> dict:
 if __name__ == '__main__':
     for mode_ in mode_s:
         print('round {0}'.format(mode_))
-        main(mode_)
+        for k in feats_demand.keys():
+            main(mode_, k)

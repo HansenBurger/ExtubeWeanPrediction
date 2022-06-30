@@ -252,7 +252,7 @@ class FeatureProcess(Basic):
             feat_violin = self.__save_p / 'feat_violin'
             feat_violin.mkdir(parents=True, exist_ok=True)
 
-            plot_p = PlotMain(self.__save_p)
+            plot_p = PlotMain(feat_violin)
             for feat_col in feats_slt.met:
                 df_tmp = data_[[self.__col_l, feat_col]]
                 df_tmp['all'] = ''
