@@ -172,7 +172,7 @@ class FeatureProcess(Basic):
             auc, _, _, = process.AucAssess()
 
             p_cate = 'binary' if col_met in bin_cols else 'continuous'
-            p, rs_pos, rs_neg = process.PAssess(cate=p_cate)
+            p, rs_pos, rs_neg = process.PValueAssess(cate=p_cate)
             log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {

@@ -212,7 +212,7 @@ def VarStatistics() -> list:
             array_ = np.array([x.loc[i, j] for x in p_r_l])
             process_ = PerfomAssess(p_i_df.end, array_)
             auc, _, _ = process_.AucAssess()
-            p, _, _ = process_.PAssess()
+            p, _, _ = process_.PValueAssess()
             roc_df.loc[i, j] = auc
             p_v_df.loc[i, j] = p
 

@@ -490,7 +490,13 @@ class PerfomAssess(Basic):
         auc = round(roc_auc_score(self.__true_a, self.__pred_a), v_ran)
         return auc, fpr, tpr
 
-    def PAssess(self, alpha: float = 0.05, cate: str = 'continuous'):
+    def ChiSquareAssess(self):
+        pass
+
+    def MutInfoAssess(self):
+        pass
+
+    def PValueAssess(self, alpha: float = 0.05, cate: str = 'continuous'):
         # Perform type: binary, continuous
 
         pos_, neg_ = self.__PosNegSep()
@@ -513,7 +519,7 @@ class PerfomAssess(Basic):
         def GetDist_2(arr):
             len_0 = np.sum(arr == 0)
             len_1 = np.sum(arr == 1)
-            ratio = round(len_0 / len(arr) * 100, 2)
+            ratio = round(len_0 / (len_0 + len_1) * 100, 2)
             dist_ = '{0} ({1})'.format(len_0, ratio)
             return dist_
 

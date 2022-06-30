@@ -81,7 +81,7 @@ def GraphProcess(p_list: list) -> None:
                 p_assess = PerfomAssess(ture_arr, pred_arr)
                 roc, _, _ = p_assess.AucAssess()
                 df_auc.loc[i, j] = roc
-                p, rs_pos, rs_neg = p_assess.PAssess()
+                p, rs_pos, rs_neg = p_assess.PValueAssess()
                 df_p.loc[i, j] = p
                 df_p_pos.loc[i, j] = rs_pos
                 df_p_neg.loc[i, j] = rs_neg
