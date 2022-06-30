@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
@@ -18,6 +19,10 @@ class VarResultsGen(basic):
     def __init__(self, patient):
         super().__init__()
         self.__pid = patient  # layer3 Patient class
+        self.__ind_s = [
+            'rr', 'v_t_i', 've', 'rsbi', 'wob', 'mp_jm_d', 'mp_jl_d',
+            'mp_jm_t', 'mp_jl_t'
+        ]
 
     def __SaveNaming(self) -> str:
         pid = self.__pid.pid
@@ -27,7 +32,18 @@ class VarResultsGen(basic):
         save_n = '{0}_{1}_{2}_{3}'.format(pid, end_i, icu, rid)
         return save_n
 
+    def __OutliersWipe(self, max_d_st: int = 3) -> None:
+        df = pd.DataFrame({})
+        resp_l = self.__pid.resp_l
+        outlier = lambda arr, max_d: (arr - np.mean(arr)) > max_d * np.std(arr)
+        for ind in self.__ind_s:
+            df[ind] = [getattr(resp, ind) for resp in resp_l]
+            df[ind + '_val'] = ~outlier(df[ind], max_d_st)
+        df_val = df[df[[ind + '_val' for ind in self.__ind_s]].all(axis=1)]
+        self.__pid.resp_l = [resp_l[i] for i in df_val.index]
+
     def VarRsGen(self, methods_l: list) -> None:
+        self.__OutliersWipe()
         resp_l = self.__pid.resp_l
         res_p = ResultStatistical(resp_l)
         res_p.CountAggr(methods_l)

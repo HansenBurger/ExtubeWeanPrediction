@@ -33,7 +33,7 @@ def LocInit(s_f: Path, s_g: Path, mode_name: str):
     dynamic.pid_dr_s = {}
 
 
-def TableQuery(mode_name: str, mv_t_ran: tuple):
+def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
     '''
     '''
     mode_i = mode_name.split('_')
@@ -140,8 +140,7 @@ def PidVarCount(t_set: int, pid_s: list = []):
         else:
             resp_ind_save = dynamic.s_g_fold / 'IndInfo' / str(pid_obj.pid)
             resp_ind_save.mkdir(parents=True, exist_ok=True)
-            pid_obj.resp_l = RespValStatic(pid_obj.resp_l, resp_ind_save)
-            # PanglaisScatter(pid_obj.resp_l, '')
+            # pid_obj.resp_l = RespValStatic(pid_obj.resp_l, resp_ind_save)
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(static.methods)
             process_1.TensorStorage(dynamic.s_f_fold)
