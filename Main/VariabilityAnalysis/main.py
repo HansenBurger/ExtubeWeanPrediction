@@ -23,4 +23,4 @@ def VarAnalysis(mode_: str, t_set: int):
 
 if __name__ == '__main__':
     for mode_ in mode_s:
-        VarAnalysis(mode_, sys.argv[1])
+        VarAnalysis(mode_, int(sys.argv[1]))

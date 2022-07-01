@@ -28,8 +28,6 @@ class Basic():
             else:
                 obj = PatientVar()
                 info_ = file.name.split('_')
-                if info_[0] == '1518992':
-                    continue
                 obj.pid = int(info_[0])
                 obj.end = int(info_[1])
                 obj.icu = str(info_[2])
@@ -62,7 +60,6 @@ class FeatureLoader(Basic):
         data_ = data_.rename(columns={'rmk_t': 'rmk'})
         data_ = data_.sort_values('pid')
         data_ = data_.reset_index(drop=True)
-        # data_ = data_[data_.pid != 1518992]
 
         return data_
 
@@ -137,17 +134,17 @@ class FeatureProcess(Basic):
     def feat(self):
         return self.__feat
 
-    def __SingleLogReg(self, data_: pd.DataFrame, col_l: str, test_s: float):
-        X_t, y_t, X_v, y_v = DataSetProcess(data_, col_l).DataSplit(test_s)
-        balanced = BalanSMOTE(X_t, y_t)
-        train_test = [balanced.X, balanced.y, X_v, y_v]
-        model = LogisiticReg(train_test, {'C': 1, 'max_iter': 2000})
-        model.Deduce()
-        perform_rs = model.Predict()
-        auc_v = round(perform_rs['auc'], 3)
-        auc_diff = round(abs(auc_v - 0.5), 4)
+    # def __SingleLogReg(self, data_: pd.DataFrame, col_l: str, test_s: float):
+    #     X_t, y_t, X_v, y_v = DataSetProcess(data_, col_l).DataSplit(test_s)
+    #     balanced = BalanSMOTE(X_t, y_t)
+    #     train_test = [balanced.X, balanced.y, X_v, y_v]
+    #     model = LogisiticReg(train_test, {'C': 1, 'max_iter': 2000})
+    #     model.Deduce()
+    #     perform_rs = model.Predict()
+    #     auc_v = round(perform_rs['auc'], 3)
+    #     auc_diff = round(abs(auc_v - 0.5), 4)
 
-        return auc_v, auc_diff
+    #     return auc_v, auc_diff
 
     def FeatPerformance(self, col_methods: list, save_name: str = ''):
 
@@ -169,18 +166,22 @@ class FeatureProcess(Basic):
                 continue
 
             process = PerfomAssess(df_tmp[self.__col_l], df_tmp[col_met])
-            auc, _, _, = process.AucAssess()
-
             p_cate = 'binary' if col_met in bin_cols else 'continuous'
             p, rs_pos, rs_neg = process.PValueAssess(cate=p_cate)
-            log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
+            auc, _, _, = process.AucAssess()
+            chi_square = process.ChiSquareAssess()
+            mut_info = process.MutInfoAssess()
+
+            # log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {
                 'met': col_met,
                 'P': p,
                 'AUC': auc,
-                'LogReg': log_auc,
-                'LogRegDiff': log_diff,
+                'CS': chi_square,
+                'MI': mut_info,
+                # 'LogReg': log_auc,
+                # 'LogRegDiff': log_diff,
                 'rs_0': rs_neg,
                 'size_0': n_neg,
                 'rs_1': rs_pos,
@@ -195,12 +196,10 @@ class FeatureProcess(Basic):
             pass
         else:
             attr_csv = self.__save_p / (save_name + '_attr_tot.csv')
-            pd.DataFrame.to_csv(self.__feat, attr_csv, index=False)
+            self.__featto_csv(attr_csv, index=False)
 
     def DataSelect(self,
                    p_max: float = 0.05,
-                   auc_min: float = 0.0,
-                   diff_min: float = 0.00,
                    feats_spe: list = [],
                    feat_lack_max: float = 0.4,
                    recs_lack_max: float = 0.2) -> pd.DataFrame:
@@ -212,10 +211,7 @@ class FeatureProcess(Basic):
 
         if not feats_spe:
             p_v_filt = self.__feat.P < p_max
-            auc_filt = self.__feat.LogReg > auc_min
-            diff_filt = self.__feat.LogRegDiff > diff_min
-
-            filt_cond = p_v_filt & auc_filt & diff_filt
+            filt_cond = p_v_filt
             feats_all = self.__feat[filt_cond].met.tolist()
         else:
             feats_all = feats_spe
@@ -225,25 +221,14 @@ class FeatureProcess(Basic):
         data_ = self.__data[[self.__col_l] + feats_all]
         recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
         feat_val = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
-
-        # self.__feat = self.__feat.sort_values(by=['P'], ascending=True)
-        # self.__feat = self.__feat.reset_index(drop=True)
-
         feats_slt = self.__feat[self.__feat.met.isin(feat_val[feat_val].index)]
         feats_slt = feats_slt.sort_values(by=['P'], ascending=True)
-        feats_slt = feats_slt.reset_index(drop=True)
-        # feats_slt = self.__feat[feats_slt.shape[0]:feats_slt.shape[0] * 2]
-        # feats_slt = feats_slt.reset_index(drop=True)
         self.__feat = feats_slt
-        pd.DataFrame.to_csv(feats_slt,
-                            self.__save_p / 'feature_attr_slt.csv',
-                            index=False)
+        feats_slt.to_csv(self.__save_p / 'feature_attr_slt.csv', index=False)
 
         if feats_slt.empty or len(data_.end.unique()) == 1:
             data_ = pd.DataFrame()
         else:
-            # data_ = self.__data.loc[recs_val]
-            # data_ = self.__data.loc[:, [self.__col_l] + feats_slt.met.tolist()]
             data_ = data_.loc[recs_val, feat_val]
             for feat_col in feats_slt.met:
                 if data_[feat_col].dtype == 'bool':
@@ -262,14 +247,12 @@ class FeatureProcess(Basic):
                                   fig_n=feat_col,
                                   hue=self.__col_l)
 
-        pd.DataFrame.to_csv(data_,
-                            self.__save_p / 'sample_data_slt.csv',
-                            index=False)
+        data_.to_csv(self.__save_p / 'sample_data_slt.csv', index=False)
 
         return data_
 
-    def DataSelect_Multi(self,
-                         p_max: float = 0.05,
-                         feat_lack_max: float = 0.4,
-                         recs_lack_max: float = 0.2):
+    def DataSelect_ForwardSearch(self,
+                                 p_max: float = 0.05,
+                                 feat_lack_max: float = 0.4,
+                                 recs_lack_max: float = 0.2):
         pass

@@ -171,12 +171,15 @@ def VarInfoCollect():
         if p_dr_val:
             save_param['val_succ_n'] += 1 if end_con_0 else 0
             save_param['val_fail_n'] += 1 if end_con_1 else 0
+            save_param['val_ratio'] = 0
         else:
             save_param['data_inval'] += 1 if data_con else 0
             save_param['mode_inval'] += 1 if mode_con else 0
             save_param['mode_inval_succ'] += 1 if mode_con and end_con_0 else 0
             save_param['mode_inval_fail'] += 1 if mode_con and end_con_1 else 0
 
+    save_param['val_ratio'] = save_param['val_fail_n'] / (
+        save_param['val_succ_n'] + save_param['val_fail_n'])
     param_repr = repr_gen(save_param)
 
     with open(save_path, 'w') as f:
@@ -205,6 +208,7 @@ def VarStatistics() -> list:
     p_r_d = FromkeysReid(methods, {})
     roc_df = p_r_l[0].copy()
     p_v_df = p_r_l[0].copy()
+    tot_df = pd.DataFrame()
 
     for i in methods:
         for j in indicat:
@@ -214,22 +218,39 @@ def VarStatistics() -> list:
             p, _, _ = process_.PValueAssess()
             roc_df.loc[i, j] = auc
             p_v_df.loc[i, j] = p
+            tot_df['-'.join([i, j])] = array_
 
             p_r_d[i][j] = array_
 
     df_pos, df_neg = NegPosGet(p_i_df, p_r_d)
     df_fp, df_fn, _, _ = FalseBuild(p_i_df, p_r_d)
+    corr_p = tot_df.corr(method='pearson')
+    corr_s = tot_df.corr(method='spearman')
+    corr_k = tot_df.corr(method='kendall')
 
     s_g_fold = dynamic.s_g_fold
     plot_p = PlotMain(s_g_fold)
-    plot_p.HeatMapPlot(roc_df, 'AUC HeatMap', 'coolwarm')
-    plot_p.HeatMapPlot(p_v_df, 'P HeatMap', 'YlGnBu')
-    plot_p.SensSpecPlot(df_pos, 'RSBI_fail_med')
-    plot_p.SensSpecPlot(df_neg, 'RSBI_succ_med')
-    pd.DataFrame.to_csv(df_pos, s_g_fold / 'RSBI_fail_med.csv', index=False)
-    pd.DataFrame.to_csv(df_neg, s_g_fold / 'RSBI_succ_med.csv', index=False)
-    pd.DataFrame.to_csv(df_fp, s_g_fold / 'RSBI_105_fp.csv', index=False)
-    pd.DataFrame.to_csv(df_fn, s_g_fold / 'RSBI_105_fn.csv', index=False)
+
+    def ChartsSave(df: pd.DataFrame,
+                   save_n: str,
+                   chart_type: any,
+                   chart_kwags: dict = {}) -> None:
+        df.to_csv(s_g_fold / (save_n + '.csv'), index=False)
+        chart_type(df, save_n, **chart_kwags)
+
+    ChartsSave(roc_df, 'AUC_HeatMap', plot_p.HeatMapPlot, {'cmap': 'coolwarm'})
+    ChartsSave(p_v_df, 'P_HeatMap', plot_p.HeatMapPlot, {'cmap': 'YlGnBu'})
+    ChartsSave(corr_p, 'Corr_Pearson', plot_p.HeatMapLarge,
+               {'cmap': 'coolwarm'})
+    ChartsSave(corr_k, 'Corr_Kendall', plot_p.HeatMapLarge,
+               {'cmap': 'coolwarm'})
+    ChartsSave(corr_s, 'CorrSpearman', plot_p.HeatMapLarge,
+               {'cmap': 'coolwarm'})
+    ChartsSave(df_pos, 'RSBI_fail_med', plot_p.SensSpecPlot)
+    ChartsSave(df_neg, 'RSBI_succ_med', plot_p.SensSpecPlot)
+
+    df_fp.to_csv(s_g_fold / 'RSBI_105_fp.csv', index=False)
+    df_fn.to_csv(s_g_fold / 'RSBI_105_fn.csv', index=False)
 
 
 def NegPosGet(df, dict_):

@@ -5,19 +5,17 @@ import pandas as pd
 # import entropy as ent
 import EntropyHub as eh
 from scipy import interpolate
-from scipy.stats import mannwhitneyu
-from sklearn.metrics import roc_curve
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import confusion_matrix
-from scipy.stats import normaltest, ttest_ind
+from sklearn.feature_selection import chi2, mutual_info_classif
+from sklearn.metrics import roc_curve, roc_auc_score, confusion_matrix
+from scipy.stats import mannwhitneyu, normaltest, ttest_ind, spearmanr, pearsonr
 
 warnings.filterwarnings('ignore')
 
 
 class Basic():
     def __init__(self) -> None:
-        self.round_i = 4
-        pass
+        self.round_i_0 = 4
+        self.round_i_1 = 3
 
 
 class IndCalculation(Basic):
@@ -179,7 +177,7 @@ class IndCalculation(Basic):
         '''
         vent_len = self.__end_ind - self.__pro_ind
         resp_t = vent_len * 1 / sample_rate
-        return round(resp_t, self.round_i)
+        return round(resp_t, self.round_i_0)
 
     def RR(self, sample_rate: float) -> list:
         '''
@@ -189,7 +187,7 @@ class IndCalculation(Basic):
         vent_len = self.__end_ind - self.__pro_ind
         RR = 60 / (vent_len * 1 / sample_rate)
         RR_val = self.__ValRangeCheck(RR, (0, 60))
-        return round(RR, self.round_i), RR_val
+        return round(RR, self.round_i_0), RR_val
 
     def V_t(self) -> list:
         '''
@@ -201,8 +199,8 @@ class IndCalculation(Basic):
         v_t_i = v_in[-1]
         v_t_e = v_in[-1] + (v_ex[-1] if v_ex[-1] < 0 else -v_ex[-1])
         v_t = {
-            'v_t_i': round(v_t_i, self.round_i),
-            'v_t_e': round(v_t_e, self.round_i)
+            'v_t_i': round(v_t_i, self.round_i_0),
+            'v_t_e': round(v_t_e, self.round_i_0)
         }
         v_t_val = self.__ValRangeCheck([v_t_i, v_t_e], (0, 2000))
         return v_t, v_t_val
@@ -228,10 +226,10 @@ class IndCalculation(Basic):
 
         wob_val = self.__ValRangeCheck([wob, wob_full], (0, 20))
         wob_ = {
-            'wob': round(wob, self.round_i),
-            'wob_f': round(wob_full, self.round_i),
-            'wob_a': round(wob_a, self.round_i),
-            'wob_b': round(wob_b, self.round_i)
+            'wob': round(wob, self.round_i_0),
+            'wob_f': round(wob_full, self.round_i_0),
+            'wob_a': round(wob_a, self.round_i_0),
+            'wob_b': round(wob_b, self.round_i_0)
         }
         return wob_, wob_val
 
@@ -242,7 +240,7 @@ class IndCalculation(Basic):
         '''
         VE = rr * (v_t / 1000)
         val = self.__ValRangeCheck(VE, (0, 30))
-        return round(VE, self.round_i), val
+        return round(VE, self.round_i_0), val
 
     def RSBI(self, rr: float, v_t: float) -> float:
         '''
@@ -250,7 +248,7 @@ class IndCalculation(Basic):
         Unit: Index (f/L)
         '''
         rsbi = rr / (v_t / 1000)
-        return round(rsbi, self.round_i)
+        return round(rsbi, self.round_i_0)
 
     def MP_Area(self, rr: float, v_t: float, wob: float) -> list:
         '''
@@ -261,8 +259,8 @@ class IndCalculation(Basic):
         mp_jm_area = 0.098 * rr * wob
         mp_jl_area = 0.098 * wob / (v_t * 0.001)
         mp_area = {
-            'mp_jm': round(mp_jm_area, self.round_i),
-            'mp_jl': round(mp_jl_area, self.round_i)
+            'mp_jm': round(mp_jm_area, self.round_i_0),
+            'mp_jl': round(mp_jl_area, self.round_i_0)
         }
         mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area], (0, 20))
         return mp_area, mp_val
@@ -291,7 +289,7 @@ class VarAnalysis(Basic):
             result_ = -999
             print('No match method')
 
-        return round(result_, self.round_i)
+        return round(result_, self.round_i_0)
 
     def __Panglais(self, list_: list) -> np.array:
         a_0 = np.array(list_[:len(list_) - 1])
@@ -312,7 +310,7 @@ class VarAnalysis(Basic):
             num_lower += num_judge(a_1[i], a_0[i])
 
         pi = 100 * num_lower / (num_upper + num_lower)
-        return round(pi, self.round_i)
+        return round(pi, self.round_i_0)
 
     def __GI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
         '''
@@ -327,7 +325,7 @@ class VarAnalysis(Basic):
             dis_above_sum += dis_count(a_0[i], a_1[i])
             dis_below_sum += dis_count(a_1[i], a_0[i])
         gi = 100 * dis_above_sum / (dis_above_sum + dis_below_sum)
-        return round(gi, self.round_i)
+        return round(gi, self.round_i_0)
 
     def __SI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
         '''
@@ -345,7 +343,7 @@ class VarAnalysis(Basic):
             theta_below_sum += theta_count(a_1[i], a_0[i])
 
         si = 100 * theta_above_sum / (theta_above_sum + theta_below_sum)
-        return round(si, self.round_i)
+        return round(si, self.round_i_0)
 
     def HRA(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
@@ -369,7 +367,7 @@ class VarAnalysis(Basic):
         a_1: Array of IND_i+1
         '''
         sd = np.std(a_1 - a_0) / np.sqrt(2)
-        return round(sd, self.round_i)
+        return round(sd, self.round_i_0)
 
     def __SD2(self, a_0, a_1):
         '''
@@ -378,7 +376,7 @@ class VarAnalysis(Basic):
         a_1: Array of IND_i+1
         '''
         sd = np.std(a_1 + a_0) / np.sqrt(2)
-        return round(sd, self.round_i)
+        return round(sd, self.round_i_0)
 
     def HRV(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_0, array_1 = self.__Panglais(ind_s)
@@ -405,7 +403,7 @@ class VarAnalysis(Basic):
             result_ = -999
             print('No match method')
 
-        return round(result_[-1], self.round_i)
+        return round(result_[-1], self.round_i_0)
 
     def __SpaceGen(self, arr, fs):
         ind_0 = arr.min()
@@ -466,7 +464,7 @@ class VarAnalysis(Basic):
         arr_para_s = np.array([WtJudge(i / s) for i in arr_axis_s])
         prsa_ana = np.sum(arr_prsa_s * arr_para_s / s)
 
-        return round(prsa_ana, self.round_i)
+        return round(prsa_ana, self.round_i_0)
 
 
 class PerfomAssess(Basic):
@@ -485,16 +483,20 @@ class PerfomAssess(Basic):
         neg_arr = np.array(df[df.true == 0].pred)
         return pos_arr, neg_arr
 
-    def AucAssess(self, v_ran: int = 3) -> list:
+    def AucAssess(self) -> list:
         fpr, tpr, _ = roc_curve(self.__true_a, self.__pred_a)
-        auc = round(roc_auc_score(self.__true_a, self.__pred_a), v_ran)
+        auc = round(roc_auc_score(self.__true_a, self.__pred_a),
+                    self.round_i_1)
         return auc, fpr, tpr
 
     def ChiSquareAssess(self):
-        pass
+        chi_square = round(chi2(self.__true_a, self.__pred_a), self.round_i_1)
+        return chi_square
 
     def MutInfoAssess(self):
-        pass
+        mut_info = round(mutual_info_classif(self.__true_a, self.__pred_a),
+                         self.round_i_1)
+        return mut_info
 
     def PValueAssess(self, alpha: float = 0.05, cate: str = 'continuous'):
         # Perform type: binary, continuous
@@ -504,15 +506,15 @@ class PerfomAssess(Basic):
         _, p_2 = normaltest(neg_) if neg_.shape[0] >= 8 else None, 0
 
         def GetDist_0(arr):
-            ave = round(np.mean(arr), 3)
-            std = round(np.std(arr), 3)
+            ave = round(np.mean(arr), self.round_i_1)
+            std = round(np.std(arr), self.round_i_1)
             dist_ = '{0} +- {1}'.format(ave, std)
             return dist_
 
         def GetDist_1(arr):
-            med = round(np.median(arr), 3)
-            qua = round(np.percentile(arr, 25), 3)
-            tqua = round(np.percentile(arr, 75), 3)
+            med = round(np.median(arr), self.round_i_1)
+            qua = round(np.percentile(arr, 25), self.round_i_1)
+            tqua = round(np.percentile(arr, 75), self.round_i_1)
             dist_ = '{0} ({1}, {2})'.format(med, qua, tqua)
             return dist_
 
@@ -545,6 +547,14 @@ class PerfomAssess(Basic):
 
         p = round(p, 4) if not p < 0.0001 else 0.0001
         return p, rs_pos, rs_neg
+
+
+class Correlations(Basic):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def PearsonIndex(self):
+        pass
 
 
 class SenSpecCounter(Basic):

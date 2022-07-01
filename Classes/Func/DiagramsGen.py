@@ -147,7 +147,7 @@ class PlotMain():
         plt.savefig(save_loc)
         plt.close()
 
-    def HeatMapPlot(self, df: any, fig_n: str, cmap: str = "rocket"):
+    def HeatMapPlot(self, df: any, fig_n: str, cmap: str = 'rocket'):
         save_loc = self.__SaveRouteGen(fig_n)
         try:
             df.index = df.index.str.upper()
@@ -156,11 +156,19 @@ class PlotMain():
         fig_wid = df.shape[1]
         fig_het = df.shape[0] - 2
         sns.set(rc={'figure.figsize': (fig_wid, fig_het)})
-        # sns.heatmap(df, annot=True, linewidths=.5)
         sns.heatmap(df, annot=True, linewidths=.5, cmap=cmap)
         plt.title(fig_n, fontsize=18, fontweight='bold')
-        # plt.ylabel('Scale S')
-        # plt.xlabel('Anchor Len T')
+        plt.tight_layout()
+        plt.savefig(save_loc)
+        plt.close()
+
+    def HeatMapLarge(self, df: any, fig_n: str, cmap: str = 'rocket'):
+        save_loc = self.__SaveRouteGen(fig_n)
+
+        fig_wid, fig_het = 25, 25
+        sns.set(rc={'figure.figsize': (fig_wid, fig_het)})
+        sns.heatmap(df, annot=False, linewidths=.1, cmap=cmap)
+        plt.title(fig_n, fontsize=18, fontweight='bold')
         plt.tight_layout()
         plt.savefig(save_loc)
         plt.close()
