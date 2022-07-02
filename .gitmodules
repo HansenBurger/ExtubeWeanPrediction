@@ -1,3 +1,6 @@
 [submodule "WaveDataProcess"]
 	path = WaveDataProcess
 	url = https://github.com/HansenBurger/WaveDataProcess.git
+[submodule "MLBasic"]
+	path = MLBasic
+	url = https://github.com/HansenBurger/MLBasic.git
