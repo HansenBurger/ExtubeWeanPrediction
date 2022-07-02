@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
-from Classes.MLD.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
+from MLBasic.Classes.algorithm import LogisiticReg, RandomForest, SupportVector, XGBoosterClassify
 
 
 class Basic():

@@ -21,19 +21,18 @@ feats_demand = {
     # type_1: Only the Imp P-Feature
     # 'Type1': {},
     # type_2: POS/NEG GreatImp Feature
-    'Type2': {
-        'diff_min': 0.1
-    },
+    # 'Type2': {
+    #     'diff_min': 0.1
+    # },
     # # type_3: POSImp Feature
     # 'Type3': {
     #     'auc_min': 0.5,
     #     'diff_min': 0.01
     # },
     # type_4: POS GreatImp Feature
-    'Type4': {
-        'auc_min': 0.5,
-        'diff_min': 0.1
-    }
+    # 'Type4': {
+    #     'auc_min': 0.5,
+    #     'diff_min': 0.1
 }
 
 s_f_path = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
