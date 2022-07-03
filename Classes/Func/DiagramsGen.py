@@ -42,7 +42,7 @@ class PlotMain():
         save_loc = self.__SaveRouteGen(fig_name)
         sns.reset_orig()
         sns.set_theme(style='whitegrid')
-        plt.figure(figsize=(1 * df.shape[0], 6))
+        plt.figure(figsize=(18, 6))
         plt.plot([0, df.shape[0]], [0.7, 0.7], 'k--')
         plt.ylim([0.0, 1.0])
         plt.xlim([1, df.shape[0]])

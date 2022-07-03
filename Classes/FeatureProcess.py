@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
 from pathlib import Path
+from sklearn.feature_selection import chi2, mutual_info_classif
 
 sys.path.append(str(Path.cwd()))
 
@@ -42,10 +43,15 @@ class FeatureLoader(Basic):
     def __init__(self, local_p: Path):
         super().__init__()
         self.__samples = self._Basic__TableLoad(local_p)
+        self.__info_col = ['pid', 'icu', 'end', 'rmk']
 
     @property
     def samples(self):
         return self.__samples
+
+    @property
+    def info_col(self):
+        return self.__info_col
 
     def __GetSampleData(self) -> pd.DataFrame:
 
@@ -134,18 +140,6 @@ class FeatureProcess(Basic):
     def feat(self):
         return self.__feat
 
-    # def __SingleLogReg(self, data_: pd.DataFrame, col_l: str, test_s: float):
-    #     X_t, y_t, X_v, y_v = DataSetProcess(data_, col_l).DataSplit(test_s)
-    #     balanced = BalanSMOTE(X_t, y_t)
-    #     train_test = [balanced.X, balanced.y, X_v, y_v]
-    #     model = LogisiticReg(train_test, {'C': 1, 'max_iter': 2000})
-    #     model.Deduce()
-    #     perform_rs = model.Predict()
-    #     auc_v = round(perform_rs['auc'], 3)
-    #     auc_diff = round(abs(auc_v - 0.5), 4)
-
-    #     return auc_v, auc_diff
-
     def FeatPerformance(self, col_methods: list, save_name: str = ''):
 
         row_s = []
@@ -169,19 +163,11 @@ class FeatureProcess(Basic):
             p_cate = 'binary' if col_met in bin_cols else 'continuous'
             p, rs_pos, rs_neg = process.PValueAssess(cate=p_cate)
             auc, _, _, = process.AucAssess()
-            chi_square = process.ChiSquareAssess()
-            mut_info = process.MutInfoAssess()
-
-            # log_auc, log_diff = self.__SingleLogReg(df_tmp, self.__col_l, 0.3)
 
             row_value = {
                 'met': col_met,
                 'P': p,
                 'AUC': auc,
-                'CS': chi_square,
-                'MI': mut_info,
-                # 'LogReg': log_auc,
-                # 'LogRegDiff': log_diff,
                 'rs_0': rs_neg,
                 'size_0': n_neg,
                 'rs_1': rs_pos,
@@ -196,7 +182,7 @@ class FeatureProcess(Basic):
             pass
         else:
             attr_csv = self.__save_p / (save_name + '_attr_tot.csv')
-            self.__featto_csv(attr_csv, index=False)
+            self.__feat.to_csv(attr_csv, index=False)
 
     def DataSelect(self,
                    p_max: float = 0.05,
@@ -234,18 +220,18 @@ class FeatureProcess(Basic):
                 if data_[feat_col].dtype == 'bool':
                     data_[feat_col] = data_[feat_col].astype(int)
 
-            feat_violin = self.__save_p / 'feat_violin'
-            feat_violin.mkdir(parents=True, exist_ok=True)
+            # feat_violin = self.__save_p / 'feat_violin'
+            # feat_violin.mkdir(parents=True, exist_ok=True)
 
-            plot_p = PlotMain(feat_violin)
-            for feat_col in feats_slt.met:
-                df_tmp = data_[[self.__col_l, feat_col]]
-                df_tmp['all'] = ''
-                plot_p.ViolinPlot(x='all',
-                                  y=feat_col,
-                                  df=df_tmp,
-                                  fig_n=feat_col,
-                                  hue=self.__col_l)
+            # plot_p = PlotMain(feat_violin)
+            # for feat_col in feats_slt.met:
+            #     df_tmp = data_[[self.__col_l, feat_col]]
+            #     df_tmp['all'] = ''
+            #     plot_p.ViolinPlot(x='all',
+            #                       y=feat_col,
+            #                       df=df_tmp,
+            #                       fig_n=feat_col,
+            #                       hue=self.__col_l)
 
         data_.to_csv(self.__save_p / 'sample_data_slt.csv', index=False)
 
