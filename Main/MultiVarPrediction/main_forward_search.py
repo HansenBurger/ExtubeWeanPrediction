@@ -70,15 +70,16 @@ def main(mode_name: str):
 
     for model in ['LR', 'RF', 'SVM', 'XGB']:
         model_tot = DataFrame({})
-        model_tot['sen'] = [i[model]['s_sen'] for i in perform_boxes]
-        model_tot['spe'] = [i[model]['s_spe'] for i in perform_boxes]
-        model_tot['acc'] = [i[model]['s_acc'] for i in perform_boxes]
-        model_tot['auc'] = [i[model]['s_auc'] for i in perform_boxes]
-        model_tot['f_1'] = [i[model]['s_f_1'] for i in perform_boxes]
-        model_tot['ind'] = model_tot.index
+        model_tot['sen'] = [i[model]['s_sen'] for i in perform_boxes[1:]]
+        model_tot['spe'] = [i[model]['s_spe'] for i in perform_boxes[1:]]
+        model_tot['acc'] = [i[model]['s_acc'] for i in perform_boxes[1:]]
+        model_tot['auc'] = [i[model]['s_auc'] for i in perform_boxes[1:]]
+        model_tot['f_1'] = [i[model]['s_f_1'] for i in perform_boxes[1:]]
+        model_tot['ind'] = [i + 1 for i in model_tot.index.to_list()]
         p_plot = PlotMain(s_g_fold)
         p_plot.linesplot('ind', ['auc', 'acc', 'f_1', 'sen', 'spe'], model_tot,
                          model + '_Perform')
+        a = 1
 
 
 if __name__ == '__main__':
