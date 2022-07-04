@@ -14,10 +14,7 @@ from Classes.FeatureProcess import FeatureLoader, FeatureProcess
 p_name = 'ForwardSearch'
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
-mode_s = [
-    'Extube_PSV_Nad-30', 'Extube_SumP12_Nad-30', 'Extube_PSV_Nad-60',
-    'Extube_SumP12_Nad-60'
-]
+mode_s = ['Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60']
 
 
 @measure
@@ -39,7 +36,7 @@ def main(mode_name: str):
     feat_var_s = data_var.columns.drop(load_p.info_col).tolist()
     feat_var_p = FeatureProcess(data_var, 'end', s_f_fold)
     feat_var_p.FeatPerformance(feat_var_s, 'VarFeats')
-    data_tot = feat_var_p.DataSelect()
+    data_tot = feat_var_p.DataSelect(p_max=1)
     feat_tot = feat_var_p.feat.met.tolist()
 
     feat_boxes = [[]]
