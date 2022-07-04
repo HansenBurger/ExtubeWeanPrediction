@@ -27,7 +27,8 @@ class StaticData(Basic):
                 'eval_set': False,
                 'param_init': {},
                 'param_deduce': {},
-                're_select': False
+                're_select': False,
+                'get_feat_imp': True
             },
             'RF': {
                 'class': RandomForest,
@@ -43,7 +44,8 @@ class StaticData(Basic):
                 'eval_set': False,
                 'param_init': {},
                 'param_deduce': {},
-                're_select': False
+                're_select': False,
+                'get_feat_imp': True
             },
             'SVM': {
                 'class': SupportVector,
@@ -57,7 +59,8 @@ class StaticData(Basic):
                 'eval_set': False,
                 'param_init': {},
                 'param_deduce': {},
-                're_select': False
+                're_select': False,
+                'get_feat_imp': False
             },
             'XGB': {
                 'class': XGBoosterClassify,
@@ -87,7 +90,8 @@ class StaticData(Basic):
                     'seed': 0
                 },
                 'param_deduce': {},
-                're_select': True
+                're_select': True,
+                'get_feat_imp': True
             }
         }
 

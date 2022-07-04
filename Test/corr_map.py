@@ -60,8 +60,8 @@ group_range = {
 }
 
 
-def PreTabelGen(tabel_n: str):
-    df = pd.read_csv(fold_p / (tabel_n + '.csv'))
+def PretableGen(table_n: str):
+    df = pd.read_csv(fold_p / (table_n + '.csv'))
     df['corr'] = df.columns
     df = df.set_index('corr', drop=True)
     return df
@@ -110,7 +110,7 @@ def HeatMapPlot(df: pd.DataFrame, fig_dim: tuple, cmp: str, save_p: Path):
 
 
 def main():
-    spearman = PreTabelGen('CorrSpearman')
+    spearman = PretableGen('CorrSpearman')
     spearman_imp = ImpFiltTable(spearman)
     spearman_save = save_p / 'Total'
     spearman_save.mkdir(parents=True, exist_ok=True)

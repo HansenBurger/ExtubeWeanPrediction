@@ -41,6 +41,6 @@ class KFoldCossValid(Basic):
             model_p.DataSetBuild(self.__data_set, 'end')
             model_p.ParamSelectRand(st['s_param'], st['eval_set'])
             model_p.CrossValidate(st['param_init'], st['param_deduce'],
-                                  st['re_select'])
+                                  st['re_select'], st['get_feat_imp'])
             df_rs = model_p.ResultGenerate(store_results, save_path)
             self.__ave_result[model] = df_rs.loc['ave', :]

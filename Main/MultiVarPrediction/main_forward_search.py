@@ -76,7 +76,6 @@ def main(mode_name: str):
         p_plot = PlotMain(s_g_fold)
         p_plot.linesplot('ind', ['auc', 'acc', 'f_1', 'sen', 'spe'], model_tot,
                          model + '_Perform')
-        a = 1
 
 
 if __name__ == '__main__':

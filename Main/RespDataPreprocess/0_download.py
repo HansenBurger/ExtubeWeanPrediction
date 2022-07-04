@@ -38,7 +38,7 @@ def main(mode_: str) -> None:
 
     def __RecRegister(ins_d: dict) -> None:
         '''
-        Update records info into tabel
+        Update records info into table
         '''
         ins_l = DLToLD(ins_d)
         dst_class.insert_many(ins_l).on_conflict('replace').execute()
