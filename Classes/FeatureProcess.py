@@ -207,6 +207,9 @@ class DatasetGeneration(Basic):
                     data_slt[feat_col] = data_[feat_col].astype(int)
 
         self.__feat, self.__data = feats_slt, data_slt
+        data_slt.to_csv(self.__save_p / 'data_slt.csv', index=False)
+        feats_slt.to_csv(self.__save_p / 'feat_slt.csv')
+        a = 1
 
     def FeatsDistPlot(self):
         violin_dist = self.__save_p / 'feat_violin'

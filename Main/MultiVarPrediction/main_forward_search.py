@@ -16,8 +16,8 @@ pred_way = 'Norm'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
 mode_s = [
-    'Extube_PSV_Nad-30', 'Extube_SumP12_Nad-30', 'Extube_PSV_Nad-60',
-    'Extube_SumP12_Nad-60'
+    'Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60', 'Extube_PSV_Nad-30',
+    'Extube_PSV_Nad-60'
 ]
 
 
