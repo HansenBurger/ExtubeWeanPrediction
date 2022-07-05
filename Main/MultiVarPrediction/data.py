@@ -17,7 +17,8 @@ class StaticData(Basic):
         self.__algo_set = {
             'LR': {
                 'class': LogisiticReg,
-                'split': 5,
+                'split': 0.3,
+                'k-split': 5,
                 's_param': {
                     'C': [0.001, 0.1, 1, 100, 1000, 5000],
                     'penalty': ['l2'],
@@ -32,7 +33,8 @@ class StaticData(Basic):
             },
             'RF': {
                 'class': RandomForest,
-                'split': 5,
+                'split': 0.3,
+                'k-split': 5,
                 's_param': {
                     'max_depth': range(10, 80, 5),
                     'n_estimators': range(100, 2000, 100),
@@ -49,7 +51,8 @@ class StaticData(Basic):
             },
             'SVM': {
                 'class': SupportVector,
-                'split': 5,
+                'split': 0.3,
+                'k-split': 5,
                 's_param': {
                     'C': [0.1, 1, 10, 100, 1000, 5000],
                     'gamma': [1, 0.1, 0.01, 0.001, 0.0001, 0.00001],
@@ -64,7 +67,8 @@ class StaticData(Basic):
             },
             'XGB': {
                 'class': XGBoosterClassify,
-                'split': 5,
+                'split': 0.3,
+                'k-split': 5,
                 's_param': {
                     'booster': ["gbtree"],
                     'learning_rate': [

@@ -77,18 +77,19 @@ def ImpFiltTable(df: pd.DataFrame):
 def ImpSortSave(df: pd.DataFrame, save_p: Path):
     df_corr_imp = pd.DataFrame({})
     i_met, i_ind, j_met, j_ind, corr_v = [], [], [], [], []
-    for i in df.index:
-        for j in df.columns:
+    for i in range(len(df.index)):
+        for j in range(i + 1):
+            var_i, var_j = df.index[i], df.columns[j]
             if i == j:
                 continue
-            elif df.loc[i, j] == 0:
+            elif df.loc[var_i, var_j] == 0:
                 continue
             else:
-                i_met.append(i.split('-')[0])
-                i_ind.append(i.split('-')[1])
-                j_met.append(j.split('-')[0])
-                j_ind.append(j.split('-')[1])
-                corr_v.append(df.loc[i, j])
+                i_met.append(var_i.split('-')[0])
+                i_ind.append(var_i.split('-')[1])
+                j_met.append(var_j.split('-')[0])
+                j_ind.append(var_j.split('-')[1])
+                corr_v.append(df.loc[var_i, var_j])
     df_corr_imp['i_met'] = i_met
     df_corr_imp['i_ind'] = i_ind
     df_corr_imp['j_met'] = j_met

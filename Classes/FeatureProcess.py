@@ -1,24 +1,21 @@
 import sys
 import pandas as pd
 from pathlib import Path
-from sklearn.feature_selection import chi2, mutual_info_classif
 
 sys.path.append(str(Path.cwd()))
 
+from Classes.ORM.expr import PatientInfo
+from Classes.ORM.basic import OutcomeExWean
 from Classes.Domain.layer_p import PatientVar
 from Classes.Func.KitTools import PathVerify
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import PerfomAssess
-from Classes.MLD.processfunc import DataSetProcess
-from Classes.MLD.balancefunc import BalanSMOTE
-from Classes.MLD.algorithm import LogisiticReg
-from Classes.ORM.expr import PatientInfo
-from Classes.ORM.basic import OutcomeExWean
 
 
 class Basic():
     def __init__(self) -> None:
-        pass
+        self.__label_col = 'end'
+        self.__info_cols = ['pid', 'icu', 'end', 'rmk']
 
     def __TableLoad(self, load_path: Path):
         obj_s = []
@@ -38,28 +35,13 @@ class Basic():
         obj_s = sorted(obj_s, key=lambda x: x.pid, reverse=False)
         return obj_s
 
-
-class FeatureLoader(Basic):
-    def __init__(self, local_p: Path):
-        super().__init__()
-        self.__samples = self._Basic__TableLoad(local_p)
-        self.__info_col = ['pid', 'icu', 'end', 'rmk']
-
-    @property
-    def samples(self):
-        return self.__samples
-
-    @property
-    def info_col(self):
-        return self.__info_col
-
-    def __GetSampleData(self) -> pd.DataFrame:
+    def __GetSampleData(self, samples: any) -> pd.DataFrame:
 
         src = PatientInfo
         data_ = pd.DataFrame()
-        data_['pid'] = [samp.pid for samp in self.__samples]
-        data_['end'] = [samp.end for samp in self.__samples]
-        data_['icu'] = [samp.icu for samp in self.__samples]
+        data_['pid'] = [samp.pid for samp in samples]
+        data_['end'] = [samp.end for samp in samples]
+        data_['icu'] = [samp.icu for samp in samples]
         c_rmk = src.pid.in_(data_.pid.tolist())
         rmk_ = pd.DataFrame(list(src.select(src.rmk_t).where(c_rmk).dicts()))
         data_ = pd.concat([data_, rmk_], axis=1)
@@ -69,12 +51,57 @@ class FeatureLoader(Basic):
 
         return data_
 
-    def VarFeatLoad(self, met_s: list = [], ind_s: list = []) -> pd.DataFrame:
+
+class FeatureLoader(Basic):
+    def __init__(self, local_p: Path, save_p: Path = None):
+        super().__init__()
+        # self.__label_col = 'end'
+        # self.__info_cols = ['pid', 'icu', 'end', 'rmk']
+        self.__samples = self._Basic__TableLoad(local_p)
+        self.__save_p = PathVerify(save_p) if save_p else Path.cwd()
+
+    def __GetFeatPerform(self, data_: pd.DataFrame) -> pd.DataFrame:
+
+        row_s = []
+        bin_cols = ['sex', 'gender']
+        col_s = data_.columns.drop(self._Basic__info_cols).tolist()
+
+        for col in col_s:
+
+            tmp = data_[[self._Basic__label_col, col]]
+            tmp = tmp.dropna()
+
+            n_neg = len(tmp[tmp[self._Basic__label_col] == 0])
+            n_pos = len(tmp[tmp[self._Basic__label_col] == 1])
+
+            if n_neg < 2 or n_pos < 2:
+                continue
+
+            process = PerfomAssess(tmp[self._Basic__label_col], tmp[col])
+            p_cate = 'binary' if col in bin_cols else 'continuous'
+            p, rs_pos, rs_neg = process.PValueAssess(cate=p_cate)
+            auc, _, _, = process.AucAssess()
+
+            key_s = ['met', 'P', 'AUC', 'rs_0', 'size_0', 'rs_1', 'size_1']
+            value_s = [col, p, auc, rs_neg, n_neg, rs_pos, n_pos]
+
+            row = pd.Series(dict(zip(key_s, value_s)))
+            row_s.append(row)
+
+        feat = pd.DataFrame(row_s)
+        feat = feat.set_index('met', drop=True)
+        return feat
+
+    def VarFeatsLoad(self,
+                     met_s: list = [],
+                     ind_s: list = [],
+                     save_n: str = '') -> None:
         '''
         met_s: methods select
         ind_s: indicators select
+        save_n: table save name (Default: Not Save to local)
         '''
-        data_var = self.__GetSampleData()
+        data_var = self._Basic__GetSampleData(self.__samples)
         met_s = met_s if met_s else self.__samples[0].data.index.to_list()
         ind_s = ind_s if ind_s else self.__samples[0].data.columns.to_list()
 
@@ -84,15 +111,23 @@ class FeatureLoader(Basic):
                 data_var[col_name] = [
                     samp.data.loc[met, ind] for samp in self.__samples
                 ]
+        feat_var = self.__GetFeatPerform(data_var)
 
-        return data_var
+        if save_n:
+            save_p_0 = self.__save_p / (save_n + '_data_tot.csv')
+            data_var.to_csv(save_p_0, index=False)
+            save_p_1 = self.__save_p / (save_n + '_feat_tot.csv')
+            feat_var.to_csv(save_p_1)
 
-    def LabFeatLoad(self, src_0: any, src_1: any) -> pd.DataFrame:
+        return data_var, feat_var
+
+    def LabFeatsLoad(self, src_0: any, src_1: any, save_n: str = '') -> None:
         '''
         src_0: Patient static data
         src_1: Clinical and physiological data
+        save_n: table save name (Default: Not Save to local)
         '''
-        data_lab = self.__GetSampleData()
+        data_lab = self._Basic__GetSampleData(self.__samples)
         data_lab = data_lab.sort_values('pid')
 
         join_info = {
@@ -114,131 +149,76 @@ class FeatureLoader(Basic):
 
         data_que = pd.DataFrame(list(que_l.dicts())).drop(['pid'], axis=1)
         data_lab = pd.concat([data_lab, data_que, mvt_], axis=1)
+        feat_lab = self.__GetFeatPerform(data_lab)
 
-        return data_lab
+        if save_n:
+            save_p_0 = self.__save_p / (save_n + '_data_tot.csv')
+            data_lab.to_csv(save_p_0, index=False)
+            save_p_1 = self.__save_p / (save_n + '_feat_tot.csv')
+            feat_lab.to_csv(save_p_1)
 
-    def WholeFeatLoad(self, data_0: pd.DataFrame,
-                      data_1: pd.DataFrame) -> pd.DataFrame:
-        data_1 = data_1.drop(['pid', 'end', 'icu'], axis=1)
-        data_ = pd.concat([data_0, data_1], axis=1)
-
-        return data_
+        return data_lab, feat_lab
 
 
-class FeatureProcess(Basic):
+class DatasetGeneration(Basic):
     def __init__(self,
                  data_: pd.DataFrame,
-                 col_label: str,
-                 save_path: Path = None):
+                 feat_: pd.DataFrame,
+                 save_p: Path = None):
         super().__init__()
         self.__data = data_
-        self.__feat = pd.DataFrame()
-        self.__col_l = col_label
-        self.__save_p = PathVerify(save_path) if save_path else Path.cwd()
+        self.__feat = feat_
+        self.__save_p = PathVerify(save_p) if save_p else Path.cwd()
+
+    @property
+    def data(self):
+        return self.__data
 
     @property
     def feat(self):
         return self.__feat
 
-    def FeatPerformance(self, col_methods: list, save_name: str = ''):
-
-        row_s = []
-        bin_cols = ['sex', 'gender']
-        data_csv = self.__save_p / (save_name + '_data_tot.csv')
-        pd.DataFrame.to_csv(self.__data, data_csv, index=False)
-
-        for col_met in col_methods:
-
-            df_tmp = self.__data[[self.__col_l, col_met]]
-            df_tmp = df_tmp.dropna()
-
-            # Get feature attributes
-            n_neg = len(df_tmp[df_tmp[self.__col_l] == 0])
-            n_pos = len(df_tmp[df_tmp[self.__col_l] == 1])
-
-            if n_neg < 2 or n_pos < 2:
-                continue
-
-            process = PerfomAssess(df_tmp[self.__col_l], df_tmp[col_met])
-            p_cate = 'binary' if col_met in bin_cols else 'continuous'
-            p, rs_pos, rs_neg = process.PValueAssess(cate=p_cate)
-            auc, _, _, = process.AucAssess()
-
-            row_value = {
-                'met': col_met,
-                'P': p,
-                'AUC': auc,
-                'rs_0': rs_neg,
-                'size_0': n_neg,
-                'rs_1': rs_pos,
-                'size_1': n_pos
-            }
-
-            row = pd.Series(row_value)
-            row_s.append(row)
-
-        self.__feat = pd.DataFrame(row_s)
-        if self.__feat.empty:
-            pass
+    def FeatsSelect(self, p_max: float = 0.05, specified_feats: list = []):
+        if specified_feats:
+            feats_all = specified_feats
         else:
-            attr_csv = self.__save_p / (save_name + '_attr_tot.csv')
-            self.__feat.to_csv(attr_csv, index=False)
+            p_v_filt = self.__feat.P < p_max
+            feats_all = self.__feat[p_v_filt].index
+        self.__feat = self.__feat.loc[feats_all, :]
 
     def DataSelect(self,
-                   p_max: float = 0.05,
-                   feats_spe: list = [],
                    feat_lack_max: float = 0.4,
                    recs_lack_max: float = 0.2) -> pd.DataFrame:
 
-        if self.__feat.empty:
-            return pd.DataFrame()
-
-        # Features select
-
-        if not feats_spe:
-            p_v_filt = self.__feat.P < p_max
-            filt_cond = p_v_filt
-            feats_all = self.__feat[filt_cond].met.tolist()
-        else:
-            feats_all = feats_spe
-
-        # Data select
-
-        data_ = self.__data[[self.__col_l] + feats_all]
+        data_ = self.__data[[self._Basic__label_col] +
+                            self.__feat.index.to_list()]
         recs_val = data_.isnull().sum(axis=1) < data_.shape[1] * recs_lack_max
         feat_val = data_.isnull().sum(axis=0) < data_.shape[0] * feat_lack_max
-        feats_slt = self.__feat[self.__feat.met.isin(feat_val[feat_val].index)]
+        feats = feat_val[feat_val].index.drop(self._Basic__label_col)
+        feats_slt = self.__feat.loc[feats, :]
         feats_slt = feats_slt.sort_values(by=['P'], ascending=True)
-        self.__feat = feats_slt
-        feats_slt.to_csv(self.__save_p / 'feature_attr_slt.csv', index=False)
 
         if feats_slt.empty or len(data_.end.unique()) == 1:
-            data_ = pd.DataFrame()
+            data_slt = pd.DataFrame()
         else:
-            data_ = data_.loc[recs_val, feat_val]
-            for feat_col in feats_slt.met:
-                if data_[feat_col].dtype == 'bool':
-                    data_[feat_col] = data_[feat_col].astype(int)
+            data_slt = data_.loc[recs_val, feat_val]
+            for feat_col in feats_slt.index:
+                if data_slt[feat_col].dtype == 'bool':
+                    data_slt[feat_col] = data_[feat_col].astype(int)
 
-            # feat_violin = self.__save_p / 'feat_violin'
-            # feat_violin.mkdir(parents=True, exist_ok=True)
+        self.__feat, self.__data = feats_slt, data_slt
 
-            # plot_p = PlotMain(feat_violin)
-            # for feat_col in feats_slt.met:
-            #     df_tmp = data_[[self.__col_l, feat_col]]
-            #     df_tmp['all'] = ''
-            #     plot_p.ViolinPlot(x='all',
-            #                       y=feat_col,
-            #                       df=df_tmp,
-            #                       fig_n=feat_col,
-            #                       hue=self.__col_l)
+    def FeatsDistPlot(self):
+        violin_dist = self.__save_p / 'feat_violin'
+        violin_dist.mkdir(parents=True, exist_ok=True)
 
-        data_.to_csv(self.__save_p / 'sample_data_slt.csv', index=False)
-
-        return data_
-
-    def DataSelect_ForwardSearch(self,
-                                 p_max: float = 0.05,
-                                 feat_lack_max: float = 0.4,
-                                 recs_lack_max: float = 0.2):
-        pass
+        plot_p = PlotMain(violin_dist)
+        for feat_col in self.__feats_slt.index:
+            df_tmp = self.__data[[self._Basic__label_col, feat_col]]
+            df_tmp['all'] = ''
+            df_tmp.to_csv(violin_dist / (feat_col + '.csv'), index=False)
+            plot_p.ViolinPlot(x='all',
+                              y=feat_col,
+                              df=df_tmp,
+                              fig_n=feat_col,
+                              hue=self._Basic__label_col)
