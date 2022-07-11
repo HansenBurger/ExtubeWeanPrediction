@@ -12,13 +12,10 @@ from Classes.ORM.expr import LabExtube, LabWean, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
 p_name = 'ForwardSearch'
-pred_way = 'Norm'  # KFold | Norm
+pred_way = 'KFold'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
-mode_s = [
-    'Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60', 'Extube_PSV_Nad-30',
-    'Extube_PSV_Nad-60'
-]
+mode_s = ['Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60']
 
 
 @measure
@@ -34,7 +31,7 @@ def main(mode_name: str):
     _ = load_p.LabFeatsLoad(PatientInfo, LabExtube, 'LabFeats')
 
     data_p = DatasetGeneration(data_var, feat_var, s_f_fold)
-    data_p.FeatsSelect(p_max=1.1)
+    data_p.FeatsSelect()
     data_p.DataSelect()
     data_tot, feat_tot = data_p.data, data_p.feat
 
@@ -57,8 +54,9 @@ def main(mode_name: str):
         feat_i = [best_j] + feat_include
         data_i = data_tot.loc[:, ['end'] + feat_i]
         feat_boxes.append(feat_i)
-        tot_predict = MultiModelPredict(data_i, static.algo_set, 'end',
-                                        s_g_fold / (str(i) + '-' + best_j))
+        tot_predict = MultiModelPredict(
+            data_i, static.algo_set, 'end', s_g_fold /
+            (str(i).rjust(len(str(len(feat_tot))), '0') + '-' + best_j))
         tot_predict.MultiModels(pred_way)
         perform_boxes.append(tot_predict.model_result)
 
