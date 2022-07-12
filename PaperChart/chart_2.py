@@ -11,7 +11,7 @@ from pylatex import Document, Package, Figure, SubFigure, Command
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, SaveGen
-from Classes.FeatureProcess import FeatureLoader, FeatureProcess
+from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
 p_name = 'Chart_2_Heatmap'
 mode_s = [
@@ -43,15 +43,9 @@ def main(mode_: str):
     save_form.mkdir(parents=True, exist_ok=True)
 
     load_p = FeatureLoader(ConfigRead('Source', mode_, json_loc))
-    data_ = load_p.VarFeatLoad(mets_d.keys(), inds_d.keys())
+    _, feat_var = load_p.VarFeatsLoad()
 
-    info_col_n = ['pid', 'icu', 'end', 'rmk']
-    feat_col_s = data_.columns.drop(info_col_n).tolist()
-    feat_var_p = FeatureProcess(data_, 'end', save_form)
-    feat_var_p.FeatPerformance(feat_col_s, 'VarFeats')
-
-    feat_df_d = GetVarPerform(feat_var_p.feat.set_index('met', drop=True),
-                              list(perform_info.keys()))
+    feat_df_d = GetVarPerform(feat_var, list(perform_info.keys()))
 
     for df_n, df in feat_df_d.items():
         draw_i = perform_info[df_n]

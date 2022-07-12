@@ -14,7 +14,7 @@ sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, SaveGen
 from Classes.ORM.expr import LabExtube, PatientInfo
-from Classes.FeatureProcess import FeatureLoader, FeatureProcess
+from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
 p_name = 'Chart_1_Baseline'
 mode_s = [
@@ -43,17 +43,12 @@ def main(mode_: str):
     save_form.mkdir(parents=True, exist_ok=True)
 
     load_p = FeatureLoader(ConfigRead('Source', mode_, json_loc))
-    data_ = load_p.LabFeatLoad(PatientInfo, LabExtube)
-
-    info_col_n = ['pid', 'icu', 'end', 'rmk']
-    feat_col_s = data_.columns.drop(info_col_n).tolist()
-    feat_lab_p = FeatureProcess(data_, 'end', save_form)
-    feat_lab_p.FeatPerformance(feat_col_s, 'LabFeats')
+    _, feat_lab = load_p.LabFeatsLoad(PatientInfo, LabExtube)
 
     feat_map = GetWholeNameMap()
-    feat_df = feat_lab_p.feat[feat_lab_p.feat.met.isin(feat_map.index)]
-    feat_df['para_num'] = feat_df['met'].map(feat_map['para_num'])
-    feat_df['para_inter'] = feat_df['met'].map(feat_map['para_inter'])
+    feat_df = feat_lab[feat_lab.index.isin(feat_map.index)]
+    feat_df['para_num'] = feat_df.index.map(feat_map['para_num'])
+    feat_df['para_inter'] = feat_df.index.map(feat_map['para_inter'])
     feat_df = feat_df.sort_values(by='para_num')
     feat_df = feat_df.reset_index(drop=True)
     feat_df = feat_df.rename(col_map, axis=1)
