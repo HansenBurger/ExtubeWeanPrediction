@@ -17,10 +17,7 @@ from Classes.ORM.expr import LabExtube, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
 p_name = 'Chart_1_Baseline'
-mode_s = [
-    'Extube_30_PSV_Nad', 'Extube_30_SumP12_Nad', "Extube_60_PSV_Nad",
-    "Extube_60_SumP12_Nad"
-]
+mode_s = ["Extube_60_PSV_Nad", "Extube_60_SumP12_Nad"]
 map_cates = [
     'BG-AcidAlkaline', 'BG-Electrolytes', 'BG-Oxygenation', 'BG-Other',
     'Biochem', 'Unkown', 'MedicalScore'

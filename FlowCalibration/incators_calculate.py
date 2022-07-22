@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
@@ -44,15 +45,27 @@ def RespValStatic(resp_l: list, save_loc: Path):
     return resp_val_l
 
 
-def PanglaisScatter(resp_l: list, save_loc: Path):
+def PoincareScatter(resp_l: list, save_loc: Path = Path.cwd()) -> None:
     def __Panglais(list_: list) -> np.array:
         a_0 = np.array(list_[:len(list_) - 1])
         a_1 = np.array(list_[1:])
         return a_0, a_1
 
-    mp_jl_t_0, mp_jl_t_1 = __Panglais([resp.mp_jl_t for resp in resp_l])
-    mp_jl_d_0, mp_jl_d_1 = __Panglais([resp.mp_jl_d for resp in resp_l])
-    a = sum([resp.wid for resp in resp_l])
-    plt.plot(mp_jl_d_0, mp_jl_d_1, 'bo')
-    plt.show()
-    plt.close()
+    resp_df = pd.DataFrame()
+
+    if not save_loc.is_dir():
+        save_loc.mkdir(parents=True, exist_ok=True)
+
+    for ind in ind_s:
+        a_0, a_1 = __Panglais([getattr(resp, ind) for resp in resp_l])
+        resp_df[ind + '_0'] = a_0
+        resp_df[ind + '_1'] = a_1
+        sns.reset_orig()
+        sns.set_theme(style="whitegrid")
+        plt.plot(a_0, a_1, 'bo')
+        plt.title(ind)
+        plt.tight_layout()
+        plt.savefig(save_loc / (ind + '.png'))
+        plt.close()
+
+    resp_df.to_csv(save_loc / 'resp_data.csv', index=False)

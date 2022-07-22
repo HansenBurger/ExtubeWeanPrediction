@@ -7,6 +7,7 @@ from datetime import datetime
 
 sys.path.append(str(Path.cwd()))
 
+from FlowCalibration.incators_calculate import PoincareScatter
 from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
@@ -16,7 +17,7 @@ from Classes.ORM.basic import db
 from Classes.ORM.expr import PatientInfo
 from Classes.ORM.cate import ExtubePSV, ExtubeSumP12, WeanPSV, WeanSumP12
 
-mode_ = 'Wean_SumP12_Nad'
+mode_ = 'Extube_SumP12_Nad'
 mode_info = {
     'Extube': {
         'PSV':
@@ -83,6 +84,8 @@ def PIDTest(gp, pids):
             print('{0}\' has no valid data'.format(pid))
             continue
         else:
+            s_g_pid = s_g_fold / str(pid)
+            PoincareScatter(pid_obj.resp_l, s_g_pid)
             process_1 = VarResultsGen(pid_obj)
             process_1.VarRsGen(method_list)
             process_1.TensorStorage(s_f_fold)

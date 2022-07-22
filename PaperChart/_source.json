@@ -6,19 +6,30 @@
         "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_60min\\Extube_SumP12_Nad"
     },
     "ForwardSearch": {
-        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph"
+        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220718_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220718_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph"
     },
-    "Chart1NameMap": {
+    "PoincarePlot": {
+        "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
+    },
+    "BaselineNameMap": {
         "Statistics": {
             "age": "Age (yr)",
             "sex": "Male (\\%)",
             "bmi": "BMI",
-            "mv_t": "MV Still Time (h)"
+            "mv_t": "MV Duration (h)"
+        },
+        "Reason for MV(n)": {
+            "cardiac": "Cardiac",
+            "neurological": "Neurological",
+            "postop": "Postop",
+            "pulmonary": "Pulmonary",
+            "sepsis": "Spesis",
+            "trama": "Trama"
         },
         "BG-AcidAlkaline": {
-            "nph": "NpH",
-            "npco2": "NPaCO_2",
+            "nph": "pH",
+            "npco2": "PaCO_2",
             "hco3": "HCO_3",
             "be": "BE"
         },
@@ -58,7 +69,7 @@
             "apache": "APACHE"
         }
     },
-    "Chart2NameMap": {
+    "HeatmapNameMap": {
         "Indicators": {
             "rr": "RR",
             "v_t": "V_t",
