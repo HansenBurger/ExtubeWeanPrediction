@@ -1,6 +1,5 @@
 import sys
 import math
-import random
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -348,13 +347,13 @@ def GenLatexPdf(fig_pathes: list):
         doc.append(Command('centering'))
         with doc.create(
                 SubFigure(position='c',
-                          width=NoEscape(r'0.55\linewidth'))) as left_row:
+                          width=NoEscape(r'0.5\linewidth'))) as left_row:
             left_row.add_image(str(fig_pathes[0]),
                                width=NoEscape(r'0.95\linewidth'))
 
         with doc.create(
                 SubFigure(position='c',
-                          width=NoEscape(r'0.55\linewidth'))) as right_row:
+                          width=NoEscape(r'0.5\linewidth'))) as right_row:
             right_row.add_image(str(fig_pathes[1]),
                                 width=NoEscape(r'0.95\linewidth'))
 
@@ -362,13 +361,13 @@ def GenLatexPdf(fig_pathes: list):
         doc.append(Command('centering'))
         with doc.create(
                 SubFigure(position='c',
-                          width=NoEscape(r'0.55\linewidth'))) as left_row:
+                          width=NoEscape(r'0.5\linewidth'))) as left_row:
             left_row.add_image(str(fig_pathes[2]),
                                width=NoEscape(r'0.95\linewidth'))
 
         with doc.create(
                 SubFigure(position='c',
-                          width=NoEscape(r'0.55\linewidth'))) as right_row:
+                          width=NoEscape(r'0.5\linewidth'))) as right_row:
             right_row.add_image(str(fig_pathes[3]),
                                 width=NoEscape(r'0.95\linewidth'))
 
