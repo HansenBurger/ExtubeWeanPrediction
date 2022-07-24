@@ -77,6 +77,30 @@ def GetWholeNameMap() -> dict:
     return tot_mapping
 
 
+class Basic():
+    def __init__(self) -> None:
+        pass
+
+    def GetDistData(self, mode_name: str):
+        load_p = FeatureLoader(ConfigRead('Source', mode_, json_loc))
+        _, feat_lab = load_p.LabFeatsLoad(PatientInfo, LabExtube)
+        return feat_lab
+
+
+class DistTable(Basic):
+    def __init__(self, mode_name: str) -> None:
+        super().__init__()
+        self.__data = self.GetDistData(mode_name)
+
+
+def GetDistTable():
+    pass
+
+
+def GetBaselineTable():
+    pass
+
+
 def GenLatexPdf(df: pd.DataFrame) -> Document:
     geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
     doc = Document(geometry_options=geometry_options)

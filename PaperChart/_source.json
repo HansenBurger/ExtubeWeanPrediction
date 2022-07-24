@@ -12,9 +12,6 @@
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
     },
-    "": {
-        "source": ""
-    },
     "BaselineNameMap": {
         "Statistics": {
             "age": "Age (yr)",
@@ -28,12 +25,15 @@
             "postop": "Postop",
             "pulmonary": "Pulmonary",
             "sepsis": "Spesis",
-            "trama": "Trama"
-        },
+            "trama": "Trama",
+            "other": "Others"
+        }
+    },
+    "BiochemBG": {
         "BG-AcidAlkaline": {
             "nph": "pH",
             "npco2": "PaCO_2",
-            "hco3": "HCO_3",
+            "hco3": "HCO_3^-",
             "be": "BE"
         },
         "BG-Electrolytes": {
@@ -45,7 +45,6 @@
             "o2": "O_2",
             "co2": "CO_2",
             "po2": "PaO_2",
-            "npo2": "NPaO_2",
             "fio2": "FiO_2"
         },
         "BG-Other": {
@@ -66,10 +65,6 @@
             "pcv": "PCV",
             "pf": "PF",
             "rhs": "RHS"
-        },
-        "MedicalScore": {
-            "sofa": "SOFA",
-            "apache": "APACHE"
         }
     },
     "HeatmapNameMap": {

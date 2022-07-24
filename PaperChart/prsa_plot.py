@@ -55,7 +55,7 @@ class Basic():
 class PRSAAnalysis(Basic):
     def __init__(self,
                  arr_st: tuple,
-                 L: int = 20,
+                 L: int = 18,
                  T: int = 2,
                  met: str = 'AC') -> None:
         super().__init__()
@@ -80,8 +80,8 @@ class PRSAAnalysis(Basic):
                 anchor['ind'] = arr_x[i]
                 anchor['siz'] = arr_y[i]
                 anchor['val'] = True
-                L_clip = slice(i - self.__L, i + self.__L + 1)
-                anchor['clip_i'] = np.arange(-self.__L, self.__L + 1, step=1)
+                L_clip = slice(i - self.__L, i + self.__L)
+                anchor['clip_i'] = np.arange(-self.__L, self.__L, step=1)
                 anchor['clip_v'] = arr_y[L_clip].tolist()
             anchor_s.append(anchor)
         return anchor_s
@@ -257,7 +257,7 @@ def GenLatexPdf(fig_pathes: list):
     chart_description = r'''Illustration of the PRSA technique: (a) Anchor points 
     are selected from the original time series $(x_i)$; here increase events are 
     selected according to Eq. (1a), corresponding to T = 1. (b) Windows 
-    (surroundings) of length 2L with L=20 are defined around each anchor point; 
+    (surroundings) of length 2L with L=18 are defined around each anchor point; 
     the points in each window are given by Eq. (3) and shown here for the first 
     four anchor points. (c) The surroundings of many anchor points (all located in 
     the centre) are shown on top of each other. (d) The PRSA curve $(\overline{x}(k))$ 

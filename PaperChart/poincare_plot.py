@@ -157,7 +157,7 @@ class PoincarePlot(Basic):
                     arrowprops=dict(facecolor='forestgreen', shrink=0.05),
                     horizontalalignment='right',
                     verticalalignment='top')
-        ax.set_title('SD1,SD2', fontsize=30, fontweight='bold', loc='left')
+        ax.set_title('$(a)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
@@ -232,7 +232,7 @@ class PoincarePlot(Basic):
                                p=p_2,
                                p_n='\Delta {0}<0'.format(self.__ind),
                                offsets=(0.1, -0.1))
-        ax.set_title('PI', fontsize=30, fontweight='bold', loc='left')
+        ax.set_title('$(b)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
@@ -268,7 +268,7 @@ class PoincarePlot(Basic):
                                p_n='D_j^-',
                                offsets=(-0.1, -0.2),
                                shrink=0.05)
-        ax.set_title('GI', fontsize=30, fontweight='bold', loc='left')
+        ax.set_title('$(c)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
@@ -323,7 +323,7 @@ class PoincarePlot(Basic):
         ax.plot(*l_theta_j, 'k-', lw=0.8)
         self.__AddArrow(ax, p_sta, p_j)
 
-        ax.set_title('GI', fontsize=30, fontweight='bold', loc='left')
+        ax.set_title('$(d)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
@@ -335,13 +335,13 @@ def GenLatexPdf(fig_pathes: list):
     doc.packages.append(Package('booktabs'))
 
     chart_description = r'''Four methods of variability analysis of the Pongarets. 
-    Subplots "SD1,SD2" are general Poncelet analysis, where SD1 is the degree of 
-    variation in the short axis and SD2 is the degree of variation in the long axis. 
-    Subplot "PI" is the asymmetry analysis, which calculates the proportion of points 
-    above and below the LI to the total. Subplot "GI" is the asymmetry analysis, and the 
-    sum of the distances from the points above LI to LI is calculated as the proportion of 
-    the total. Subplot "SI" is an asymmetry analysis, which calculates the ratio of the 
-    angle between the point above LI and LI to the total.'''
+    (a) is general Poncare analysis, where SD1 is the degree of variation in the 
+    short axis and SD2 is the degree of variation in the long axis. (b) is the asymmetry 
+    analysis, which calculates the proportion of points above and below the LI to the 
+    total(PI). (c) is the asymmetry analysis, and the sum of the distances from 
+    the points above LI to LI is calculated as the proportion of the total(GI). 
+    (d) is an asymmetry analysis, which calculates the ratio of the angle between 
+    the point above LI and LI to the total(SI).'''
 
     with doc.create(Figure(position='h!')) as imagesRow1:
         doc.append(Command('centering'))
