@@ -5,94 +5,196 @@ from pathlib import Path
 from matplotlib import pyplot as plt
 
 from pylatex.section import Paragraph
-from pylatex.utils import bold, NoEscape
-from pylatex import Document, Package, Figure, SubFigure, Command
+from pylatex.utils import bold, italic, NoEscape
+from pylatex import Document, Package, Figure, SubFigure, Command, LongTable
 
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, SaveGen
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
-p_name = 'Chart_2_Heatmap'
-mode_s = [
-    'Extube_30_PSV_Nad', 'Extube_30_SumP12_Nad', "Extube_60_PSV_Nad",
-    "Extube_60_SumP12_Nad"
-]
+p_name = 'RespVariability'
+mode_s = ["Extube_60_SumP12_Nad"]
 
 perform_info = {
     'P': {
-        'name': 'p-value',
+        'col_n': 'P',
         'color': 'YlGnBu',
-        'range': (0, 0.05)
+        'range': (0, 0.05),
+        'save_n': 'p-value'
     },
     'AUC': {
-        'name': 'rocauc',
+        'col_n': 'AUC',
         'color': 'coolwarm',
-        'range': ()
+        'range': (),
+        'save_n': 'rocauc'
+    },
+    'ind_part': {
+        'save_n': 'resp_ind',
+        'mets': ['ave', 'med', 'std', 'cv', 'qua', 'tqua', 'sd1', 'sd2'],
+        'p_limit': (0, 0.05),
+    },
+    'met_part': {
+        'save_n': 'resp_met',
+        'inds': ['rr', 'v_t', 've', 'rsbi'],
+        'p_limit': (0, 0.05),
+    },
+    'new_best': {
+        'save_n': 'resp_new',
+        'mets': ['pi', 'gi', 'si', 'app', 'samp', 'fuzz', 'ac', 'dc'],
+        'inds': ['wob', 'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'],
+        'p_limit': (0, 0.05),
     }
 }
 
-json_loc = Path.cwd() / 'PaperChart' / 'charts.json'
+col_map_s = {
+    'para': 'Variability-Respiratory',
+    'rs_0': 'Successful N = ',
+    'rs_1': 'Failed N = ',
+    'P': 'P-value',
+    'AUC': 'ROC-AUC'
+}
+
+json_loc = Path.cwd() / 'PaperChart' / '_source.json'
 s_f_fold = SaveGen(ConfigRead('ResultSave', 'Form'), p_name)
-mets_d = ConfigRead('Chart2NameMap', 'Methods', json_loc)
-inds_d = ConfigRead('Chart2NameMap', 'Indicators', json_loc)
 
 
 def main(mode_: str):
     save_form = s_f_fold / mode_
     save_form.mkdir(parents=True, exist_ok=True)
 
-    load_p = FeatureLoader(ConfigRead('Source', mode_, json_loc))
-    _, feat_var = load_p.VarFeatsLoad()
+    main_p = VarResult(mode_, save_form)
+    main_p.TotalPerform(**perform_info['P'])
+    main_p.TotalPerform(**perform_info['AUC'])
+    fig_pathes = [
+        save_form / i for i in [
+            perform_info['P']['save_n'],
+            perform_info['AUC']['save_n'],
+        ]
+    ]
+    doc_g_0 = LatexGraph(*fig_pathes)
+    doc_g_0.generate_pdf(str(save_form / (p_name + '_graph')), clean_tex=False)
 
-    feat_df_d = GetVarPerform(feat_var, list(perform_info.keys()))
+    df_0 = main_p.PartialPerform(**perform_info['ind_part'])
+    doc_t_0 = LatexTable(df_0, 3, 'Remarkable respiratory parameters')
+    doc_t_0.generate_pdf(str(save_form / (p_name + '_table_0')),
+                         clean_tex=False)
 
-    for df_n, df in feat_df_d.items():
-        draw_i = perform_info[df_n]
-        fig = DrawHeatMap(df, draw_i['color'], draw_i['range'])
-        fig.savefig(save_form / (draw_i['name'] + '.png'))
-        df.to_csv(save_form / (draw_i['name'] + '.csv'))
-        df.to_latex(save_form / (draw_i['name'] + '.tex'))
+    df_1 = main_p.PartialPerform(**perform_info['met_part'])
+    doc_t_1 = LatexTable(df_1, 4, 'Significant variability method')
+    doc_t_1.generate_pdf(str(save_form / (p_name + '_table_1')),
+                         clean_tex=False)
 
-    doc = GenLatexPdf(save_form / (perform_info['P']['name'] + '.png'),
-                      save_form / (perform_info['AUC']['name'] + '.png'))
-    doc.generate_pdf(str(save_form / 'chart_2'), clean_tex=False)
-
-
-def GetVarPerform(df: pd.DataFrame, val_cols: list) -> dict:
-    df_d = {}
-    for val in val_cols:
-        feat_df = pd.DataFrame(columns=['met'] + list(inds_d.keys()))
-        feat_df['met'] = mets_d.keys()
-        feat_df = feat_df.set_index('met', drop=True)
-        for met in feat_df.index:
-            for ind in feat_df.columns:
-                feat_df.loc[met, ind] = df.loc[('-').join([met, ind]), val]
-        feat_df.index = list(mets_d.values())
-        feat_df = feat_df.rename(columns=inds_d)
-        feat_df = feat_df.astype('float')
-        df_d[val] = feat_df
-    return df_d
+    df_2 = main_p.PartialPerform(**perform_info['new_best'])
+    doc_t_2 = LatexTable(df_2, 5, 'Significant rew type')
+    doc_t_2.generate_pdf(str(save_form / (p_name + '_table_2')),
+                         clean_tex=False)
 
 
-def DrawHeatMap(df: pd.DataFrame, c_map: str, v_range: tuple) -> plt.figure:
-    fig_dims = tuple(reversed(df.shape))
-    fig_dims = (fig_dims[0] + 1, fig_dims[1])
-    df.index = ['$' + i + '$' for i in df.index]
-    df.columns = ['$' + i + '$' for i in df.columns]
-    fig = plt.figure(figsize=fig_dims, dpi=300)
-    res = sns.heatmap(df,
-                      annot=True,
-                      linewidths=.5,
-                      cmap=c_map,
-                      annot_kws={'size': 14})
-    res.set_yticklabels(res.get_ymajorticklabels(), fontsize=12)
-    plt.tight_layout()
-    plt.close()
-    return fig
+class Basic():
+    def __init__(self) -> None:
+        pass
+
+    def GetVarData(self, mode_name: str):
+        load_p = FeatureLoader(ConfigRead('Source', mode_name, json_loc))
+        data_, feat_ = load_p.VarFeatsLoad()
+        return data_, feat_
 
 
-def GenLatexPdf(fig_path_0: Path, fig_path_1: Path) -> Document:
+class VarResult(Basic):
+    def __init__(self, mode_name: str, save_path: Path) -> None:
+        super().__init__()
+        _, self.__feat = self.GetVarData(mode_name)
+        self.__save_p = save_path
+        self.__name_map = {
+            'mets': ConfigRead('RespVar', 'Methods', json_loc),
+            'inds': ConfigRead('RespVar', 'Indicators', json_loc)
+        }
+
+    def TotalPerform(self, col_n: str, color: str, range: str, save_n: str):
+        var_cols = ['met'] + list(self.__name_map['inds'].keys())
+        df_var = pd.DataFrame(columns=var_cols)
+        df_var['met'] = self.__name_map['mets'].keys()
+        df_var = df_var.set_index('met', drop=True)
+
+        for met in df_var.index:
+            for ind in df_var.columns:
+                df_var.loc[met, ind] = self.__feat.loc[('-').join([met, ind]),
+                                                       col_n]
+
+        df_var.index = list(self.__name_map['mets'].values())
+        df_var = df_var.rename(columns=self.__name_map['inds'])
+        df_var = df_var.astype('float')
+        df_var.to_csv(self.__save_p / (save_n + '.csv'))
+        df_var.to_latex(self.__save_p / (save_n + '.tex'), escape=False)
+
+        fig_dims = tuple(reversed(df_var.shape))
+        fig_dims = (fig_dims[0] + 1, fig_dims[1])
+        df_var.index = ['$' + i + '$' for i in df_var.index]
+        df_var.columns = ['$' + i + '$' for i in df_var.columns]
+        fig = plt.figure(figsize=fig_dims, dpi=300)
+        res = sns.heatmap(df_var,
+                          annot=True,
+                          linewidths=.5,
+                          cmap=color,
+                          annot_kws={'size': 14})
+        res.set_yticklabels(res.get_ymajorticklabels(), fontsize=12)
+        fig.tight_layout()
+        fig.savefig(self.__save_p / (save_n + '.png'))
+        plt.close()
+
+    def PartialPerform(
+        self,
+        save_n: str,
+        mets: list = [],
+        inds: list = [],
+        respvar_s: list = [],
+        p_limit: tuple = (0, 1.1),
+        auc_limit: tuple = (0, 1.1),
+        order_by: str = 'P',
+        show_stop: int = -1,
+    ):
+
+        if respvar_s:
+            df = self.__feat.loc[respvar_s, :]
+        else:
+            mets = list(self.__name_map['mets'].keys()) if not mets else mets
+            inds = list(self.__name_map['inds'].keys()) if not inds else inds
+            index_raw = []
+            index_inter = []
+            for i in mets:
+                for j in inds:
+                    met = self.__name_map['mets'][i]
+                    ind = self.__name_map['inds'][j]
+                    index_raw.append('-'.join([i, j]))
+                    index_inter.append('-'.join([met, ind]))
+            df = self.__feat.loc[index_raw, :]
+            df['para'] = index_inter
+
+        filt_p = (df.P >= p_limit[0]) & (df.P <= p_limit[1])
+        filt_auc = (df.AUC >= auc_limit[0]) & (df.AUC <= auc_limit[1])
+        df = df.loc[filt_p & filt_auc]
+        df = df.sort_values(by=order_by, ascending=True, axis=0)
+
+        if df.empty:
+            pass
+        else:
+            col_map_s_ = col_map_s.copy()
+            col_map_s_['rs_0'] = col_map_s_['rs_0'] + str(df['size_0'][0])
+            col_map_s_['rs_1'] = col_map_s_['rs_1'] + str(df['size_1'][0])
+            df = df.rename(col_map_s_, axis=1)
+            df = df[[i for i in col_map_s_.values() if i in df.columns]]
+            df = df.loc[0:show_stop, :] if show_stop > 0 else df.loc[:, :]
+
+            df.to_csv(self.__save_p / (save_n + '.csv'), index=False)
+            df.to_latex(self.__save_p / (save_n + '.tex'),
+                        escape=False,
+                        index=False)
+
+        return df
+
+
+def LatexGraph(fig_path_0: Path, fig_path_1: Path) -> Document:
     geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
     doc = Document(geometry_options=geometry_options)
     doc.packages.append(Package('booktabs'))
@@ -125,8 +227,31 @@ def GenLatexPdf(fig_path_0: Path, fig_path_1: Path) -> Document:
             right_row.add_caption('AUC HeatMap')
 
     with doc.create(Paragraph('')) as tail:
-        tail.append(bold('Fig.1 '))
+        tail.append(bold('Fig.3 '))
         tail.append(NoEscape(chart_description))
+
+    return doc
+
+
+def LatexTable(df: pd.DataFrame, table_ind: int, table_name: str) -> Document:
+    geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
+    doc = Document(geometry_options=geometry_options)
+    doc.packages.append(Package('booktabs'))
+
+    with doc.create(Paragraph('')) as title:
+        title.append(bold('Table.{0} '.format(table_ind)))
+        title.append(italic(table_name))
+
+    with doc.create(LongTable('l|ll|r|r', row_height=1.5)) as data_table:
+        data_table.add_hline()
+        data_table.add_row(df.columns.to_list(), mapper=bold)
+        data_table.add_hline()
+        for i in df.index:
+            row = df.loc[i, :]
+            row[col_map_s['para']] = '$' + row[col_map_s['para']] + '$'
+            row = row.values.flatten().tolist()
+            data_table.add_row(row, escape=False)
+        data_table.add_hline()
 
     return doc
 

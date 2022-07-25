@@ -17,7 +17,7 @@ from Classes.ORM.expr import LabExtube, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
 p_name = 'PatientsBaseline'
-mode_s = ["Extube_60_PSV_Nad", "Extube_60_SumP12_Nad"]
+mode_s = ["Extube_60_SumP12_Nad"]
 
 table_info = {
     'statistic': {

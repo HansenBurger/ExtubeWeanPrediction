@@ -67,7 +67,7 @@
             "rhs": "RHS"
         }
     },
-    "HeatmapNameMap": {
+    "RespVar": {
         "Indicators": {
             "rr": "RR",
             "v_t": "V_t",
