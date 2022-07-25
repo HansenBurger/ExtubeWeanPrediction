@@ -12,24 +12,24 @@
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
     },
-    "BaselineNameMap": {
+    "Baseline": {
         "Statistics": {
             "age": "Age (yr)",
             "sex": "Male (\\%)",
             "bmi": "BMI",
             "mv_t": "MV Duration (h)"
         },
-        "Reason for MV(n)": {
+        "Remarks": {
             "cardiac": "Cardiac",
-            "neurological": "Neurological",
+            "neurological/neuromuscular": "Neurological",
             "postop": "Postop",
-            "pulmonary": "Pulmonary",
+            "pulmonary/COPD": "Pulmonary",
             "sepsis": "Spesis",
-            "trama": "Trama",
-            "other": "Others"
+            "truama": "Trama",
+            "others": "Others"
         }
     },
-    "BiochemBG": {
+    "BGBC": {
         "BG-AcidAlkaline": {
             "nph": "pH",
             "npco2": "PaCO_2",

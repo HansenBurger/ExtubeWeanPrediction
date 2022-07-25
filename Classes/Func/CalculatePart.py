@@ -452,11 +452,11 @@ class VarAnalysis(Basic):
             if not anchor_set(array_, i):
                 pass
             else:
-                clip = slice(i - L, i + L + 1)
+                clip = slice(i - L, i + L)
                 anchor_s.append(array_[clip].tolist())
 
         arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
-        arr_axis = np.linspace(-L, L + 1, 2 * L + 1, endpoint=False)
+        arr_axis = np.linspace(-L, L, 2 * L, endpoint=False)
         df = pd.DataFrame({'axis': arr_axis, 'prsa': arr_prsa})
 
         arr_axis_s = np.linspace(-s, s, 2 * s, endpoint=False)

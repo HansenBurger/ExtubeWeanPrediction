@@ -132,7 +132,7 @@ class PRSAAnalysis(Basic):
 
         # anchor select
         p_n_s = ['v=1', 'v=2', 'v=3', 'v=4']
-        p_offsets = [(-0.01, -0.3), (-0.03, 0.2), (-0.02, 0.4), (0.02, 0.2)]
+        p_offsets = [(-0.01, -0.4), (-0.03, 0.2), (-0.01, 0.5), (0.02, 0.3)]
         for i in range(len(p_n_s)):
             self.__BasicAnnotation(ax,
                                    ac_p_s.T[i],
