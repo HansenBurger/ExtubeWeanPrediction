@@ -31,7 +31,7 @@ perform_info = {
     },
     'ind_part': {
         'save_n': 'resp_ind',
-        'mets': ['ave', 'med', 'std', 'cv', 'qua', 'tqua', 'sd1', 'sd2'],
+        'mets': ['ave', 'med', 'std', 'cv', 'qua', 'tqua'],
         'p_limit': (0, 0.05),
     },
     'met_part': {

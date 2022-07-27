@@ -6,8 +6,8 @@
         "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_60min\\Extube_SumP12_Nad"
     },
     "ForwardSearch": {
-        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220718_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220718_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph"
+        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph"
     },
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
@@ -93,7 +93,7 @@
             "si": "SI",
             "app": "ApEn",
             "samp": "SampEn",
-            "fuzz": "FuzzyEn",
+            "fuzz": "FuzzEn",
             "ac": "PRSA(AC)",
             "dc": "PRSA(DC)"
         }
