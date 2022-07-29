@@ -11,11 +11,30 @@ from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 from Classes.ORM.expr import LabExtube, LabWean, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 
-p_name = 'ForwardSearch'
+p_name = 'ForwardSearch' + '_' + sys.argv[2]
 pred_way = 'KFold'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
 mode_s = ['Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60']
+
+ablation_group_s = {
+    'group_1': {
+        'met_s': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+        'ind_s': ['rr', 'v_t', 've', 'rsbi']
+    },
+    'group_2': {
+        'met_s': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+        'ind_s': []
+    },
+    'group_3': {
+        'met_s': [],
+        'ind_s': ['rr', 'v_t', 've', 'rsbi']
+    },
+    'group_4': {
+        'met_s': [],
+        'ind_s': []
+    },
+}
 
 
 @measure
@@ -27,7 +46,8 @@ def main(mode_name: str):
     s_g_fold.mkdir(parents=True, exist_ok=True)
 
     load_p = FeatureLoader(data_rot, s_f_fold)
-    data_var, feat_var = load_p.VarFeatsLoad(save_n='VarFeats')
+    data_var, feat_var = load_p.VarFeatsLoad(**ablation_group_s[sys.argv[1]],
+                                             save_n='VarFeats')
     _ = load_p.LabFeatsLoad(PatientInfo, LabExtube, 'LabFeats')
 
     data_p = DatasetGeneration(data_var, feat_var, s_f_fold)
