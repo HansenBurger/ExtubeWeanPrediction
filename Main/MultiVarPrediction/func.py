@@ -70,3 +70,9 @@ class MultiModelPredict(Basic):
             elif pred_way == 'KFold':
                 rs = self.KFold(m_st, save_path, store_results)
                 self.__model_result[model] = rs
+
+
+class ResultsSummary(Basic):
+    def __init__(self, load_path: Path) -> None:
+        super().__init__()
+        self.__load_p = load_path
