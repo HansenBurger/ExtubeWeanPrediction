@@ -98,7 +98,69 @@ class StaticData(Basic):
                 'get_feat_imp': True
             }
         }
+        self.__var_set = {
+            'basic_Nvar': {
+                # Basic Inds + Basic Methods (Not only variability)
+                'met_s': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+                'ind_s': ['rr', 'v_t', 've', 'rsbi']
+            },
+            'basic_var': {
+                # Basic Inds + Basic Methods (Only variability)
+                'met_s': ['cv', 'std'],
+                'ind_s': ['rr', 'v_t', 've', 'rsbi']
+            },
+            'basic_dis': {
+                # Basic Inds + Inds Distribution
+                'met_s': ['ave', 'med', 'qua', 'tqua'],
+                'ind_s': ['rr', 'v_t', 've', 'rsbi']
+            },
+            'inds_Nvar': {
+                # All Inds + Basic Methods (Not only variability)
+                'met_s': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+                'ind_s': []
+            },
+            'inds_var': {
+                # All Inds + Basic Methods (Only variability)
+                'met_s': ['cv', 'std'],
+                'ind_s': []
+            },
+            'inds_dis': {
+                # All Inds + Inds Distribution
+                'met_s': ['ave', 'med', 'qua', 'tqua'],
+                'ind_s': []
+            },
+            'mets_Nvar': {
+                # Basic Inds + All Methods (Not only variability)
+                'met_s': [],
+                'ind_s': ['rr', 'v_t', 've', 'rsbi']
+            },
+            'mets_var': {
+                # Basic Inds + All Methods (Only variability)
+                'met_s': [
+                    'cv', 'std', 'sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp',
+                    'fuzz', 'ac', 'dc'
+                ],
+                'ind_s': ['rr', 'v_t', 've', 'rsbi']
+            },
+            'all_Nvar': {
+                # All Inds + All Methods (Not only variability)
+                'met_s': [],
+                'ind_s': []
+            },
+            'all_var': {
+                # All Inds + All Methods (Only variability)
+                'met_s': [
+                    'cv', 'std', 'sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp',
+                    'fuzz', 'ac', 'dc'
+                ],
+                'ind_s': []
+            },
+        }
 
     @property
     def algo_set(self):
         return self.__algo_set
+
+    @property
+    def var_set(self):
+        return self.__var_set

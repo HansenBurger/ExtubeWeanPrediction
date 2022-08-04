@@ -7,7 +7,11 @@
     },
     "ForwardSearch": {
         "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph"
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_22_ForwardSearch_gp_origin\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_22_ForwardSearch_gp_indicators\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_23_ForwardSearch_gp_methods\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_23_ForwardSearch_gp_all\\Extube_SumP12_Nad-60\\Graph"
     },
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"

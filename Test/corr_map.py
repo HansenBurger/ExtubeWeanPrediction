@@ -10,52 +10,52 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func.KitTools import SaveGen, ConfigRead
 
 fold_p = Path(
-    r'C:\Main\Data\_\Result\Graph\20220701_22_VarAnalysis_60min\Extube_SumP12_Nad'
+    r'C:\Main\Data\_\Result\Graph\20220803_19_VarAnalysis_60min\Extube_SumP12_Nad'
 )
 p_name = 'Corr_MapPorcess'
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
 group_range = {
     '1': {
-        'row': slice(0, 54),
-        'col': slice(0, 54),
+        'row': slice(0, 90),
+        'col': slice(0, 90),
         'cmp': 'coolwarm',
-        'shape': (15, 13)
+        'shape': (18, 16)
     },
     '1-1': {
-        'row': slice(0, 18),
-        'col': slice(0, 18),
+        'row': slice(0, 30),
+        'col': slice(0, 30),
         'cmp': 'coolwarm',
-        'shape': (8, 6)
+        'shape': (10, 8)
     },
     '1-2': {
-        'row': slice(18, 36),
-        'col': slice(18, 36),
+        'row': slice(30, 60),
+        'col': slice(30, 60),
         'cmp': 'rocket',
-        'shape': (8, 6)
+        'shape': (10, 8)
     },
     '2': {
-        'row': slice(18, 36),
-        'col': slice(81, 144),
+        'row': slice(30, 60),
+        'col': slice(135, 240),
         'cmp': 'coolwarm',
         'shape': (18, 6)
     },
     '2-1': {
-        'row': slice(18, 36),
-        'col': slice(81, 99),
+        'row': slice(30, 60),
+        'col': slice(135, 165),
         'cmp': 'rocket',
         'shape': (8, 6)
     },
     '2-2': {
-        'row': slice(18, 36),
-        'col': slice(117, 144),
+        'row': slice(30, 60),
+        'col': slice(195, 240),
         'cmp': 'coolwarm',
         'shape': (10, 6)
     },
     '3': {
-        'row': slice(81, 144),
-        'col': slice(81, 144),
+        'row': slice(135, 240),
+        'col': slice(135, 240),
         'cmp': 'coolwarm',
-        'shape': (15, 13)
+        'shape': (18, 16)
     }
 }
 

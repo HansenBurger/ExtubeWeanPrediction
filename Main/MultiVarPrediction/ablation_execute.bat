@@ -19,7 +19,7 @@ set g_n_3=group_4
 set n_s_3=gp_all
 
 :: activate the process env
-call C:\Main\Soft\Conda\Scripts\activate.bat C:\Main\Soft\Conda\envs\ExWeanPredict
+call C:\Main\Soft\Conda\Scripts\activate.bat C:\Main\Soft\Conda\envs\DF_process
 cd C:\Main\Project\ExtubeWeanPrediction
 
 ECHO Start of Group_1 foward test !

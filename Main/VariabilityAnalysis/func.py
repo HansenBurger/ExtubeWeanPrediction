@@ -15,7 +15,7 @@ from Classes.VarResultsGen import VarResultsGen
 from Classes.Func.KitTools import ConfigRead, FromkeysReid
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import SenSpecCounter, PerfomAssess
-from FlowCalibration.incators_calculate import RespValStatic, PanglaisScatter
+from FlowCalibration.incators_calculate import RespValStatic, PoincareScatter
 
 static = StaticData()
 dynamic = DynamicData()

@@ -13,7 +13,10 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func.KitTools import ConfigRead, SaveGen
 
 p_name = 'FowardSearch'
-mode_s = ['Extube_60_SumP12_Nad']
+mode_s = [
+    'Extube_60_SumP12_Nad_GP1', 'Extube_60_SumP12_Nad_GP2',
+    'Extube_60_SumP12_Nad_GP3', 'Extube_60_SumP12_Nad_GP4'
+]
 
 pred_models = ['LR', 'RF', 'SVM', 'XGB']
 table_name_map = {

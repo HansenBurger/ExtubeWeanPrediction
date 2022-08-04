@@ -1,28 +1,30 @@
 @ECHO OFF
+setlocal enabledelayedexpansion
 ECHO Calculation of respiratory variability before operation
-PAUSE
 
-set t_st_0=1800
-set n_st_0=VarAnalysis_30min
-set t_st_1=3600
-set n_st_1=VarAnalysis_60min
+set t_st_s[0]=1800
+set n_st_s[0]=VarAnalysis_30_min
+
+set t_st_s[1]=3600
+set n_st_s[1]=VarAnalysis_60_min
+
+ECHO.
+
+set /p conda_env=Enter the virtual environment name[q:quit] :
+
+if %conda_env%==q EXIT
 
 :: activate the process env
-call C:\Main\Soft\Conda\Scripts\activate.bat C:\Main\Soft\Conda\envs\ExWeanPredict
+call C:\Main\Soft\Conda\Scripts\activate.bat C:\Main\Soft\Conda\envs\%conda_env%
 cd C:\Main\Project\ExtubeWeanPrediction
 
-ECHO Start of variability analysis 30min before extubation!
-python Main\VariabilityAnalysis\main.py %t_st_0% %n_st_0%
-ECHO End of Processing !
-
-:: sleep 30 s for next group
-ping 127.0.0.1 -n 30 > nul
-
-ECHO Wean data process start!
-ECHO Start of variability analysis 60min before extubation!
-python Main\VariabilityAnalysis\main.py %t_st_1% %n_st_1%
-ECHO End of Process
-ECHO End of Processing !
+FOR /L %%i IN (0,1,1) DO (
+    CALL ECHO Start of %%n_st_s[%%i]%%
+    :: main program running
+    python Main\VariabilityAnalysis\main.py !t_st_s[%%i]! !n_st_s[%%i]!
+    ECHO End of Processing !
+    ping 127.0.0.1 -n 30 > nul
+)
 
 PAUSE
 EXIT

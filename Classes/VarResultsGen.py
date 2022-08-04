@@ -17,12 +17,18 @@ class basic():
 
 class VarResultsGen(basic):
     def __init__(self, patient):
+        '''
+        :attr __pid: layer_p Patient classs
+        :attr __ind_s: resp parameters for outlier detection
+        :attr __met_s: layer_2 Reuslt class
+        '''
         super().__init__()
-        self.__pid = patient  # layer3 Patient class
+        self.__pid = patient
         self.__ind_s = [
-            'rr', 'v_t_i', 've', 'rsbi', 'wob', 'mp_jm_d', 'mp_jl_d',
-            'mp_jm_t', 'mp_jl_t'
+            'pip', 'peep', 'rr', 'v_t_i', 've', 'rsbi', 'wob', 'mp_jm_d',
+            'mp_jl_d', 'mp_jm_t', 'mp_jl_t'
         ]
+        self.__met_s = ['td', 'hra', 'hrv', 'ent', 'prsa']
 
     def __SaveNaming(self) -> str:
         pid = self.__pid.pid
@@ -68,7 +74,7 @@ class VarResultsGen(basic):
         save_n = self.__SaveNaming()
 
         var_rs = self.__pid.result
-        var_sl = [var_rs.td, var_rs.hra, var_rs.hrv, var_rs.ent, var_rs.prsa]
+        var_sl = [getattr(var_rs, i) for i in self.__met_s]
         var_sl = [GetObjectDict(i) for i in var_sl]
         var_sd = {}
         for i in var_sl:

@@ -105,10 +105,17 @@ class RecordResp(Basic):
             if not p_count.valid_tag:
                 resp.val = False
             else:
-                resp.wid = p_count.RespT(rec.sr)
+                resp_t = p_count.RespT(rec.sr)
+                resp.wid = resp_t['wid']
+                resp.t_i = resp_t['t_i']
+                resp.t_e = resp_t['t_e']
+                resp.i_e = resp_t['i_e']
+
+                resp.pip, pip_val = p_count.PIP()
+                resp.peep, peep_val = p_count.PEEP()
                 resp.rr, rr_val = p_count.RR(rec.sr)
 
-                v_t, v_t_val = p_count.V_t()
+                v_t, v_t_val = p_count.V_T()
                 resp.v_t_i = v_t['v_t_i']
                 resp.v_t_e = v_t['v_t_e']
 
@@ -216,6 +223,12 @@ class ResultStatistical(Basic):
 
         resp_l = self.__resp_l
         ind_rs = layer_0.Target0()
+        ind_rs.t_tot = func([i.wid for i in resp_l], meth, **para_['rr'])
+        ind_rs.t_i = func([i.t_i for i in resp_l], meth, **para_['rr'])
+        ind_rs.t_e = func([i.t_e for i in resp_l], meth, **para_['rr'])
+        ind_rs.i_e = func([i.i_e for i in resp_l], meth, **para_['rr'])
+        ind_rs.pip = func([i.pip for i in resp_l], meth, **para_['wob'])
+        ind_rs.peep = func([i.peep for i in resp_l], meth, **para_['wob'])
         ind_rs.rr = func([i.rr for i in resp_l], meth, **para_['rr'])
         ind_rs.v_t = func([i.v_t_i for i in resp_l], meth, **para_['v_t'])
         ind_rs.ve = func([i.ve for i in resp_l], meth, **para_['ve'])
@@ -266,7 +279,7 @@ class ResultStatistical(Basic):
 
     def EntAggr(self):
         p_count = VarAnalysis().Entropy
-        self.__rec.ent.app = self.__IndStat(p_count, 'AppEn')
+        self.__rec.ent.app = self.__IndStat(p_count, 'ApEn')
         self.__rec.ent.samp = self.__IndStat(p_count, 'SampEn')
         self.__rec.ent.fuzz = self.__IndStat(p_count, 'FuzzEn')
 

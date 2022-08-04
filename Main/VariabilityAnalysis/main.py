@@ -7,7 +7,7 @@ from func import LocInit, TableQuery, PidVarCount, VarStatistics, VarInfoCollect
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
 p_name = sys.argv[2]
-mode_s = ['Extube_PSV_Nad', 'Extube_SumP12_Nad']
+mode_s = ['Extube_SumP12_Nad']
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
 

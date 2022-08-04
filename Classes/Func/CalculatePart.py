@@ -35,6 +35,15 @@ class IndCalculation(Basic):
         self.__v_ex = np.array([])  # Exhalation V
 
         self.__valid_tag = True  # Validity of current resp
+        self.__param_range = {
+            'PIP': (10, 50),
+            'PEEP': (0, 20),
+            'RR': (0, 60),
+            'V_T': (0, 2000),
+            'WOB': (0, 20),
+            'VE': (0, 30),
+            'MP': (0, 20)
+        }
 
     @property
     def valid_tag(self):
@@ -172,12 +181,41 @@ class IndCalculation(Basic):
 
     def RespT(self, sample_rate: float) -> float:
         '''
-        Count "resp still time" per resp
+        Count "resp still time (tot, in, ex)" per resp
         Unit: Second (s)
         '''
-        vent_len = self.__end_ind - self.__pro_ind
-        resp_t = vent_len * 1 / sample_rate
-        return round(resp_t, self.round_i_0)
+        tot_len = self.__end_ind - self.__pro_ind
+        in_len = self.__min_ind - self.__pro_ind
+        ex_len = self.__end_ind - self.__min_ind
+        t_tot = tot_len * 1 / sample_rate
+        t_in = in_len * 1 / sample_rate
+        t_ex = ex_len * 1 / sample_rate
+        in_ex_ratio = t_in / t_ex
+        resp_t = {
+            'wid': round(t_tot, self.round_i_0),
+            't_i': round(t_in, self.round_i_0),
+            't_e': round(t_ex, self.round_i_0),
+            'i_e': round(in_ex_ratio, self.round_i_0)
+        }
+        return resp_t
+
+    def PIP(self):
+        '''
+        Count "Peak Inspiratory Pressure" per resp
+        Unit: cmH2O
+        '''
+        pip = self.__p_in[-1]
+        pip_val = self.__ValRangeCheck(pip, self.__param_range['PIP'])
+        return round(pip, self.round_i_0), pip_val
+
+    def PEEP(self):
+        '''
+        Count "Positive End-Expiratory Pressure" per resp
+        Unit: cmH2O
+        '''
+        peep = self.__p_in[0]
+        peep_val = self.__ValRangeCheck(peep, self.__param_range['PEEP'])
+        return round(peep, self.round_i_0), peep_val
 
     def RR(self, sample_rate: float) -> list:
         '''
@@ -186,10 +224,10 @@ class IndCalculation(Basic):
         '''
         vent_len = self.__end_ind - self.__pro_ind
         RR = 60 / (vent_len * 1 / sample_rate)
-        RR_val = self.__ValRangeCheck(RR, (0, 60))
+        RR_val = self.__ValRangeCheck(RR, self.__param_range['RR'])
         return round(RR, self.round_i_0), RR_val
 
-    def V_t(self) -> list:
+    def V_T(self) -> list:
         '''
         Count "tidal volume during expiratory" per resp
         Unit: ml (ml)
@@ -202,7 +240,8 @@ class IndCalculation(Basic):
             'v_t_i': round(v_t_i, self.round_i_0),
             'v_t_e': round(v_t_e, self.round_i_0)
         }
-        v_t_val = self.__ValRangeCheck([v_t_i, v_t_e], (0, 2000))
+        v_t_val = self.__ValRangeCheck([v_t_i, v_t_e],
+                                       self.__param_range['V_T'])
         return v_t, v_t_val
 
     def WOB(self) -> list:
@@ -224,7 +263,8 @@ class IndCalculation(Basic):
         wob_b = ((p_in[-1] - p_in[0]) * v_in[-1]) / 2000
         wob_a = wob - wob_b
 
-        wob_val = self.__ValRangeCheck([wob, wob_full], (0, 20))
+        wob_val = self.__ValRangeCheck([wob, wob_full],
+                                       self.__param_range['WOB'])
         wob_ = {
             'wob': round(wob, self.round_i_0),
             'wob_f': round(wob_full, self.round_i_0),
@@ -239,7 +279,7 @@ class IndCalculation(Basic):
         Unit: L/min (L/min)
         '''
         VE = rr * (v_t / 1000)
-        val = self.__ValRangeCheck(VE, (0, 30))
+        val = self.__ValRangeCheck(VE, self.__param_range['VE'])
         return round(VE, self.round_i_0), val
 
     def RSBI(self, rr: float, v_t: float) -> float:
@@ -262,7 +302,8 @@ class IndCalculation(Basic):
             'mp_jm': round(mp_jm_area, self.round_i_0),
             'mp_jl': round(mp_jl_area, self.round_i_0)
         }
-        mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area], (0, 20))
+        mp_val = self.__ValRangeCheck([mp_jm_area, mp_jl_area],
+                                      self.__param_range['MP'])
         return mp_area, mp_val
 
 
@@ -393,7 +434,7 @@ class VarAnalysis(Basic):
 
     def Entropy(self, ind_s: list, method_sub: str, **kwargs) -> float:
         array_ = np.array(ind_s)
-        if method_sub == 'AppEn':
+        if method_sub == 'ApEn':
             result_, _ = eh.ApEn(array_, m=1)
         elif method_sub == 'SampEn':
             result_, _, _ = eh.SampEn(array_, m=1)
