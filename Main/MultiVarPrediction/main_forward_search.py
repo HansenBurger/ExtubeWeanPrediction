@@ -17,7 +17,7 @@ Forward Search Experiment
 
 sys_args = sys.argv
 arg_suffix = sys_args[1] if len(sys_args) > 1 else 'Default'
-arg_st_n = sys_args[2] if len(sys_args) > 2 else 'all_Nvar'
+arg_st_n = sys_args[2] if len(sys_args) > 2 else 'default'
 arg_stop = sys_args[3] if len(sys_args) > 3 else 0.95
 
 p_name = 'ForwardSearch' + '_' + arg_suffix
