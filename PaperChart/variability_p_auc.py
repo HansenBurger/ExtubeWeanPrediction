@@ -25,18 +25,23 @@ perform_info = {
     },
     'AUC': {
         'col_n': 'AUC',
-        'color': 'coolwarm',
+        'color': 'YlOrBr',
         'range': (),
         'save_n': 'rocauc'
     },
     'ind_part': {
-        'save_n': 'resp_ind',
-        'mets': ['ave', 'med', 'std', 'cv', 'qua', 'tqua'],
+        'save_n':
+        'resp_ind',
+        'mets': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+        'inds': [
+            'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d', 'mp_jm_d',
+            'mp_jl_t', 'mp_jm_t'
+        ],
         'p_limit': (0, 0.05),
     },
     'met_part': {
         'save_n': 'resp_met',
-        'inds': ['rr', 'v_t', 've', 'rsbi'],
+        'inds': ['pip', 'rr', 'v_t', 've', 'rsbi'],
         'p_limit': (0, 0.05),
     },
     'new_best': {

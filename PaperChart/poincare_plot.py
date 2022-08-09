@@ -1,3 +1,4 @@
+from re import S
 import sys
 import math
 import numpy as np
@@ -22,7 +23,7 @@ single_dims = (12, 12)
 lim_size = (2, 0.9)
 json_loc = Path.cwd() / 'PaperChart' / '_source.json'
 s_f_fold = SaveGen(ConfigRead('ResultSave', 'Form'), p_name)
-chart_names = ['SD', 'PI', 'GI', 'SI']
+chart_names = ['SD', 'PI', 'GI', 'SI', 'Total']
 
 
 def main():
@@ -31,6 +32,7 @@ def main():
     p_main.PI(chart_names[1])
     p_main.GI(chart_names[2])
     p_main.SI(chart_names[3])
+    p_main.TotalPlot(chart_names[4])
     doc = GenLatexPdf([s_f_fold / (i + '.png') for i in chart_names])
     doc.generate_pdf(str(s_f_fold / p_name), clean_tex=False)
 
@@ -69,6 +71,10 @@ class PoincarePlot(Basic):
         self.__arr_0, self.__arr_1 = self.LoadData(ind_info['type'])
         self.__x_l, self.__y_l = self.LabelName(ind_info['name'],
                                                 ind_info['unit'])
+        self.__ax_sd = None
+        self.__ax_pi = None
+        self.__ax_gi = None
+        self.__ax_si = None
 
     def __OffAxisDistance(self, ax) -> tuple:
         dists = {}
@@ -159,6 +165,7 @@ class PoincarePlot(Basic):
                     verticalalignment='top')
         ax.set_title('$(a)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
+        self.__ax_sd = ax
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -234,6 +241,7 @@ class PoincarePlot(Basic):
                                offsets=(0.1, -0.1))
         ax.set_title('$(b)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
+        self.__ax_pi = ax
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -270,6 +278,7 @@ class PoincarePlot(Basic):
                                shrink=0.05)
         ax.set_title('$(c)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
+        self.__ax_gi = ax
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -325,8 +334,19 @@ class PoincarePlot(Basic):
 
         ax.set_title('$(d)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
+        self.__ax_si = ax
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
+
+    def TotalPlot(self, save_name: str) -> None:
+        mul_size = tuple(4 * i for i in self.__dims)
+        fig, ax_s = plt.subplots(2, 2, figsize=mul_size)
+        ax_s[0, 0] = self.__ax_sd
+        ax_s[0, 1] = self.__ax_pi
+        ax_s[1, 0] = self.__ax_gi
+        ax_s[1, 1] = self.__ax_si
+        plt.tight_layout()
+        fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
 
 
 def GenLatexPdf(fig_pathes: list):

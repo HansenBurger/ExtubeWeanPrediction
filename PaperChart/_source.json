@@ -73,6 +73,7 @@
     },
     "RespVar": {
         "Indicators": {
+            "pip": "PIP",
             "rr": "RR",
             "v_t": "V_t",
             "ve": "MV",
@@ -86,10 +87,10 @@
         "Methods": {
             "ave": "AVE",
             "med": "MED",
-            "std": "STD",
-            "cv": "CV",
             "qua": "QUA",
             "tqua": "TQUA",
+            "std": "STD",
+            "cv": "CV",
             "sd1": "SD_1",
             "sd2": "SD_2",
             "pi": "PI",

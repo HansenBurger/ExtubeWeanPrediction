@@ -43,7 +43,7 @@ cd C:\Main\Project\ExtubeWeanPrediction
 
 set py_file=Main\MultiVarPrediction\main_forward_search.py
 
-FOR /L %%i IN (0,1,9) DO (
+FOR /L %%i IN (9,1,9) DO (
     ECHO Start of Group %%i
     python %py_file% !g_suffix[%%i]! !g_st_key[%%i]!
     ECHO End of Processing !
