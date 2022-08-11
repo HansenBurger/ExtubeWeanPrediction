@@ -11,7 +11,7 @@ from pylatex import Document, Package, Figure, SubFigure, Command, LongTable
 sys.path.append(str(Path.cwd()))
 
 from Classes.Func.KitTools import ConfigRead, SaveGen
-from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
+from Classes.FeatureProcess import FeatureLoader
 
 p_name = 'RespVariability'
 mode_s = ["Extube_60_SumP12_Nad"]
@@ -20,14 +20,17 @@ perform_info = {
     'P': {
         'col_n': 'P',
         'color': 'YlGnBu',
-        'range': (0, 0.05),
         'save_n': 'p-value'
     },
     'AUC': {
         'col_n': 'AUC',
         'color': 'YlOrBr',
-        'range': (),
         'save_n': 'rocauc'
+    },
+    'P-AUC': {
+        'col_n': ['P', 'AUC'],
+        'color': ['YlGnBu', 'YlOrBr'],
+        'save_n': 'combine'
     },
     'ind_part': {
         'save_n':
@@ -71,6 +74,7 @@ def main(mode_: str):
     main_p = VarResult(mode_, save_form)
     main_p.TotalPerform(**perform_info['P'])
     main_p.TotalPerform(**perform_info['AUC'])
+    main_p.TotalPerform(**perform_info['P-AUC'])
     fig_pathes = [
         save_form / i for i in [
             perform_info['P']['save_n'],
@@ -103,6 +107,8 @@ class Basic():
     def GetVarData(self, mode_name: str):
         load_p = FeatureLoader(ConfigRead('Source', mode_name, json_loc))
         data_, feat_ = load_p.VarFeatsLoad()
+        feat_['AUC'] = [1 - i if i < 0.5 else i for i in feat_.loc[:, 'AUC']]
+        feat_['AUC'] = feat_['AUC'].round(3)
         return data_, feat_
 
 
@@ -116,7 +122,20 @@ class VarResult(Basic):
             'inds': ConfigRead('RespVar', 'Indicators', json_loc)
         }
 
-    def TotalPerform(self, col_n: str, color: str, range: str, save_n: str):
+    def __HeatmapPlot(self, df: pd.DataFrame, color: str, ax: any):
+        df = df.copy()
+        df.index = ['$' + i + '$' for i in df.index]
+        df.columns = ['$' + i + '$' for i in df.columns]
+        sns.heatmap(df,
+                    annot=True,
+                    linewidths=.5,
+                    cmap=color,
+                    annot_kws={'size': 14},
+                    ax=ax)
+        ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=12)
+        return ax
+
+    def __GetPerformance(self, col_n: str, save_n: str = ''):
         var_cols = ['met'] + list(self.__name_map['inds'].keys())
         df_var = pd.DataFrame(columns=var_cols)
         df_var['met'] = self.__name_map['mets'].keys()
@@ -130,23 +149,35 @@ class VarResult(Basic):
         df_var.index = list(self.__name_map['mets'].values())
         df_var = df_var.rename(columns=self.__name_map['inds'])
         df_var = df_var.astype('float')
-        df_var.to_csv(self.__save_p / (save_n + '.csv'))
-        df_var.to_latex(self.__save_p / (save_n + '.tex'), escape=False)
 
-        fig_dims = tuple(reversed(df_var.shape))
-        fig_dims = (fig_dims[0] + 1, fig_dims[1])
-        df_var.index = ['$' + i + '$' for i in df_var.index]
-        df_var.columns = ['$' + i + '$' for i in df_var.columns]
-        fig = plt.figure(figsize=fig_dims, dpi=300)
-        res = sns.heatmap(df_var,
-                          annot=True,
-                          linewidths=.5,
-                          cmap=color,
-                          annot_kws={'size': 14})
-        res.set_yticklabels(res.get_ymajorticklabels(), fontsize=12)
-        fig.tight_layout()
+        if not save_n:
+            pass
+        else:
+            df_var.to_csv(self.__save_p / (save_n + '.csv'))
+            df_var.to_latex(self.__save_p / (save_n + '.tex'), escape=False)
+
+        return df_var
+
+    def TotalPerform(self, col_n: list, color: list, save_n: str):
+        col_n = [col_n] if type(col_n) != list else col_n
+        color = [color] if type(color) != list else color
+
+        df_s = []
+        for col in col_n:
+            df = self.__GetPerformance(
+                col, save_n=None if len(col_n) > 1 else save_n)
+            df_s.append(df)
+
+        fig_dims = tuple(reversed(df_s[0].shape))
+        fig_dims = (fig_dims[0] * len(df_s) + 1, fig_dims[1])
+        fig, ax_s = plt.subplots(1, len(df_s), figsize=fig_dims, dpi=300)
+        for i in range(len(col_n)):
+            try:
+                ax_s[i] = self.__HeatmapPlot(df_s[i], color[i], ax_s[i])
+            except:
+                ax_s = self.__HeatmapPlot(df_s[i], color[i], ax_s)
+        plt.tight_layout()
         fig.savefig(self.__save_p / (save_n + '.png'))
-        plt.close()
 
     def PartialPerform(
         self,
@@ -231,9 +262,9 @@ def LatexGraph(fig_path_0: Path, fig_path_1: Path) -> Document:
                                 width=NoEscape(r'1\linewidth'))
             right_row.add_caption('AUC HeatMap')
 
-    with doc.create(Paragraph('')) as tail:
-        tail.append(bold('Fig.3 '))
-        tail.append(NoEscape(chart_description))
+    # with doc.create(Paragraph('')) as tail:
+    #     tail.append(bold('Fig.3 '))
+    #     tail.append(NoEscape(chart_description))
 
     return doc
 
@@ -243,9 +274,9 @@ def LatexTable(df: pd.DataFrame, table_ind: int, table_name: str) -> Document:
     doc = Document(geometry_options=geometry_options)
     doc.packages.append(Package('booktabs'))
 
-    with doc.create(Paragraph('')) as title:
-        title.append(bold('Table.{0} '.format(table_ind)))
-        title.append(italic(table_name))
+    # with doc.create(Paragraph('')) as title:
+    #     title.append(bold('Table.{0} '.format(table_ind)))
+    #     title.append(italic(table_name))
 
     with doc.create(LongTable('l|ll|r|r', row_height=1.5)) as data_table:
         data_table.add_hline()

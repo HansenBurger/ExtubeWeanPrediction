@@ -32,7 +32,6 @@ def main():
     p_main.PI(chart_names[1])
     p_main.GI(chart_names[2])
     p_main.SI(chart_names[3])
-    p_main.TotalPlot(chart_names[4])
     doc = GenLatexPdf([s_f_fold / (i + '.png') for i in chart_names])
     doc.generate_pdf(str(s_f_fold / p_name), clean_tex=False)
 
@@ -165,7 +164,6 @@ class PoincarePlot(Basic):
                     verticalalignment='top')
         ax.set_title('$(a)$', loc='left', fontsize=25, fontstyle='italic')
         plt.tight_layout()
-        self.__ax_sd = ax
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -240,8 +238,8 @@ class PoincarePlot(Basic):
                                p_n='\Delta {0}<0'.format(self.__ind),
                                offsets=(0.1, -0.1))
         ax.set_title('$(b)$', loc='left', fontsize=25, fontstyle='italic')
-        plt.tight_layout()
         self.__ax_pi = ax
+        plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -277,8 +275,8 @@ class PoincarePlot(Basic):
                                offsets=(-0.1, -0.2),
                                shrink=0.05)
         ax.set_title('$(c)$', loc='left', fontsize=25, fontstyle='italic')
-        plt.tight_layout()
         self.__ax_gi = ax
+        plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -333,20 +331,10 @@ class PoincarePlot(Basic):
         self.__AddArrow(ax, p_sta, p_j)
 
         ax.set_title('$(d)$', loc='left', fontsize=25, fontstyle='italic')
-        plt.tight_layout()
         self.__ax_si = ax
+        plt.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
-
-    def TotalPlot(self, save_name: str) -> None:
-        mul_size = tuple(4 * i for i in self.__dims)
-        fig, ax_s = plt.subplots(2, 2, figsize=mul_size)
-        ax_s[0, 0] = self.__ax_sd
-        ax_s[0, 1] = self.__ax_pi
-        ax_s[1, 0] = self.__ax_gi
-        ax_s[1, 1] = self.__ax_si
-        plt.tight_layout()
-        fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
 
 
 def GenLatexPdf(fig_pathes: list):

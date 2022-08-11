@@ -7,7 +7,7 @@ import sys
 import pandas as pd
 from pathlib import Path
 from pylatex.section import Paragraph
-from pylatex import Document, Package, LongTable
+from pylatex import Document, Package, LongTable, Command
 from pylatex.utils import bold, italic, NoEscape
 
 sys.path.append(str(Path.cwd()))
@@ -45,9 +45,7 @@ table_info = {
 col_map_s = {
     'para_inter': 'Variable',
     'rs_0': 'Successful extubation',
-    'size_0': 'Successful (n)',
     'rs_1': 'Failed extubation',
-    'size_1': 'Failed (n)',
     'P': 'P-value',
 }
 
@@ -102,6 +100,21 @@ class DistTable(Basic):
         self.__data, self.__feat = self.GetDistData(mode_name)
         self.__save_p = save_path
 
+    def __CombineTwoCols(self, df: pd.DataFrame):
+        rs_0, rs_1 = [], []
+        df = df.copy()
+        for i in df.index:
+            rs_0_i = df.loc[i, 'rs_0'].split(')')[0] + ', n=' + str(
+                df.loc[i, 'size_0']) + ')'
+            rs_1_i = df.loc[i, 'rs_1'].split(')')[0] + ', n=' + str(
+                df.loc[i, 'size_1']) + ')'
+            rs_0.append(rs_0_i)
+            rs_1.append(rs_1_i)
+        df['rs_0'] = rs_0
+        df['rs_1'] = rs_1
+        df = df.drop(['size_0', 'size_1'], axis=1)
+        return df
+
     def __RenameByMap(self, source_: pd.DataFrame, **kwargs):
         map_ = self.GetNameMap(**kwargs)
         df_ = source_[source_.index.isin(map_.index)]
@@ -131,35 +144,36 @@ class DistTable(Basic):
             c_rmk = self.__data.rmk == rmk
             rmk_d = {}
             rmk_d['rmk'] = rmk
-            rmk_d['rs_0'] = '-'
-            rmk_d['size_0'] = self.__data[c_rmk & c_succ].shape[0]
-            rmk_d['rs_1'] = '-'
-            rmk_d['size_1'] = self.__data[c_rmk & c_fail].shape[0]
+            rmk_d['rs_0'] = str(self.__data[c_rmk & c_succ].shape[0])
+            rmk_d['rs_1'] = str(self.__data[c_rmk & c_fail].shape[0])
             rmk_d['P'] = '-'
             rmk_d_s.append(rmk_d)
         df_rmk = pd.DataFrame(rmk_d_s)
         df_rmk = df_rmk.set_index('rmk', drop=True)
+        df_dis = self.__CombineTwoCols(self.__feat)
 
-        df_0 = self.__SaveToLocal(self.__feat, table_info['statistic'])
+        df_0 = self.__SaveToLocal(df_dis, table_info['statistic'])
         df_1 = self.__SaveToLocal(df_rmk, table_info['remark'])
 
         return df_0, df_1
 
     def BGBiochemTable(self):
-        df_0 = self.__SaveToLocal(self.__feat, table_info['BGBC'])
+        df_dis = self.__CombineTwoCols(self.__feat)
+        df_0 = self.__SaveToLocal(df_dis, table_info['BGBC'])
         return df_0
 
 
 def LatexTable_0(df_0: pd.DataFrame, df_1: pd.DataFrame) -> Document:
     geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
     doc = Document(geometry_options=geometry_options)
-    doc.packages.append(Package('booktabs'))
+    doc.preamble.append(Command('usepackage', 'helvet'))
+    # doc.packages.append(Package('booktabs'))
 
-    with doc.create(Paragraph('')) as title:
-        title.append(bold('Table.1 '))
-        title.append(italic('Demographics of the datasets'))
+    # with doc.create(Paragraph('')) as title:
+    #     title.append(bold('Table.1 '))
+    #     title.append(italic('Demographics of the datasets'))
 
-    with doc.create(LongTable('llrlrr', row_height=1.5)) as data_table:
+    with doc.create(LongTable('l|ll|r', row_height=1.5)) as data_table:
         data_table.add_hline()
         data_table.add_row(df_0.columns.to_list(), mapper=bold)
         data_table.add_hline()
@@ -183,6 +197,7 @@ def LatexTable_0(df_0: pd.DataFrame, df_1: pd.DataFrame) -> Document:
 def LatexTable_1(df: pd.DataFrame) -> Document:
     geometry_options = {"tmargin": "1cm", "lmargin": "1cm"}
     doc = Document(geometry_options=geometry_options)
+    doc.preamble.append(Command('usepackage', 'helvet'))
     doc.packages.append(Package('booktabs'))
 
     chart_description = r'''
@@ -190,11 +205,11 @@ def LatexTable_1(df: pd.DataFrame) -> Document:
     compared between the two groups using the Mann-Whitney test or using the
     students' t-test. '''
 
-    with doc.create(Paragraph('')) as title:
-        title.append(bold('Table.2 '))
-        title.append(italic('Baseline characteristics of the patients enroll'))
+    # with doc.create(Paragraph('')) as title:
+    #     title.append(bold('Table.2 '))
+    #     title.append(italic('Baseline characteristics of the patients enroll'))
 
-    with doc.create(LongTable('llrlrr', row_height=1.5)) as data_table:
+    with doc.create(LongTable('l|ll|r', row_height=1.5)) as data_table:
         data_table.add_hline()
         data_table.add_row(df.columns.to_list(), mapper=bold)
         data_table.add_hline()
@@ -205,8 +220,8 @@ def LatexTable_1(df: pd.DataFrame) -> Document:
             data_table.add_row(row, escape=False)
         data_table.add_hline()
 
-    with doc.create(Paragraph('')) as tail:
-        tail.append(NoEscape(chart_description))
+    # with doc.create(Paragraph('')) as tail:
+    #     tail.append(NoEscape(chart_description))
 
     return doc
 

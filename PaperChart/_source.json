@@ -1,17 +1,7 @@
 {
     "Source": {
-        "Extube_30_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_30min\\Extube_PSV_Nad",
-        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_30min\\Extube_SumP12_Nad",
-        "Extube_60_PSV_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_60min\\Extube_PSV_Nad",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220701_22_VarAnalysis_60min\\Extube_SumP12_Nad"
-    },
-    "ForwardSearch": {
-        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-30\\Graph",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Mix\\20220711_09_ForwardSearch\\Extube_SumP12_Nad-60\\Graph",
-        "Extube_60_SumP12_Nad_GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_22_ForwardSearch_gp_origin\\Extube_SumP12_Nad-60\\Graph",
-        "Extube_60_SumP12_Nad_GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_22_ForwardSearch_gp_indicators\\Extube_SumP12_Nad-60\\Graph",
-        "Extube_60_SumP12_Nad_GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_23_ForwardSearch_gp_methods\\Extube_SumP12_Nad-60\\Graph",
-        "Extube_60_SumP12_Nad_GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220731_23_ForwardSearch_gp_all\\Extube_SumP12_Nad-60\\Graph"
+        "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220804_16_VarAnalysis_30_min\\Extube_SumP12_Nad",
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220804_17_VarAnalysis_60_min\\Extube_SumP12_Nad"
     },
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
@@ -101,6 +91,20 @@
             "fuzz": "FuzzEn",
             "ac": "PRSA(AC)",
             "dc": "PRSA(DC)"
+        }
+    },
+    "ForwardSearch": {
+        "Extube_60_SumP12_Nad_GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220806_20_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_09_ForwardSearch_gp_3_inds_Nvar\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_12_ForwardSearch_gp_6_mets_Nvar\\Extube_SumP12_Nad-60\\Graph",
+        "Extube_60_SumP12_Nad_GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_15_ForwardSearch_gp_8_all_Nvar\\Extube_SumP12_Nad-60\\Graph"
+    },
+    "AblationExp": {
+        "Extube_60_SumP12_Nad": {
+            "GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220806_20_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_09_ForwardSearch_gp_3_inds_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_12_ForwardSearch_gp_6_mets_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_15_ForwardSearch_gp_8_all_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best"
         }
     }
 }
