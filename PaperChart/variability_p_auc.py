@@ -32,31 +32,45 @@ perform_info = {
         'color': ['YlGnBu', 'YlOrBr'],
         'save_n': 'combine'
     },
-    'basic_part': {
-        'save_n': 'resp_basic',
+    'gp_a': {
+        'save_n': 'group_a',
         'mets': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
         'inds': ['pip', 'rr', 'v_t', 've', 'rsbi'],
         'p_limit': (0, 0.05),
     },
-    'ind_part': {
-        'save_n':
-        'resp_ind',
+    'gp_b': {
+        'save_n': 'group_b',
         'mets': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
-        'inds': [
-            'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d', 'mp_jm_d',
-            'mp_jl_t', 'mp_jm_t'
-        ],
+        'inds': ['mp_jb_d', 'mp_jl_d', 'mp_jm_d'],
         'p_limit': (0, 0.05),
     },
-    'met_part': {
-        'save_n': 'resp_met',
+    'gp_a+b': {
+        'save_n': 'group_a+b',
+        'mets': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+        'inds':
+        ['pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jl_d', 'mp_jm_d'],
+        'p_limit': (0, 0.05),
+    },
+    'gp_c': {
+        'save_n': 'group_c',
+        'mets':
+        ['sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp', 'fuzz', 'ac', 'dc'],
         'inds': ['pip', 'rr', 'v_t', 've', 'rsbi'],
         'p_limit': (0, 0.05),
     },
-    'new_best': {
-        'save_n': 'resp_new',
-        'mets': ['pi', 'gi', 'si', 'app', 'samp', 'fuzz', 'ac', 'dc'],
-        'inds': ['wob', 'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'],
+    'gp_d': {
+        'save_n': 'group_d',
+        'mets':
+        ['sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp', 'fuzz', 'ac', 'dc'],
+        'inds': ['mp_jb_d', 'mp_jl_d', 'mp_jm_d'],
+        'p_limit': (0, 0.05),
+    },
+    'gp_c+d': {
+        'save_n': 'group_c+d',
+        'mets':
+        ['sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp', 'fuzz', 'ac', 'dc'],
+        'inds':
+        ['pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jl_d', 'mp_jm_d'],
         'p_limit': (0, 0.05),
     }
 }
@@ -90,24 +104,14 @@ def main(mode_: str):
     doc_g_0 = LatexGraph(*fig_pathes)
     doc_g_0.generate_pdf(str(save_form / (p_name + '_graph')), clean_tex=False)
 
-    df_0 = main_p.PartialPerform(**perform_info['basic_part'])
-    doc_t_0 = LatexTable(df_0, 3, 'Basic respiratory parameters')
+    df_0 = main_p.PartialPerform(**perform_info['gp_a+b'])
+    doc_t_0 = LatexTable(df_0, 3, 'Group A + B')
     doc_t_0.generate_pdf(str(save_form / (p_name + '_table_0')),
                          clean_tex=False)
 
-    df_1 = main_p.PartialPerform(**perform_info['ind_part'])
-    doc_t_1 = LatexTable(df_1, 3, 'Remarkable respiratory parameters')
+    df_1 = main_p.PartialPerform(**perform_info['gp_c+d'])
+    doc_t_1 = LatexTable(df_1, 3, 'Group C+D')
     doc_t_1.generate_pdf(str(save_form / (p_name + '_table_1')),
-                         clean_tex=False)
-
-    df_2 = main_p.PartialPerform(**perform_info['met_part'])
-    doc_t_2 = LatexTable(df_2, 4, 'Significant variability method')
-    doc_t_2.generate_pdf(str(save_form / (p_name + '_table_2')),
-                         clean_tex=False)
-
-    df_3 = main_p.PartialPerform(**perform_info['new_best'])
-    doc_t_3 = LatexTable(df_3, 5, 'Significant rew type')
-    doc_t_3.generate_pdf(str(save_form / (p_name + '_table_3')),
                          clean_tex=False)
 
 
@@ -143,7 +147,8 @@ class VarResult(Basic):
                     cmap=color,
                     annot_kws={'size': 14},
                     ax=ax)
-        ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=12)
+        ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=15)
+        ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=13)
         return ax
 
     def __GetPerformance(self, col_n: str, save_n: str = ''):
@@ -185,9 +190,11 @@ class VarResult(Basic):
         for i in range(len(col_n)):
             try:
                 name_l = ['(a)', '(b)']
-                xlabel_st = dict(fontname='Times New Roman', size=18)
+                title_st = dict(family='Arial', style='normal', size=30)
                 ax_s[i] = self.__HeatmapPlot(df_s[i], color[i], ax_s[i])
-                ax_s[i].set_xlabel(name_l[i] + ' ' + col_n[i], fontdict=xlabel_st)
+                ax_s[i].set_title(name_l[i] + ' ' + col_n[i],
+                                  fontdict=title_st,
+                                  y=-0.05)
             except:
                 ax_s = self.__HeatmapPlot(df_s[i], color[i], ax_s)
         plt.tight_layout()

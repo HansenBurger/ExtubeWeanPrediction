@@ -19,8 +19,8 @@ from Classes.Func.KitTools import SaveGen, ConfigRead
 
 p_name = 'PoincarePlot'
 resp_dict = {'type': 'v_t_i', 'name': 'V_t', 'unit': 'mL'}
-single_dims = (12, 12)
-lim_size = (2, 0.9)
+single_dims = (8, 8)
+lim_size = (3, 0.8)
 json_loc = Path.cwd() / 'PaperChart' / '_source.json'
 s_f_fold = SaveGen(ConfigRead('ResultSave', 'Form'), p_name)
 chart_names = ['SD', 'PI', 'GI', 'SI', 'Total']
@@ -32,6 +32,7 @@ def main():
     p_main.PI(chart_names[1])
     p_main.GI(chart_names[2])
     p_main.SI(chart_names[3])
+    p_main.CombinePlot(chart_names[4])
     doc = GenLatexPdf([s_f_fold / (i + '.png') for i in chart_names])
     doc.generate_pdf(str(s_f_fold / p_name), clean_tex=False)
 
@@ -70,10 +71,6 @@ class PoincarePlot(Basic):
         self.__arr_0, self.__arr_1 = self.LoadData(ind_info['type'])
         self.__x_l, self.__y_l = self.LabelName(ind_info['name'],
                                                 ind_info['unit'])
-        self.__ax_sd = None
-        self.__ax_pi = None
-        self.__ax_gi = None
-        self.__ax_si = None
 
     def __OffAxisDistance(self, ax) -> tuple:
         dists = {}
@@ -92,7 +89,7 @@ class PoincarePlot(Basic):
             sorted(dists.items(), key=lambda item: item[1], reverse=True))
         return dists_ac, dists_dc
 
-    def __OffAxisAngle(self, ax):
+    def __OffAxisAngle(self, ax) -> tuple:
         angles = {}
         theta_count = lambda x, y: np.degrees(np.arctan(y / x)) - 45
         for i in range(len(self.__arr_0)):
@@ -107,10 +104,9 @@ class PoincarePlot(Basic):
             sorted(angles.items(), key=lambda item: item[1], reverse=True))
         return angles_ac, angles_dc
 
-    def __ScatterGen(self):
+    def __ScatterGen(self, ax: any) -> None:
         sns.reset_orig()
         sns.set_theme(style='white')
-        fig, ax = plt.subplots(1, 1, figsize=self.__dims)
         ax.scatter(self.__arr_0, self.__arr_1, c='black', s=65)
         ax.scatter(self.__arr_0, self.__arr_1, c='gold', s=40)
         ax.set_xlim(
@@ -121,10 +117,10 @@ class PoincarePlot(Basic):
             max(self.__arr_1) * lim_size[1])
         ax.set_xlabel('$' + self.__x_l + '$', fontsize=20)
         ax.set_ylabel('$' + self.__y_l + '$', fontsize=20)
-        return fig, ax
+        return
 
-    def SD(self, save_name: str) -> None:
-        fig, ax = self.__ScatterGen()
+    def __SDPlot(self, ax: any) -> None:
+        self.__ScatterGen(ax)
         ellipse_, wid, het = confidence_ellipse(self.__arr_0,
                                                 self.__arr_1,
                                                 ax,
@@ -162,8 +158,12 @@ class PoincarePlot(Basic):
                     arrowprops=dict(facecolor='forestgreen', shrink=0.05),
                     horizontalalignment='right',
                     verticalalignment='top')
-        ax.set_title('$(a)$', loc='left', fontsize=25, fontstyle='italic')
-        plt.tight_layout()
+
+    def SD(self, save_name: str):
+        fig, ax = plt.subplots(1, 1, figsize=self.__dims)
+
+        self.__SDPlot(ax)
+        fig.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -209,8 +209,8 @@ class PoincarePlot(Basic):
                     verticalalignment='top')
         return
 
-    def PI(self, save_name: str) -> None:
-        fig, ax = self.__ScatterGen()
+    def __PIPlot(self, ax: any) -> None:
+        self.__ScatterGen(ax)
         self.__LIAnnotation(ax)
         d_ac, d_dc = self.__OffAxisDistance(ax)
         # point: RR=0, lowest
@@ -236,15 +236,18 @@ class PoincarePlot(Basic):
         self.__BasicAnnotation(ax,
                                p=p_2,
                                p_n='\Delta {0}<0'.format(self.__ind),
-                               offsets=(0.1, -0.1))
-        ax.set_title('$(b)$', loc='left', fontsize=25, fontstyle='italic')
-        self.__ax_pi = ax
-        plt.tight_layout()
+                               offsets=(0.2, -0.1))
+
+    def PI(self, save_name: str):
+        fig, ax = plt.subplots(1, 1, figsize=self.__dims)
+
+        self.__PIPlot(ax)
+        fig.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
-    def GI(self, save_name: str) -> None:
-        fig, ax = self.__ScatterGen()
+    def __GIPlot(self, ax: any) -> None:
+        self.__ScatterGen(ax)
         li_0, li_1 = self.__LIAnnotation(ax)
         d_ac, d_dc = self.__OffAxisDistance(ax)
         # point: P_i(RR_i < RR_{i+1})
@@ -254,7 +257,7 @@ class PoincarePlot(Basic):
         l_i_hf = np.array([p_i, p_i_hf]).T
         p_i_m = tuple((p_i[i] + p_i_hf[i]) / 2 for i in range(2))
         ax.plot(*l_i_hf, color='black', linestyle='-', linewidth=1.2)
-        ax.text(*p_i, '$P_i$', fontsize=25)
+        ax.text(*p_i, '$P_i$', fontsize=30)
         self.__BasicAnnotation(ax,
                                p=p_i_m,
                                p_n='D_i^+',
@@ -268,15 +271,18 @@ class PoincarePlot(Basic):
         l_j_hf = np.array([p_j, p_j_hf]).T
         p_j_m = tuple((p_j[i] + p_j_hf[i]) / 2 for i in range(2))
         ax.plot(*l_j_hf, color='black', linestyle='-', linewidth=1.2)
-        ax.text(*p_j, '$P_j$', fontsize=25)
+        ax.text(*p_j, '$P_j$', fontsize=30)
         self.__BasicAnnotation(ax,
                                p=p_j_m,
                                p_n='D_j^-',
                                offsets=(-0.1, -0.2),
                                shrink=0.05)
-        ax.set_title('$(c)$', loc='left', fontsize=25, fontstyle='italic')
-        self.__ax_gi = ax
-        plt.tight_layout()
+
+    def GI(self, save_name: str):
+        fig, ax = plt.subplots(1, 1, figsize=self.__dims)
+
+        self.__GIPlot(ax)
+        fig.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
@@ -290,8 +296,8 @@ class PoincarePlot(Basic):
         ax.add_patch(arrow)
         return
 
-    def SI(self, save_name: str) -> None:
-        fig, ax = self.__ScatterGen()
+    def __SIPlot(self, ax: any) -> None:
+        self.__ScatterGen(ax)
         self.__LIAnnotation(ax)
         a_ac, a_dc = self.__OffAxisAngle(ax)
         p_sta = np.array([ax.get_xlim(), ax.get_ylim()]).T[0]
@@ -307,7 +313,7 @@ class PoincarePlot(Basic):
         # point: P_i(RR_i < RR_{i+1})
         p_i_i = list(a_dc.keys())[1]
         p_i = (self.__arr_0[p_i_i], self.__arr_1[p_i_i])
-        ax.text(*p_i, '$P_i$', fontsize=25)
+        ax.text(*p_i, '$P_i$', fontsize=30)
         theta_i_0 = (np.array(p_i) - p_sta) * 0.15 + p_sta
         theta_i_1 = (p_i[0] * 0.2 + p_sta[0], 0)
         l_theta_i = np.array([theta_i_0, theta_i_1]).T
@@ -318,21 +324,38 @@ class PoincarePlot(Basic):
         self.__AddArrow(ax, p_sta, p_i)
 
         # point: P_j(RR_i > RR_{i+1})
-        p_j_i = list(a_ac.keys())[1]
+        p_j_i = list(a_ac.keys())[0]
         p_j = (self.__arr_0[p_j_i], self.__arr_1[p_j_i])
-        ax.text(*p_j, '$P_j$', fontsize=25)
+        ax.text(*p_j, '$P_j$', fontsize=30)
         theta_j_0 = (np.array(p_j) - p_sta) * 0.55 + p_sta
         theta_j_1 = (p_j[0] * 0.5 + p_sta[0], 0)
         l_theta_j = np.array([theta_j_0, theta_j_1]).T
         theta_j = ((theta_j_0[0] - p_sta[0]) * 1.3 + p_sta[1],
-                   (theta_j_0[1] - p_sta[1]) * 0.6 + p_sta[1])
+                   (theta_j_0[1] - p_sta[1]) * 0.5 + p_sta[1])
         ax.text(*theta_j, '$\\theta_j$', fontsize=20)
         ax.plot(*l_theta_j, 'k-', lw=0.8)
         self.__AddArrow(ax, p_sta, p_j)
 
-        ax.set_title('$(d)$', loc='left', fontsize=25, fontstyle='italic')
-        self.__ax_si = ax
-        plt.tight_layout()
+    def SI(self, save_name: str):
+        fig, ax = plt.subplots(1, 1, figsize=self.__dims)
+        self.__SIPlot(ax)
+        fig.tight_layout()
+        fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
+        plt.close()
+
+    def CombinePlot(self, save_name: str):
+        dim_plus = tuple(i * 2 + 1 for i in self.__dims)
+        sup_title_st = dict(family='Arial', style='normal', size=30)
+        fig, ((sd, pi), (gi, si)) = plt.subplots(2, 2, figsize=dim_plus)
+        self.__SDPlot(sd)
+        sd.set_title('$(a) SD1, SD2$', y=-0.15, fontdict=sup_title_st)
+        self.__PIPlot(pi)
+        pi.set_title('$(b) PI$', y=-0.15, fontdict=sup_title_st)
+        self.__GIPlot(gi)
+        gi.set_title('$(c) GI$', y=-0.15, fontdict=sup_title_st)
+        self.__SIPlot(si)
+        si.set_title('$(d) SI$', y=-0.15, fontdict=sup_title_st)
+        fig.tight_layout()
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
