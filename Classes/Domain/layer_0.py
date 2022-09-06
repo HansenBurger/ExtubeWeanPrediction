@@ -19,10 +19,10 @@ class Resp(func):
         self.__v_t_e = 0.0
         self.__ve = 0.0
         self.__rsbi = 0.0
-        self.__wob_a = 0.0
-        self.__wob_b = 0.0
-        self.__wob_f = 0.0
-        self.__wob = 0.0
+        self.__mp_jb_a = 0.0
+        self.__mp_jb_b = 0.0
+        self.__mp_jb_t = 0.0
+        self.__mp_jb_d = 0.0
         self.__mp_jm_d = 0.0
         self.__mp_jl_d = 0.0
         self.__mp_jm_t = 0.0
@@ -125,36 +125,36 @@ class Resp(func):
         self.__ve = v
 
     @property
-    def wob(self):
-        return self.__wob
+    def mp_jb_d(self):
+        return self.__mp_jb_d
 
-    @wob.setter
-    def wob(self, v):
-        self.__wob = v
-
-    @property
-    def wob_a(self):
-        return self.__wob_a
-
-    @wob_a.setter
-    def wob_a(self, v):
-        self.__wob_a = v
+    @mp_jb_d.setter
+    def mp_jb_d(self, v):
+        self.__mp_jb_d = v
 
     @property
-    def wob_f(self):
-        return self.__wob_f
+    def mp_jb_a(self):
+        return self.__mp_jb_a
 
-    @wob_f.setter
-    def wob_f(self, v):
-        self.__wob_f = v
+    @mp_jb_a.setter
+    def mp_jb_a(self, v):
+        self.__mp_jb_a = v
 
     @property
-    def wob_b(self):
-        return self.__wob_b
+    def mp_jb_t(self):
+        return self.__mp_jb_t
 
-    @wob_b.setter
-    def wob_b(self, v):
-        self.__wob_b = v
+    @mp_jb_t.setter
+    def mp_jb_t(self, v):
+        self.__mp_jb_t = v
+
+    @property
+    def mp_jb_b(self):
+        return self.__mp_jb_b
+
+    @mp_jb_b.setter
+    def mp_jb_b(self, v):
+        self.__mp_jb_b = v
 
     @property
     def mp_jm_d(self):
@@ -209,8 +209,9 @@ class Target0():
         self.__rr = 0  # Respiratory Rate
         self.__v_t = 0  # Tidal Volume
         self.__ve = 0  # Minute Ventilation
-        self.__wob = 0  # Dynamic Work Of Breathing
         self.__rsbi = 0  # Rapid Shallow Breathing Index
+        self.__mp_jb_d = 0  # Dynamic Mechanical Power (J/Breath)
+        self.__mp_jb_t = 0  # Total Mechanical Power (J/Breath)
         self.__mp_jl_d = 0  # Dynamic Mechanical Power (J/L)
         self.__mp_jm_d = 0  # Dynamic Mechanical Power (J/min)
         self.__mp_jl_t = 0  # Total Mechanical Power (J/L)
@@ -343,18 +344,32 @@ class Target0():
         self.__ve = v
 
     @property
-    def wob(self):
+    def mp_jb_d(self):
         '''
-        Dynamic Work Of Breathing (WOB)
+        Dynamic Mechanical Power (J/breath)
         '''
-        return self.__wob
+        return self.__mp_jb_d
 
-    @wob.setter
-    def wob(self, v):
+    @mp_jb_d.setter
+    def mp_jb_d(self, v):
         '''
-        :param v: WOB (float, unit: J/L)
+        :param v: MP_d(J/breath) (float, unit: J/L)
         '''
-        self.__wob = v
+        self.__mp_jb_d = v
+
+    @property
+    def mp_jb_t(self):
+        '''
+        Dynamic Mechanical Power (J/breath)
+        '''
+        return self.__mp_jb_t
+
+    @mp_jb_t.setter
+    def mp_jb_t(self, v):
+        '''
+        :param v: MP_d(J/breath) (float, unit: J/L)
+        '''
+        self.__mp_jb_t = v
 
     @property
     def rsbi(self):

@@ -119,26 +119,27 @@ class RecordResp(Basic):
                 resp.v_t_i = v_t['v_t_i']
                 resp.v_t_e = v_t['v_t_e']
 
-                wob, wob_val = p_count.WOB()
-                resp.wob = wob['wob']
-                resp.wob_f = wob['wob_f']
-                resp.wob_a = wob['wob_a']
-                resp.wob_b = wob['wob_b']
-
                 resp.ve, ve_val = p_count.VE(resp.rr, resp.v_t_i)
                 resp.rsbi = p_count.RSBI(resp.rr, resp.v_t_i)
 
-                mp_d, mp_d_val = p_count.MP_Area(resp.rr, resp.v_t_i, resp.wob)
+                mp_jb, mp_jb_val = p_count.MP_Breath()
+                resp.mp_jb_d = mp_jb['mp_jb_d']
+                resp.mp_jb_t = mp_jb['mp_jb_t']
+                resp.mp_jb_a = mp_jb['mp_jb_a']
+                resp.mp_jb_b = mp_jb['mp_jb_b']
+
+                mp_d, mp_d_val = p_count.MP_Area(resp.rr, resp.v_t_i,
+                                                 resp.mp_jb_d)
                 resp.mp_jm_d = mp_d['mp_jm']
                 resp.mp_jl_d = mp_d['mp_jl']
 
                 mp_t, mp_t_val = p_count.MP_Area(resp.rr, resp.v_t_i,
-                                                 resp.wob_f)
+                                                 resp.mp_jb_t)
                 resp.mp_jm_t = mp_t['mp_jm']
                 resp.mp_jl_t = mp_t['mp_jl']
 
                 val_list = [
-                    rr_val, v_t_val, wob_val, ve_val, mp_d_val, mp_t_val
+                    rr_val, v_t_val, ve_val, mp_jb_val, mp_d_val, mp_t_val
                 ]
                 resp.val = True if not False in val_list else False
 
@@ -218,7 +219,7 @@ class ResultStatistical(Basic):
                   func: any,
                   meth: str,
                   para_: dict = {}) -> layer_0.Target0:
-        ind_sel = ['rr', 'v_t', 've', 'wob', 'rsbi', 'mp']
+        ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
         para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
 
         resp_l = self.__resp_l
@@ -227,13 +228,16 @@ class ResultStatistical(Basic):
         ind_rs.t_i = func([i.t_i for i in resp_l], meth, **para_['rr'])
         ind_rs.t_e = func([i.t_e for i in resp_l], meth, **para_['rr'])
         ind_rs.i_e = func([i.i_e for i in resp_l], meth, **para_['rr'])
-        ind_rs.pip = func([i.pip for i in resp_l], meth, **para_['wob'])
-        ind_rs.peep = func([i.peep for i in resp_l], meth, **para_['wob'])
+        ind_rs.pip = func([i.pip for i in resp_l], meth, **para_['mp_jb'])
+        ind_rs.peep = func([i.peep for i in resp_l], meth, **para_['mp_jb'])
         ind_rs.rr = func([i.rr for i in resp_l], meth, **para_['rr'])
         ind_rs.v_t = func([i.v_t_i for i in resp_l], meth, **para_['v_t'])
         ind_rs.ve = func([i.ve for i in resp_l], meth, **para_['ve'])
-        ind_rs.wob = func([i.wob for i in resp_l], meth, **para_['wob'])
         ind_rs.rsbi = func([i.rsbi for i in resp_l], meth, **para_['rsbi'])
+        ind_rs.mp_jb_d = func([i.mp_jb_d for i in resp_l], meth,
+                              **para_['mp_jb'])
+        ind_rs.mp_jb_t = func([i.mp_jb_t for i in resp_l], meth,
+                              **para_['mp_jb'])
         ind_rs.mp_jl_d = func([i.mp_jl_d for i in resp_l], meth, **para_['mp'])
         ind_rs.mp_jl_t = func([i.mp_jl_t for i in resp_l], meth, **para_['mp'])
         ind_rs.mp_jm_d = func([i.mp_jm_d for i in resp_l], meth, **para_['mp'])
@@ -304,7 +308,7 @@ class ResultStatistical(Basic):
                 'T': 45,
                 's': 14
             },
-            'wob': {
+            'mp_jb': {
                 'L': 120,
                 'F': 2.0,
                 'T': 1,

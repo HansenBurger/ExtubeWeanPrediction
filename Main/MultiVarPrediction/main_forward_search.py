@@ -12,7 +12,7 @@ from Classes.ORM.expr import LabExtube, LabWean, PatientInfo
 from Classes.FeatureProcess import FeatureLoader, DatasetGeneration
 '''
 Forward Search Experiment
-:
+:Check config data before experiment
 '''
 
 sys_args = sys.argv
@@ -24,7 +24,7 @@ p_name = 'ForwardSearch' + '_' + arg_suffix
 pred_way = 'KFold'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
-mode_s = ['Extube_SumP12_Nad-30', 'Extube_SumP12_Nad-60']
+mode_s = ['Extube_SumP12_Nad-60']
 
 
 class ForwardSearch():

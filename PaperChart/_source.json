@@ -1,7 +1,7 @@
 {
     "Source": {
         "Extube_30_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220804_16_VarAnalysis_30_min\\Extube_SumP12_Nad",
-        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220804_17_VarAnalysis_60_min\\Extube_SumP12_Nad"
+        "Extube_60_SumP12_Nad": "C:\\Main\\Data\\_\\Result\\Form\\20220904_16_VarAnalysis_60_min\\Extube_SumP12_Nad"
     },
     "PoincarePlot": {
         "source": "C:\\Main\\Data\\_\\Result\\Graph\\20220720_14_Extube_SumP12_Nad\\3393144\\resp_data.csv"
@@ -25,50 +25,145 @@
     },
     "BGBC": {
         "BG-AcidAlkaline": {
-            "nph": "pH",
-            "npco2": "PaCO_2",
-            "hco3": "HCO_3^-",
-            "be": "BE"
+            "nph": {
+                "S": "pH",
+                "F": "pH",
+                "CN": "酸碱度"
+            },
+            "npco2": {
+                "S": "PaCO_2",
+                "F": "Partial Pressure Of CO_2 (Arterial)",
+                "CN": "二氧化碳分压"
+            },
+            "hco3": {
+                "S": "HCO_3^-",
+                "F": "Bicarbonate",
+                "CN": "碳酸氢根浓度"
+            },
+            "be": {
+                "S": "BE",
+                "F": "Base Excess",
+                "CN": "全血剩余碱"
+            }
         },
         "BG-Electrolytes": {
-            "K": "K^+",
-            "na": "Na^+",
-            "Cl": "Cl^-"
+            "K": {
+                "S": "K^+",
+                "F": "K^+",
+                "CN": "钾"
+            },
+            "na": {
+                "S": "Na^+",
+                "F": "Na^+",
+                "CN": "钠"
+            },
+            "Cl": {
+                "S": "Cl^-",
+                "F": "Cl^-",
+                "CN": "氯"
+            },
+            "ga": {
+                "S": "Ca^{++}",
+                "F": "Ionized Calcium",
+                "CN": "离子钙"
+            }
         },
         "BG-Oxygenation": {
-            "o2": "O_2",
-            "co2": "CO_2",
-            "po2": "PaO_2",
-            "fio2": "FiO_2"
+            "o2": {
+                "S": "SO_2",
+                "F": "Oxygen Saturation",
+                "CN": "总氧饱和度"
+            },
+            "co2": {
+                "S": "TCO_2",
+                "F": "Total CO_2",
+                "CN": "二氧化碳总量"
+            },
+            "po2": {
+                "S": "PaO_2",
+                "F": "Partial Pressure Of O_2",
+                "CN": "动脉血氧分压"
+            },
+            "fio2": {
+                "S": "FiO_2",
+                "F": "Fraction of Inspired O_2",
+                "CN": "吸入氧浓度"
+            },
+            "pf": {
+                "S": "P/F",
+                "F": "P/F Ratio",
+                "CN": "氧合指数"
+            }
         },
         "BG-Other": {
-            "hemo": "Hb",
-            "mhb": "MHb",
-            "lac": "Lac",
-            "wbg": "WBG",
-            "temp": "Temp"
+            "pcv": {
+                "S": "PCV",
+                "F": "Packed cell volume",
+                "CN": "红细胞压积"
+            },
+            "hemo": {
+                "S": "Hb",
+                "F": "Hematocrit",
+                "CN": "血色素"
+            },
+            "mhb": {
+                "S": "MHb",
+                "F": "Methemoglobin",
+                "CN": "高铁血红蛋白"
+            },
+            "rhs": {
+                "S": "RHS",
+                "F": "Reduced Hemoglobin Solubility",
+                "CN": "还原型血红蛋白溶解度"
+            },
+            "lac": {
+                "S": "Lac",
+                "F": "Lactic Acid",
+                "CN": "乳酸"
+            },
+            "wbg": {
+                "S": "WBG",
+                "F": "Whole Blood Glucose",
+                "CN": "全血葡萄糖"
+            },
+            "osp": {
+                "S": "OSP",
+                "F": "Osmotic pressure",
+                "CN": "渗透压"
+            },
+            "temp": {
+                "S": "Temp",
+                "F": "Temperature",
+                "CN": "体温"
+            }
         },
         "Biochem": {
-            "ga": "GA",
-            "cr": "Cre",
-            "crp": "CRP",
-            "tbil": "TBIL"
-        },
-        "Unkown": {
-            "osp": "OsP",
-            "pcv": "PCV",
-            "pf": "PF",
-            "rhs": "RHS"
+            "cr": {
+                "S": "Cre",
+                "F": "Creatinine",
+                "CN": "肌酐"
+            },
+            "crp": {
+                "S": "CRP",
+                "F": "C-Reactive Protein",
+                "CN": "C-反应蛋白"
+            },
+            "tbil": {
+                "S": "TBIL",
+                "F": "Total Bilirubin",
+                "CN": "总胆红素"
+            }
         }
     },
     "RespVar": {
         "Indicators": {
             "pip": "PIP",
             "rr": "RR",
-            "v_t": "V_t",
+            "v_t": "V_T",
             "ve": "MV",
-            "wob": "WOB",
             "rsbi": "RSBI",
+            "mp_jb_d": "MP_d(J/b)",
+            "mp_jb_t": "MP_t(J/b)",
             "mp_jl_d": "MP_d(J/L)",
             "mp_jm_d": "MP_d(J/m)",
             "mp_jl_t": "MP_t(J/L)",
@@ -89,8 +184,8 @@
             "app": "ApEn",
             "samp": "SampEn",
             "fuzz": "FuzzEn",
-            "ac": "PRSA(AC)",
-            "dc": "PRSA(DC)"
+            "ac": "AC",
+            "dc": "DC"
         }
     },
     "ForwardSearch": {
@@ -101,10 +196,10 @@
     },
     "AblationExp": {
         "Extube_60_SumP12_Nad": {
-            "GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220806_20_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
-            "GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_09_ForwardSearch_gp_3_inds_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
-            "GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_12_ForwardSearch_gp_6_mets_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
-            "GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220807_15_ForwardSearch_gp_8_all_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best"
+            "GP1": "C:\\Main\\Data\\_\\Result\\Mix\\20220905_06_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP2": "C:\\Main\\Data\\_\\Result\\Mix\\20220905_06_ForwardSearch_gp_1_inds_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP3": "C:\\Main\\Data\\_\\Result\\Mix\\20220905_07_ForwardSearch_gp_2_mets_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best",
+            "GP4": "C:\\Main\\Data\\_\\Result\\Mix\\20220905_08_ForwardSearch_gp_3_all_Nvar\\Extube_SumP12_Nad-60\\Graph\\_Best"
         }
     }
 }

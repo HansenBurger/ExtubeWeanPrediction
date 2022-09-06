@@ -32,6 +32,12 @@ perform_info = {
         'color': ['YlGnBu', 'YlOrBr'],
         'save_n': 'combine'
     },
+    'basic_part': {
+        'save_n': 'resp_basic',
+        'mets': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
+        'inds': ['pip', 'rr', 'v_t', 've', 'rsbi'],
+        'p_limit': (0, 0.05),
+    },
     'ind_part': {
         'save_n':
         'resp_ind',
@@ -84,19 +90,24 @@ def main(mode_: str):
     doc_g_0 = LatexGraph(*fig_pathes)
     doc_g_0.generate_pdf(str(save_form / (p_name + '_graph')), clean_tex=False)
 
-    df_0 = main_p.PartialPerform(**perform_info['ind_part'])
-    doc_t_0 = LatexTable(df_0, 3, 'Remarkable respiratory parameters')
+    df_0 = main_p.PartialPerform(**perform_info['basic_part'])
+    doc_t_0 = LatexTable(df_0, 3, 'Basic respiratory parameters')
     doc_t_0.generate_pdf(str(save_form / (p_name + '_table_0')),
                          clean_tex=False)
 
-    df_1 = main_p.PartialPerform(**perform_info['met_part'])
-    doc_t_1 = LatexTable(df_1, 4, 'Significant variability method')
+    df_1 = main_p.PartialPerform(**perform_info['ind_part'])
+    doc_t_1 = LatexTable(df_1, 3, 'Remarkable respiratory parameters')
     doc_t_1.generate_pdf(str(save_form / (p_name + '_table_1')),
                          clean_tex=False)
 
-    df_2 = main_p.PartialPerform(**perform_info['new_best'])
-    doc_t_2 = LatexTable(df_2, 5, 'Significant rew type')
+    df_2 = main_p.PartialPerform(**perform_info['met_part'])
+    doc_t_2 = LatexTable(df_2, 4, 'Significant variability method')
     doc_t_2.generate_pdf(str(save_form / (p_name + '_table_2')),
+                         clean_tex=False)
+
+    df_3 = main_p.PartialPerform(**perform_info['new_best'])
+    doc_t_3 = LatexTable(df_3, 5, 'Significant rew type')
+    doc_t_3.generate_pdf(str(save_form / (p_name + '_table_3')),
                          clean_tex=False)
 
 
@@ -173,7 +184,10 @@ class VarResult(Basic):
         fig, ax_s = plt.subplots(1, len(df_s), figsize=fig_dims, dpi=300)
         for i in range(len(col_n)):
             try:
+                name_l = ['(a)', '(b)']
+                xlabel_st = dict(fontname='Times New Roman', size=18)
                 ax_s[i] = self.__HeatmapPlot(df_s[i], color[i], ax_s[i])
+                ax_s[i].set_xlabel(name_l[i] + ' ' + col_n[i], fontdict=xlabel_st)
             except:
                 ax_s = self.__HeatmapPlot(df_s[i], color[i], ax_s)
         plt.tight_layout()

@@ -35,7 +35,7 @@ table_info = {
         'BGBC',
         'item': [
             'BG-AcidAlkaline', 'BG-Electrolytes', 'BG-Oxygenation', 'BG-Other',
-            'Biochem', 'Unkown'
+            'Biochem'
         ],
         'name':
         '1_BGBC_table'
@@ -80,6 +80,7 @@ class Basic():
         map_s = name_map.keys() if not item_names else item_names
         for map_ in map_s:
             for k, v in name_map.get(map_).items():
+                v = v if type(v) == str else v['S']
                 tot_map.setdefault(k, []).append(v)
 
         tot_mapping = pd.DataFrame({

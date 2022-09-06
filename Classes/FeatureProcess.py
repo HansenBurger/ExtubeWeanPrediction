@@ -55,8 +55,6 @@ class Basic():
 class FeatureLoader(Basic):
     def __init__(self, local_p: Path, save_p: Path = None):
         super().__init__()
-        # self.__label_col = 'end'
-        # self.__info_cols = ['pid', 'icu', 'end', 'rmk']
         self.__samples = self._Basic__TableLoad(local_p)
         self.__save_p = PathVerify(save_p) if save_p else Path.cwd()
 
@@ -92,9 +90,14 @@ class FeatureLoader(Basic):
         feat = feat.set_index('met', drop=True)
         return feat
 
+    def DropInfoCol(self, df: pd.DataFrame):
+        df = df.drop(columns=self._Basic__info_cols)
+        return df
+
     def VarFeatsLoad(self,
                      met_s: list = [],
                      ind_s: list = [],
+                     spec_: list = [],
                      save_n: str = '') -> None:
         '''
         met_s: methods select
@@ -108,9 +111,17 @@ class FeatureLoader(Basic):
         for met in met_s:
             for ind in ind_s:
                 col_name = met + '-' + ind
-                data_var[col_name] = [
-                    samp.data.loc[met, ind] for samp in self.__samples
-                ]
+                if not spec_:
+                    data_var[col_name] = [
+                        samp.data.loc[met, ind] for samp in self.__samples
+                    ]
+                elif col_name in spec_:
+                    data_var[col_name] = [
+                        samp.data.loc[met, ind] for samp in self.__samples
+                    ]
+                else:
+                    continue
+
         feat_var = self.__GetFeatPerform(data_var)
 
         if save_n:

@@ -25,8 +25,8 @@ class VarResultsGen(basic):
         super().__init__()
         self.__pid = patient
         self.__ind_s = [
-            'pip', 'peep', 'rr', 'v_t_i', 've', 'rsbi', 'wob', 'mp_jm_d',
-            'mp_jl_d', 'mp_jm_t', 'mp_jl_t'
+            'pip', 'peep', 'rr', 'v_t_i', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+            'mp_jm_d', 'mp_jl_d', 'mp_jm_t', 'mp_jl_t'
         ]
         self.__met_s = ['td', 'hra', 'hrv', 'ent', 'prsa']
 

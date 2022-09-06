@@ -40,7 +40,6 @@ class IndCalculation(Basic):
             'PEEP': (0, 20),
             'RR': (0, 60),
             'V_T': (0, 2000),
-            'WOB': (0, 20),
             'VE': (0, 30),
             'MP': (0, 20)
         }
@@ -204,7 +203,7 @@ class IndCalculation(Basic):
         Count "Peak Inspiratory Pressure" per resp
         Unit: cmH2O
         '''
-        pip = self.__p_in[-1]
+        pip = self.__p_in[-1]  # max(self.__p_in)
         pip_val = self.__ValRangeCheck(pip, self.__param_range['PIP'])
         return round(pip, self.round_i_0), pip_val
 
@@ -244,35 +243,6 @@ class IndCalculation(Basic):
                                        self.__param_range['V_T'])
         return v_t, v_t_val
 
-    def WOB(self) -> list:
-        '''
-        Count "work of breath" in multiple modes per resp
-        wob: WOB, Dynamic
-        wob_f: WOB Full, Dynamic + Static
-        wob_a: WOB A, Resistive WOB in
-        wob_b: WOB B, Elastic WOB in
-        Unit: J/L (J/L)
-        '''
-        p_in, v_in = self.__p_in, self.__v_in
-        vp_rectangle = (p_in[-1] * v_in[-1]) / 1000
-        peep_rectangle = (p_in[0] * v_in[-1]) / 1000
-        inhal_points = abs(np.trapz(v_in, p_in)) / 1000
-
-        wob_full = vp_rectangle - inhal_points
-        wob = wob_full - peep_rectangle
-        wob_b = ((p_in[-1] - p_in[0]) * v_in[-1]) / 2000
-        wob_a = wob - wob_b
-
-        wob_val = self.__ValRangeCheck([wob, wob_full],
-                                       self.__param_range['WOB'])
-        wob_ = {
-            'wob': round(wob, self.round_i_0),
-            'wob_f': round(wob_full, self.round_i_0),
-            'wob_a': round(wob_a, self.round_i_0),
-            'wob_b': round(wob_b, self.round_i_0)
-        }
-        return wob_, wob_val
-
     def VE(self, rr: float, v_t: float) -> list:
         '''
         Count "minute ventilation" per resp
@@ -290,14 +260,48 @@ class IndCalculation(Basic):
         rsbi = rr / (v_t / 1000)
         return round(rsbi, self.round_i_0)
 
+    def MP_Breath(self) -> list:
+        '''
+        Count work of the ventilator per breath
+        mp_jb_d: MP d, Dynamic, J/breath
+        mp_jb_t: MP t, Dynamic + Static, J/breath
+        mp_jb_a: MP a, Overcome resistive power 
+        mp_jb_b: MP b, Overcome elastic power
+        Unit: J/breath (J/breath)
+        '''
+        p_in, v_in = self.__p_in, self.__v_in
+        vp_rectangle = (p_in[-1] * v_in[-1]) / 1000
+        peep_rectangle = (p_in[0] * v_in[-1]) / 1000
+        inhal_points = abs(np.trapz(v_in, p_in)) / 1000
+
+        mp_jb_t = vp_rectangle - inhal_points
+        mp_jb_d = mp_jb_t - peep_rectangle
+        mp_jb_b = ((p_in[-1] - p_in[0]) * v_in[-1]) / 2000
+        mp_jb_a = mp_jb_d - mp_jb_b
+
+        mp_jb_d *= 0.098
+        mp_jb_t *= 0.098
+        mp_jb_a *= 0.098
+        mp_jb_b *= 0.098
+
+        mp_jb_val = self.__ValRangeCheck([mp_jb_d, mp_jb_t],
+                                         self.__param_range['MP'])
+        mp_jb = {
+            'mp_jb_d': round(mp_jb_d, self.round_i_0),
+            'mp_jb_t': round(mp_jb_t, self.round_i_0),
+            'mp_jb_a': round(mp_jb_a, self.round_i_0),
+            'mp_jb_b': round(mp_jb_b, self.round_i_0)
+        }
+        return mp_jb, mp_jb_val
+
     def MP_Area(self, rr: float, v_t: float, wob: float) -> list:
         '''
         Count the work of the ventilator using the area method
-        mp_jm_area: MP(Jm)
-        mp_jl_area: MP(JL)
+        mp_jm_area: MP(J/min)
+        mp_jl_area: MP(J/L)
         '''
-        mp_jm_area = 0.098 * rr * wob
-        mp_jl_area = 0.098 * wob / (v_t * 0.001)
+        mp_jm_area = wob * rr
+        mp_jl_area = wob / (v_t * 0.001)
         mp_area = {
             'mp_jm': round(mp_jm_area, self.round_i_0),
             'mp_jl': round(mp_jl_area, self.round_i_0)

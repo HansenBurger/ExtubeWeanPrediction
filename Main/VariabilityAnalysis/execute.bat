@@ -20,7 +20,7 @@ cd C:\Main\Project\ExtubeWeanPrediction
 
 set py_file=Main\VariabilityAnalysis\main.py
 
-FOR /L %%i IN (0,1,1) DO (
+FOR /L %%i IN (1,1,1) DO (
     CALL ECHO Start of %%n_st_s[%%i]%%
     :: main program running
     python %py_file% !t_st_s[%%i]! !n_st_s[%%i]!

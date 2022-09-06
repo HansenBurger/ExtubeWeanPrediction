@@ -118,24 +118,24 @@ class StaticData(Basic):
                 # All Inds + Basic Methods (Not only variability)
                 'met_s': ['cv', 'std', 'ave', 'med', 'qua', 'tqua'],
                 'ind_s': [
-                    'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d',
-                    'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+                    'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
             'inds_var': {
                 # All Inds + Basic Methods (Only variability)
                 'met_s': ['cv', 'std'],
                 'ind_s': [
-                    'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d',
-                    'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+                    'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
             'inds_dis': {
                 # All Inds + Inds Distribution
                 'met_s': ['ave', 'med', 'qua', 'tqua'],
                 'ind_s': [
-                    'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d',
-                    'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+                    'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
             'mets_Nvar': {
@@ -155,8 +155,8 @@ class StaticData(Basic):
                 # All Inds + All Methods (Not only variability)
                 'met_s': [],
                 'ind_s': [
-                    'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d',
-                    'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+                    'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
             'all_var': {
@@ -166,13 +166,47 @@ class StaticData(Basic):
                     'fuzz', 'ac', 'dc'
                 ],
                 'ind_s': [
-                    'pip', 'rr', 'v_t', 've', 'rsbi', 'wob', 'mp_jl_d',
-                    'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
+                    'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
             'default': {
                 'met_s': [],
                 'ind_s': []
+            }
+        }
+        self.__feat_cate = {
+            # Basic ind + Basic method
+            'group_a': {
+                'met_s': ['ave', 'med', 'qua', 'tqua', 'std', 'cv'],
+                'ind_s': ['pip', 'rr', 'v_t', 've', 'rsbi']
+            },
+            # Comprehensive ind + Basic method
+            'group_b': {
+                'met_s': ['ave', 'med', 'qua', 'tqua', 'std', 'cv'],
+                'ind_s': [
+                    'mp_jb_d', 'mp_jb_t', 'mp_jl_d', 'mp_jm_d', 'mp_jl_t',
+                    'mp_jm_t'
+                ]
+            },
+            # Basic ind + Advanced method
+            'group_c': {
+                'met_s': [
+                    'sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp', 'fuzz',
+                    'ac', 'dc'
+                ],
+                'ind_s': ['pip', 'rr', 'v_t', 've', 'rsbi']
+            },
+            # Comprehensive ind + Advanced method
+            'group_d': {
+                'met_s': [
+                    'sd1', 'sd2', 'pi', 'gi', 'si', 'app', 'samp', 'fuzz',
+                    'ac', 'dc'
+                ],
+                'ind_s': [
+                    'mp_jb_d', 'mp_jb_t', 'mp_jl_d', 'mp_jm_d', 'mp_jl_t',
+                    'mp_jm_t'
+                ]
             }
         }
 
@@ -183,3 +217,7 @@ class StaticData(Basic):
     @property
     def var_set(self):
         return self.__var_set
+
+    @property
+    def feat_cate(self):
+        return self.__feat_cate

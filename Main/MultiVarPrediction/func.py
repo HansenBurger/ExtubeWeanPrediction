@@ -190,7 +190,7 @@ class ResultsSummary(Basic):
             imp_df['med'] = imp_df.median(numeric_only=True, axis=1)
 
             imp_df_n = '_'.join([load_n, 'Importance'])
-            imp_df.to_csv(save_p / (imp_df_n + '.csv'), index=False)
+            imp_df.to_csv(save_p / (imp_df_n + '.csv'))
             dim_st = (12, 0.6 * imp_df.shape[0])
             fig, (ax_0,
                   ax_1) = plt.subplots(1,
@@ -198,12 +198,28 @@ class ResultsSummary(Basic):
                                        figsize=dim_st,
                                        gridspec_kw={'width_ratios': [1, 1]})
 
-            ave_sort = imp_df.sort_values(by=['ave'], ascending=False)
-            ax_0.set_ylabel('Breathing Variability', fontsize=15)
-            sns.barplot(y=ave_sort.index, x=ave_sort.ave, ax=ax_0)
+            xstick_st = dict(fontname='Times New Roman', size=15)
 
-            ax_1.set_ylabel('Breathing Variability', fontsize=15)
+            ave_sort = imp_df.sort_values(by=['ave'], ascending=False)
+            sns.barplot(y=ave_sort.index, x=ave_sort.ave, ax=ax_0)
+            ax_0.set_ylabel('Breathing Variability', fontsize=15)
+            ax_0.set_xlabel('(a) Average', fontdict=xstick_st)
+
             med_sort = imp_df.sort_values(by=['med'], ascending=False)
             sns.barplot(y=med_sort.index, x=med_sort.med, ax=ax_1)
+            # ax_1.set_ylabel('Breathing Variability', fontsize=15)
+            ax_1.set_xlabel('(b) Median', fontdict=xstick_st)
             plt.tight_layout()
             fig.savefig(save_p / (imp_df_n + '.png'), dpi=300)
+
+
+# p_l = [
+#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_09_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph',
+#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_10_ForwardSearch_gp_3_inds_Nvar\\Extube_SumP12_Nad-60\\Graph',
+#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_11_ForwardSearch_gp_6_mets_Nvar\\Extube_SumP12_Nad-60\\Graph',
+#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_14_ForwardSearch_gp_8_all_Nvar\\Extube_SumP12_Nad-60\\Graph'
+# ]
+# models = ['LR', 'RF', 'SVM', 'XGB']
+# for p in p_l:
+#     main_p = ResultsSummary(Path(p), models)
+#     main_p.BestDisplay()

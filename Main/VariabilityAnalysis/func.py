@@ -216,7 +216,7 @@ def VarStatistics() -> list:
             process_ = PerfomAssess(p_i_df.end, array_)
             auc, _, _ = process_.AucAssess()
             p, _, _ = process_.PValueAssess()
-            roc_df.loc[i, j] = auc
+            roc_df.loc[i, j] = auc if auc > 0.5 else (1 - auc)
             p_v_df.loc[i, j] = p
             tot_df['-'.join([i, j])] = array_
 
@@ -238,7 +238,7 @@ def VarStatistics() -> list:
         df.to_csv(s_g_fold / (save_n + '.csv'), index=False)
         chart_type(df, save_n, **chart_kwags)
 
-    ChartsSave(roc_df, 'AUC_HeatMap', plot_p.HeatMapPlot, {'cmap': 'coolwarm'})
+    ChartsSave(roc_df, 'AUC_HeatMap', plot_p.HeatMapPlot, {'cmap': 'YlOrBr'})
     ChartsSave(p_v_df, 'P_HeatMap', plot_p.HeatMapPlot, {'cmap': 'YlGnBu'})
     ChartsSave(corr_p, 'Corr_Pearson', plot_p.HeatMapLarge,
                {'cmap': 'coolwarm'})

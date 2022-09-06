@@ -87,7 +87,7 @@ def ConfigRead(cate: str,
         print('Json File Not Exist !')
         return None
     else:
-        with open(str(file)) as f:
+        with open(str(file), encoding="utf-8") as f:
             data = json.load(f)
 
         if not name:
