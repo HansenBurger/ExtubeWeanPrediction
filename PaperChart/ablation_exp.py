@@ -65,6 +65,7 @@ class AblationExpSummary(Basic):
         self.__gp_p_s = ConfigRead('AblationExp', mode_n, json_loc)
 
     def __ResetNameMap(self, list_raw: list):
+        list_raw = self.__ExcludeWob(list_raw)
         total_name_map = {
             'mets': ConfigRead('RespVar', 'Methods', json_loc),
             'inds': ConfigRead('RespVar', 'Indicators', json_loc)
@@ -76,8 +77,16 @@ class AblationExpSummary(Basic):
         new_name_map = dict(zip(list_raw, list_rename))
         return new_name_map
 
+    def __ExcludeWob(self, list_):
+        list_ = [
+            i.split('-')[0] + '-' +
+            'mp_jb_d' if i.split('-')[1] == 'wob' else i for i in list_
+        ]
+        return list_
+
     def __ImpFeatCorr(self, df):
         imp_cols = df.index.tolist()
+        imp_cols = self.__ExcludeWob(imp_cols)
         df_data, _ = self.__feat_loader.VarFeatsLoad(spec_=imp_cols)
         df_data = self.__feat_loader.DropInfoCol(df_data)
         df_corr = df_data.corr(method='spearman')
@@ -107,9 +116,11 @@ class AblationExpSummary(Basic):
 
     def __BarPlot(self, ax: any, **kwargs) -> None:
         sns.barplot(ax=ax, **kwargs)
-        label_st = dict(fontname='Times New Roman', size=15)
+        label_st = dict(family='Arial', style='normal', size=20)
         ax.set_ylabel('Breathing Variability Indices', fontdict=label_st)
-        ax.set_xlabel('(a) Features\' Importance', fontdict=label_st)
+        ax.set_xticks(ax.get_xticks(), fontsize=20)
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=12)
+        # ax.set_xlabel('(a) Features\' Importance', fontdict=label_st)
 
     def __HeatMapPlot(self, ax: any, **kwargs) -> None:
         color_st = [
@@ -120,10 +131,10 @@ class AblationExpSummary(Basic):
         bounds = [-1.0, -0.8, -0.6, 0.0, 0.6, 0.8, 1.0]
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
         sns.heatmap(cmap=cmap, norm=norm, ax=ax, **kwargs)
-        label_st = dict(fontname='Times New Roman', size=15)
-        ax.set_xlabel('(b) Features\' Correlation', fontdict=label_st)
-        ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=8)
-        ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=8)
+        label_st = dict(family='Arial', style='normal', size=20)
+        # ax.set_xlabel('(b) Features\' Correlation', fontdict=label_st)
+        ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=10)
+        ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=10)
 
     def __DrawImpAndCorr(self, gp_p: Path):
         fig_d = {}
@@ -137,15 +148,16 @@ class AblationExpSummary(Basic):
             df_corr.index = list(name_map.values())
             df_corr.rename(columns=name_map, inplace=True)
 
-            heat_dims = (0.6 * df_m.shape[0], 0.6 * df_m.shape[0])
+            cube_size = 0.8 if df_m.shape[0] > 10 else 1.2
+            heat_dims = [df_m.shape[0] * cube_size] * 2
             dim_st = (8 + heat_dims[0], heat_dims[1])
             fig, (ax_0, ax_1) = plt.subplots(
                 1,
                 2,
                 figsize=dim_st,
-                gridspec_kw={'width_ratios': [8 / heat_dims[0], 1]})
+                gridspec_kw={'width_ratios': [8 / heat_dims[0], 1.2]})
 
-            self.__BarPlot(ax_0, y=df_m.index, x=df_m.ave)
+            self.__BarPlot(ax_0, y=df_m.index.to_list(), x=df_m.ave.to_list())
             self.__HeatMapPlot(ax_1, linewidth=.5, data=df_corr)
             fig.tight_layout()
             fig_d[m] = fig

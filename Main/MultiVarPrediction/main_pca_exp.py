@@ -20,10 +20,7 @@ static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
 mode_s = ['Extube_SumP12_Nad-60']
 
-feats_slt = [
-    'ac-mp_jl_d', 'gi-wob', 'dc-pip', 'tqua-rr', 'std-pip', 'cv-pip', 'ac-v_t',
-    'std-mp_jl_t', 'cv-mp_jl_d', 'sd2-mp_jl_t', 'sd1-v_t'
-]
+feats_slt = ['ac-pip', 'std_pip', 'gi-mp_jb_d', 'cv-mp_jb_d']
 
 feats_gps = {
     'gp_0': ['ac-mp_jl_d', 'dc-pip'],
@@ -70,8 +67,8 @@ class PCAExp(Basic):
         data_p = DatasetGeneration(data_var, feat_var, self.__s_f_p)
         data_p.FeatsSelect(**FeatSelect)
         data_p.DataSelect()
-        pca_data = self.__PCAProcess(data_p.data, feats_gps)
-        return pca_data
+        # pca_data = self.__PCAProcess(data_p.data, feats_gps)
+        return data_p.data
 
     def __KFoldTest(self, data: pd.DataFrame, model: str = 'XGB'):
         tot_predict = MultiModelPredict(data_set=data,
