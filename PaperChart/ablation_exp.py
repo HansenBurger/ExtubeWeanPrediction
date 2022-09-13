@@ -136,17 +136,24 @@ class AblationExpSummary(Basic):
         ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=10)
         ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=10)
 
-    def __DrawImpAndCorr(self, gp_p: Path):
+    def __DrawImpAndCorr(self, gp_p: Path, unit: list = []):
         fig_d = {}
         file_d = self._Basic__ResultsGetByName(gp_p, self.__models, 'Import')
         for m, f in file_d.items():
+            if m != 'XGB':
+                continue
             df_m = pd.read_csv(f, index_col=0)
             df_m = df_m.sort_values(by=['ave'], ascending=False)
             df_corr = self.__ImpFeatCorr(df_m)
             name_map = self.__ResetNameMap(df_m.index.to_list())
             df_m.index = list(name_map.values())
+            df_m.index = [df_m.index[i] + unit[i] for i in range(len(unit))]
             df_corr.index = list(name_map.values())
+            df_corr.index = [
+                df_corr.index[i] + unit[i] for i in range(len(unit))
+            ]
             df_corr.rename(columns=name_map, inplace=True)
+            df_corr.columns = df_corr.index.to_list()
 
             cube_size = 0.8 if df_m.shape[0] > 10 else 1.2
             heat_dims = [df_m.shape[0] * cube_size] * 2
@@ -168,10 +175,13 @@ class AblationExpSummary(Basic):
         self.__save_p.mkdir(parents=True, exist_ok=True)
         gp_rs = {}
         for k, v in self.__gp_p_s.items():
+            if k != 'GP4':
+                continue
+            unit = ['', '(b/min)', '(%)', '', '(%)', '(cmH2O)']
             save_n = gp_name_map[k]
             gp_rs[save_n] = self.__CollectBestInGP(Path(v))
             gp_rs[save_n].to_csv(self.__save_p / (k + '.csv'), index=False)
-            fig_d = self.__DrawImpAndCorr(Path(v))
+            fig_d = self.__DrawImpAndCorr(Path(v), unit)
             for m, f in fig_d.items():
                 f.savefig(self.__save_p / (k + '_' + m + '.png'), dpi=300)
         doc = LatexTable(gp_rs)

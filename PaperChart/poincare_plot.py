@@ -346,16 +346,19 @@ class PoincarePlot(Basic):
     def CombinePlot(self, save_name: str):
         dim_plus = tuple(i * 2 + 1 for i in self.__dims)
         sup_title_st = dict(family='Arial', style='normal', size=30)
-        fig, ((sd, pi), (gi, si)) = plt.subplots(2, 2, figsize=dim_plus)
+        fig, ((sd, pi), (gi, si)) = plt.subplots(2,
+                                                 2,
+                                                 figsize=dim_plus,
+                                                 constrained_layout=True)
         self.__SDPlot(sd)
-        sd.set_title('$(a) SD1, SD2$', y=-0.15, fontdict=sup_title_st)
+        sd.set_title('$(a) SD1, SD2$', y=-0.16, fontdict=sup_title_st)
         self.__PIPlot(pi)
-        pi.set_title('$(b) PI$', y=-0.15, fontdict=sup_title_st)
+        pi.set_title('$(b) PI$', y=-0.16, fontdict=sup_title_st)
         self.__GIPlot(gi)
-        gi.set_title('$(c) GI$', y=-0.15, fontdict=sup_title_st)
+        gi.set_title('$(c) GI$', y=-0.16, fontdict=sup_title_st)
         self.__SIPlot(si)
-        si.set_title('$(d) SI$', y=-0.15, fontdict=sup_title_st)
-        fig.tight_layout()
+        si.set_title('$(d) SI$', y=-0.16, fontdict=sup_title_st)
+        # fig.tight_layout(w_pad=0.5, h_pad=1.2)
         fig.savefig(s_f_fold / (save_name + '.png'), dpi=300)
         plt.close()
 
