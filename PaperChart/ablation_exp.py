@@ -70,10 +70,26 @@ class AblationExpSummary(Basic):
             'mets': ConfigRead('RespVar', 'Methods', json_loc),
             'inds': ConfigRead('RespVar', 'Indicators', json_loc)
         }
-        list_rename = [
-            '$' + total_name_map['mets'][i.split('-')[0]] + '-' +
-            total_name_map['inds'][i.split('-')[1]] + '$' for i in list_raw
-        ]
+        list_rename = []
+        for i in list_raw:
+            [met_n, ind_n] = i.split('-')
+            met_inter = total_name_map['mets'][met_n]['Inter']
+            met_unit = total_name_map['mets'][met_n]['Unit']
+            ind_inter = total_name_map['inds'][ind_n]['Inter']
+            ind_unit = total_name_map['inds'][ind_n]['Unit']
+
+            if not met_unit:
+                unit_st = ''
+            elif met_unit == '-':
+                unit_st = '(' + ind_unit + ')'
+            elif met_unit == '%':
+                unit_st = '(' + '\%' + ')'
+            else:
+                unit_st = '(' + met_unit + ')'
+
+            rename_st = '$' + met_inter + '-' + ind_inter + unit_st + '$'
+            list_rename.append(rename_st)
+
         new_name_map = dict(zip(list_raw, list_rename))
         return new_name_map
 
@@ -136,7 +152,7 @@ class AblationExpSummary(Basic):
         ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=10)
         ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=10)
 
-    def __DrawImpAndCorr(self, gp_p: Path, unit: list = []):
+    def __DrawImpAndCorr(self, gp_p: Path):
         fig_d = {}
         file_d = self._Basic__ResultsGetByName(gp_p, self.__models, 'Import')
         for m, f in file_d.items():
@@ -147,11 +163,7 @@ class AblationExpSummary(Basic):
             df_corr = self.__ImpFeatCorr(df_m)
             name_map = self.__ResetNameMap(df_m.index.to_list())
             df_m.index = list(name_map.values())
-            df_m.index = [df_m.index[i] + unit[i] for i in range(len(unit))]
             df_corr.index = list(name_map.values())
-            df_corr.index = [
-                df_corr.index[i] + unit[i] for i in range(len(unit))
-            ]
             df_corr.rename(columns=name_map, inplace=True)
             df_corr.columns = df_corr.index.to_list()
 
@@ -177,11 +189,10 @@ class AblationExpSummary(Basic):
         for k, v in self.__gp_p_s.items():
             if k != 'GP4':
                 continue
-            unit = ['', '(b/min)', '(%)', '', '(%)', '(cmH2O)']
             save_n = gp_name_map[k]
             gp_rs[save_n] = self.__CollectBestInGP(Path(v))
             gp_rs[save_n].to_csv(self.__save_p / (k + '.csv'), index=False)
-            fig_d = self.__DrawImpAndCorr(Path(v), unit)
+            fig_d = self.__DrawImpAndCorr(Path(v))
             for m, f in fig_d.items():
                 f.savefig(self.__save_p / (k + '_' + m + '.png'), dpi=300)
         doc = LatexTable(gp_rs)

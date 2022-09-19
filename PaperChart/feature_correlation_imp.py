@@ -208,36 +208,12 @@ class FeatCorrMap(Basic):
     def Main(self):
 
         fig = plt.figure(figsize=(44, 20), dpi=300)
-        gs_tot = fig.add_gridspec(1, 2)
+        gs_tot = fig.add_gridspec(1, 1)
         gs_0 = gs_tot[0].subgridspec(1, 1)
-        gs_1 = gs_tot[1].subgridspec(2, 2)
 
         ax_a = fig.add_subplot(gs_0[0, 0])
         self.__HeatMapPlot(ax_a, linewidth=.1, **group_st['raw'])
         self.__SinglePlot((22, 20), 'corr_a', **group_st['raw'])
-
-        ax_b = fig.add_subplot(gs_1[0, 0])
-        self.__AnnotateHeatMap(ax_a, **group_st['sub_0'])
-        self.__HeatMapPlot(ax_b, linewidth=.1, **group_st['sub_0'])
-        self.__SinglePlot((12, 10), 'corr_b', **group_st['sub_0'])
-
-        ax_c = fig.add_subplot(gs_1[0, 1])
-        self.__AnnotateHeatMap(ax_a, **group_st['sub_1'])
-        self.__HeatMapPlot(ax_c, linewidth=.1, **group_st['sub_1'])
-        self.__SinglePlot((12, 10), 'corr_c', **group_st['sub_1'])
-
-        ax_d = fig.add_subplot(gs_1[1, 0])
-        self.__AnnotateHeatMap(ax_a, **group_st['sub_2'])
-        self.__HeatMapPlot(ax_d, linewidth=.1, **group_st['sub_2'])
-        self.__SinglePlot((8, 10), 'corr_d', **group_st['sub_2'])
-
-        ax_e = fig.add_subplot(gs_1[1, 1])
-        self.__AnnotateHeatMap(ax_a, **group_st['sub_3'])
-        self.__HeatMapPlot(ax_e, linewidth=.1, **group_st['sub_3'])
-        self.__SinglePlot((14, 12), 'corr_e', **group_st['sub_3'])
-
-        fig.tight_layout(pad=2.5)
-        fig.savefig(self.__save_p / 'corr_tot.png')
 
 
 if __name__ == '__main__':

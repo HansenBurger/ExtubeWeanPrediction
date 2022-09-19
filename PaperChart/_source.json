@@ -19,7 +19,7 @@
             "postop": "Postop",
             "pulmonary/COPD": "Pulmonary",
             "sepsis": "Spesis",
-            "truama": "Trama",
+            "trauma": "Trauma",
             "others": "Others"
         }
     },
@@ -157,32 +157,104 @@
     },
     "RespVar": {
         "Indicators": {
-            "pip": "PIP",
-            "rr": "RR",
-            "v_t": "V_T",
-            "ve": "MV",
-            "rsbi": "RSBI",
-            "mp_jb_d": "MP_d(J/b)",
-            "mp_jl_d": "MP_d(J/L)",
-            "mp_jm_d": "MP_d(J/m)"
+            "pip": {
+                "Inter": "PIP",
+                "Unit": "cmH2O"
+            },
+            "rr": {
+                "Inter": "RR",
+                "Unit": "b/min"
+            },
+            "v_t": {
+                "Inter": "V_T",
+                "Unit": "mL"
+            },
+            "ve": {
+                "Inter": "MV",
+                "Unit": "L/min"
+            },
+            "rsbi": {
+                "Inter": "RSBI",
+                "Unit": "b/min*L"
+            },
+            "mp_jb_d": {
+                "Inter": "MP_d[J/b]",
+                "Unit": "J/b"
+            },
+            "mp_jl_d": {
+                "Inter": "MP_d[J/L]",
+                "Unit": "J/L"
+            },
+            "mp_jm_d": {
+                "Inter": "MP_d[J/min]",
+                "Unit": "J/min"
+            }
         },
         "Methods": {
-            "ave": "AVE",
-            "med": "MED",
-            "qua": "QUA",
-            "tqua": "TQUA",
-            "std": "SD",
-            "cv": "CV",
-            "sd1": "SD1",
-            "sd2": "SD2",
-            "pi": "PI",
-            "gi": "GI",
-            "si": "SI",
-            "app": "ApEn",
-            "samp": "SampEn",
-            "fuzz": "FuzzEn",
-            "ac": "AC",
-            "dc": "DC"
+            "ave": {
+                "Inter": "AVE",
+                "Unit": "-"
+            },
+            "med": {
+                "Inter": "MED",
+                "Unit": "-"
+            },
+            "qua": {
+                "Inter": "QUA",
+                "Unit": "-"
+            },
+            "tqua": {
+                "Inter": "TQUA",
+                "Unit": "-"
+            },
+            "std": {
+                "Inter": "SD",
+                "Unit": "-"
+            },
+            "cv": {
+                "Inter": "CV",
+                "Unit": ""
+            },
+            "sd1": {
+                "Inter": "SD1",
+                "Unit": "-"
+            },
+            "sd2": {
+                "Inter": "SD2",
+                "Unit": "-"
+            },
+            "pi": {
+                "Inter": "PI",
+                "Unit": "%"
+            },
+            "gi": {
+                "Inter": "GI",
+                "Unit": "%"
+            },
+            "si": {
+                "Inter": "SI",
+                "Unit": "%"
+            },
+            "app": {
+                "Inter": "ApEn",
+                "Unit": ""
+            },
+            "samp": {
+                "Inter": "SampEn",
+                "Unit": ""
+            },
+            "fuzz": {
+                "Inter": "FuzzEn",
+                "Unit": ""
+            },
+            "ac": {
+                "Inter": "AC",
+                "Unit": "-"
+            },
+            "dc": {
+                "Inter": "DC",
+                "Unit": "-"
+            }
         }
     },
     "ForwardSearch": {
