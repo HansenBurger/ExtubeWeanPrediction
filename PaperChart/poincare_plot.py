@@ -18,7 +18,7 @@ sys.path.append(str(Path.cwd()))
 from Classes.Func.KitTools import SaveGen, ConfigRead
 
 p_name = 'PoincarePlot'
-resp_dict = {'type': 'v_t_i', 'name': 'V_t', 'unit': 'mL'}
+resp_dict = {'type': 'v_t_i', 'name': 'V_T', 'unit': 'mL'}
 single_dims = (8, 8)
 lim_size = (3, 0.8)
 json_loc = Path.cwd() / 'PaperChart' / '_source.json'
