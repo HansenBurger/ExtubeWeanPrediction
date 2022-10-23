@@ -416,6 +416,7 @@ class DomainPRSA(func):
         super().__init__()
         self.__ac = None
         self.__dc = None
+        self.__m_l = None
 
     @property
     def ac(self):
@@ -432,3 +433,11 @@ class DomainPRSA(func):
     @dc.setter
     def dc(self, obj):
         self.__dc = obj
+
+    @property
+    def m_l(self):
+        return self.__m_l
+
+    @m_l.setter
+    def m_l(self, l):
+        self.__m_l = l

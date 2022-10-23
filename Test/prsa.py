@@ -143,10 +143,6 @@ def PRSARangeTest(arr_t, arr_v):
     L = 120
     S_s = [2, 4, 6, 8, 10, 12, 14]
     T_s = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45]
-    # re_rate = 0.25
-    # L = 15
-    # S_s = [2, 4, 6]
-    # T_s = [1, 5, 10]
 
     result_d = {}
     p_ = PRSA(L, arr_v)

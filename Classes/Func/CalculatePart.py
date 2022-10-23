@@ -311,42 +311,75 @@ class IndCalculation(Basic):
         return mp_area, mp_val
 
 
-class VarAnalysis(Basic):
-    def __init__(self, ind_t: list = []):
+class VarCount(Basic):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
         super().__init__()
-        self.__arr_t = np.array(ind_t)
+        self.__arr_t = np.array(ind_t) if type(ind_t) != np.ndarray else ind_t
+        self.__arr_0 = np.array(self.__arr_t[:len(self.__arr_t) - 1])
+        self.__arr_1 = np.array(self.__arr_t[1:])
 
-    def TimeSeries(self, ind_s: list, method_sub: str) -> float:
-        array_ = np.array(ind_s)
-        if method_sub == 'AVE':
-            result_ = np.mean(array_)
-        elif method_sub == 'STD':
-            result_ = np.std(array_)
-        elif method_sub == 'CV':
-            result_ = np.std(array_) / np.mean(array_)
-        elif method_sub == 'MED':
-            result_ = np.median(array_)
-        elif method_sub == 'QUA':
-            result_ = np.quantile(array_, 0.25)
-        elif method_sub == 'TQUA':
-            result_ = np.quantile(array_, 0.75)
-        else:
-            result_ = -999
-            print('No match method')
 
-        return round(result_, self.round_i_0)
+class TD(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
+        self.__ave = np.mean(self._VarCount__arr_t)
+        self.__std = np.std(self._VarCount__arr_t)
+        self.__cv = self.__std / self.__ave
+        self.__med = np.median(self._VarCount__arr_t)
+        self.__qua = np.quantile(self._VarCount__arr_t, 0.25)
+        self.__tqua = np.quantile(self._VarCount__arr_t, 0.75)
 
-    def __Panglais(self, list_: list) -> np.array:
-        a_0 = np.array(list_[:len(list_) - 1])
-        a_1 = np.array(list_[1:])
-        return a_0, a_1
+    @property
+    def ave(self):
+        return self.__ave
 
-    def __PI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+    @property
+    def std(self):
+        return self.__std
+
+    @property
+    def cv(self):
+        return self.__cv
+
+    @property
+    def med(self):
+        return self.__med
+
+    @property
+    def qua(self):
+        return self.__qua
+
+    @property
+    def tqua(self):
+        return self.__tqua
+
+
+class HRA(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
+        self.__pi = self.__PI()
+        self.__gi = self.__GI()
+        self.__si = self.__SI()
+
+    @property
+    def pi(self):
+        return self.__pi
+
+    @property
+    def gi(self):
+        return self.__gi
+
+    @property
+    def si(self):
+        return self.__si
+
+    def __PI(self) -> float:
         '''
-        Count PI(the point below LI)
-        a_0: Array of IND_i
-        a_1: Array of IND_i+1
+        Count PI(the number of point below LI)
         '''
+        a_0 = self._VarCount__arr_0.copy()
+        a_1 = self._VarCount__arr_1.copy()
+
         num_upper, num_lower = 0, 0
         num_judge = lambda x, y: 1 if x < y else 0
 
@@ -357,12 +390,13 @@ class VarAnalysis(Basic):
         pi = 100 * num_lower / (num_upper + num_lower)
         return round(pi, self.round_i_0)
 
-    def __GI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+    def __GI(self) -> float:
         '''
         Count GI(the distance contributed by the points above LI)
-        a_0: Array of IND_i
-        a_1: Array of IND_i+1
         '''
+        a_0 = self._VarCount__arr_0.copy()
+        a_1 = self._VarCount__arr_1.copy()
+
         dis_above_sum, dis_below_sum = 0, 0
         dis_count = lambda x, y: (y - x) / np.sqrt(2) if x < y else 0
 
@@ -372,12 +406,13 @@ class VarAnalysis(Basic):
         gi = 100 * dis_above_sum / (dis_above_sum + dis_below_sum)
         return round(gi, self.round_i_0)
 
-    def __SI(self, a_0: np.ndarray, a_1: np.ndarray) -> float:
+    def __SI(self) -> float:
         '''
         Count SI(the phase angle difference of the points above LI)
-        a_0: Array of IND_i (>=0)
-        a_1: Array of IND_i+1 (>=0)
         '''
+        a_0 = self._VarCount__arr_0.copy()
+        a_1 = self._VarCount__arr_1.copy()
+
         theta_above_sum, theta_below_sum = 0, 0
         a_0, a_1 = np.abs(a_0), np.abs(a_1)  # make sure all positive
         theta_count = lambda x, y: np.degrees(np.arctan(y / x)
@@ -390,77 +425,87 @@ class VarAnalysis(Basic):
         si = 100 * theta_above_sum / (theta_above_sum + theta_below_sum)
         return round(si, self.round_i_0)
 
-    def HRA(self, ind_s: list, method_sub: str, **kwargs) -> float:
-        array_0, array_1 = self.__Panglais(ind_s)
 
-        if method_sub == 'PI':
-            result_ = self.__PI(array_0, array_1)
-        elif method_sub == 'GI':
-            result_ = self.__GI(array_0, array_1)
-        elif method_sub == 'SI':
-            result_ = self.__SI(array_0, array_1)
-        else:
-            result_ = -999
-            print('No match method')
+class HRV(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
+        self.__sd1 = self.__SD1()
+        self.__sd2 = self.__SD2()
 
-        return result_
+    def sd1(self):
+        return self.__sd1
 
-    def __SD1(self, a_0, a_1):
+    def sd2(self):
+        return self.__sd2
+
+    def __SD1(self) -> float:
         '''
-        Count SD1()
-        a_0: Array of IND_i
-        a_1: Array of IND_i+1
+        Count SD1(Short axis standard deviation)
         '''
+        a_0 = self._VarCount__arr_0.copy()
+        a_1 = self._VarCount__arr_1.copy()
         sd = np.std(a_1 - a_0) / np.sqrt(2)
         return round(sd, self.round_i_0)
 
-    def __SD2(self, a_0, a_1):
+    def __SD2(self) -> float:
         '''
-        Count SD2()
-        a_0: Array of IND_i
-        a_1: Array of IND_i+1
+        Count SD2(Long axis standard deviation)
         '''
+        a_0 = self._VarCount__arr_0.copy()
+        a_1 = self._VarCount__arr_1.copy()
         sd = np.std(a_1 + a_0) / np.sqrt(2)
         return round(sd, self.round_i_0)
 
-    def HRV(self, ind_s: list, method_sub: str, **kwargs) -> float:
-        array_0, array_1 = self.__Panglais(ind_s)
 
-        if method_sub == 'SD1':
-            result_ = self.__SD1(array_0, array_1)
-        elif method_sub == 'SD2':
-            result_ = self.__SD2(array_0, array_1)
-        else:
-            result_ = -999
-            print('No match method')
+class ENT(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
 
-        return result_
+    def __init__(self, ind_t: list = []) -> None:
+        super().__init__(ind_t)
+        self.__apen = eh.ApEn(self._VarCount__arr_t, m=1)
+        self.__sampen = eh.SampEn(self._VarCount__arr_t, m=1)
+        self.__fuzzen = eh.FuzzEn(self._VarCount__arr_t, m=1)
 
-    def Entropy(self, ind_s: list, method_sub: str, **kwargs) -> float:
-        array_ = np.array(ind_s)
-        if method_sub == 'ApEn':
-            result_, _ = eh.ApEn(array_, m=1)
-        elif method_sub == 'SampEn':
-            result_, _, _ = eh.SampEn(array_, m=1)
-        elif method_sub == 'FuzzEn':
-            result_, _, _ = eh.FuzzEn(array_, m=1)
-        else:
-            result_ = -999
-            print('No match method')
+    def apen(self):
+        return self.__apen
 
-        return round(result_[-1], self.round_i_0)
+    def sampen(self):
+        return self.__sampen
 
-    def __SpaceGen(self, arr, fs):
-        ind_0 = arr.min()
-        ind_1 = arr.max()
+    def fuzzen(self):
+        return self.__fuzzen
+
+
+class PRSA(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
+        self.__prsa_mean = None
+        self.__ac = self.__main('AC', **kwargs)
+        self.__dc = self.__main('DC', **kwargs)
+
+    @property
+    def ac(self):
+        return self.__ac
+
+    @property
+    def dc(self):
+        return self.__dc
+
+    @property
+    def prsa_mean(self):
+        return self.__prsa_mean
+
+    def __SpaceGen(self, arr, fs) -> np.ndarray:
+        ind_0, ind_1 = arr.min(), arr.max()
         ind_num = round((ind_1 - ind_0) * fs)
         arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
         arr_ = np.round(arr_, decimals=2)
         return arr_
 
     def __Resample(self, ind_s: list, resample_rate: float) -> np.ndarray:
-        arr_v = np.array(ind_s)
-        arr_t = self.__arr_t.copy()
+        arr_v = self._VarCount__arr_t.copy()
+        arr_t = np.array(ind_s)
         arr_t = np.array([sum(arr_t[0:i + 1]) for i in range(len(arr_t))])
 
         f = interpolate.interp1d(arr_t, arr_v)
@@ -468,11 +513,14 @@ class VarAnalysis(Basic):
         arr_v_i = f(arr_t_i)
         return arr_v_i
 
-    def PRSA(self, ind_s: list, method_sub: str, L: int, F: float, T: int,
-             s: int) -> float:
+    def __main(self, method_sub: str, ind_s: list, L: int, F: float, T: int,
+               s: int) -> float:
         array_ = self.__Resample(ind_s, F)
 
         def WtJudge(val: float) -> float:
+            '''
+            The coefficients in wavelet analysis
+            '''
             if val >= -1 and val < 0:
                 para = -1 / 2
             elif val >= 0 and val < 1:
@@ -502,14 +550,19 @@ class VarAnalysis(Basic):
 
         arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
         arr_axis = np.linspace(-L, L, 2 * L, endpoint=False)
-        df = pd.DataFrame({'axis': arr_axis, 'prsa': arr_prsa})
+        df_prsa = pd.DataFrame({'axis': arr_axis, 'prsa': arr_prsa})
+
+        self.__prsa_mean = df_prsa
 
         arr_axis_s = np.linspace(-s, s, 2 * s, endpoint=False)
-        arr_prsa_s = df[df.axis.isin(arr_axis_s)].prsa
+        arr_prsa_s = df_prsa[df_prsa.axis.isin(arr_axis_s)].prsa
         arr_para_s = np.array([WtJudge(i / s) for i in arr_axis_s])
         prsa_ana = np.sum(arr_prsa_s * arr_para_s / s)
 
         return round(prsa_ana, self.round_i_0)
+
+
+
 
 
 class PerfomAssess(Basic):
