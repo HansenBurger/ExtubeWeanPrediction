@@ -16,7 +16,7 @@ class basic():
 
 
 class VarResultsGen(basic):
-    def __init__(self, patient):
+    def __init__(self, patient: any, methods: list = []):
         '''
         :attr __pid: layer_p Patient classs
         :attr __ind_s: resp parameters for outlier detection
@@ -28,7 +28,8 @@ class VarResultsGen(basic):
             'pip', 'peep', 'rr', 'v_t_i', 've', 'rsbi', 'mp_jb_d', 'mp_jb_t',
             'mp_jm_d', 'mp_jl_d', 'mp_jm_t', 'mp_jl_t'
         ]
-        self.__met_s = ['td', 'hra', 'hrv', 'ent', 'prsa']
+        self.__met_s = ['td', 'hra', 'hrv', 'ent', 'prsa'
+                        ] if not methods else methods
 
     def __SaveNaming(self) -> str:
         pid = self.__pid.pid
@@ -48,12 +49,13 @@ class VarResultsGen(basic):
         df_val = df[df[[ind + '_val' for ind in self.__ind_s]].all(axis=1)]
         self.__pid.resp_l = [resp_l[i] for i in df_val.index]
 
-    def VarRsGen(self, methods_l: list) -> None:
+    def VarRsGen(self, **kwargs) -> None:
         self.__OutliersWipe()
         resp_l = self.__pid.resp_l
         res_p = ResultStatistical(resp_l)
-        res_p.CountAggr(methods_l)
+        res_p.CountAggr(self.__met_s, **kwargs)
         self.__pid.result = res_p.rec
+        return res_p.prsa_dist
 
     def ParaTrendsPlot(self, folder: Path, col_sel: list) -> None:
         save_n = self.__SaveNaming() + '_para'
@@ -61,7 +63,10 @@ class VarResultsGen(basic):
         df = pd.DataFrame(para_d)
         PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
 
-    def RespTrendsPlot(self, folder: Path, col_sel: list) -> None:
+    def RespTrendsPlot(self,
+                       folder: Path,
+                       col_sel: list,
+                       dtype: any = float) -> None:
         resp_l = self.__pid.resp_l
         save_n = self.__SaveNaming() + '_wave'
         wid_l = [i.wid for i in resp_l]
@@ -70,7 +75,7 @@ class VarResultsGen(basic):
         df['ind'] = stl_l
         PlotMain(folder).MultiLineplot('ind', col_sel, df, save_n)
 
-    def TensorStorage(self, folder: Path) -> None:
+    def TensorStorage(self, folder: Path, dtype: any = float) -> None:
         save_n = self.__SaveNaming()
 
         var_rs = self.__pid.result

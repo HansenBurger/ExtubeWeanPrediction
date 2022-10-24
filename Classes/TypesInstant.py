@@ -8,9 +8,9 @@ from operator import add, mul
 from WaveDataProcess import BinImport
 from Classes.Domain import layer_0, layer_1, layer_2
 from Classes.Func.KitTools import PathVerify, LocatSimiTerms
-from Classes.Func.CalculatePart import IndCalculation, VarAnalysis, TD, HRA, HRV, ENT, PRSA
+from Classes.Func.CalculatePart import IndCalculation, VarCount, TD, HRA, HRV, ENT, PRSA
 
-ind_prsa_st = {
+ind_pasa_st = {
     'rr': {
         'L': 120,
         'F': 2.0,
@@ -250,88 +250,112 @@ class ResultStatistical(Basic):
         self.__rec.ent = layer_1.DomainEntropy()
         self.__rec.prsa = layer_1.DomainPRSA()
 
+        self.__prsa_dist = {}
+
     @property
     def rec(self):
         return self.__rec
 
-    def __IndStat(self,
-                  cls_: any,
-                  meth: str,
-                  para_: dict = {}) -> layer_0.Target0:
+    @property
+    def prsa_dist(self):
+        return self.__prsa_dist
+
+    def __IndStat(self, cls_: any, method_s: list, para_: dict = {}) -> dict:
         ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
         para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
         ind_l = lambda n: [getattr(i, n) for i in self.__resp_l]
 
-        var_ = layer_0.Target0()
-        var_.t_tot = getattr(cls_(ind_l('wid'), **para_['rr']), meth)
-        var_.t_i = getattr(cls_(ind_l('t_i'), **para_['rr']), meth)
-        var_.t_e = getattr(cls_(ind_l('t_e'), **para_['rr']), meth)
-        var_.i_e = getattr(cls_(ind_l('i_e'), **para_['rr']), meth)
-        var_.pip = getattr(cls_(ind_l('pip'), **para_['mp_jb']), meth)
-        var_.peep = getattr(cls_(ind_l('peep'), **para_['mp_jb']), meth)
-        var_.rr = getattr(cls_(ind_l('rr'), **para_['rr']), meth)
-        var_.v_t = getattr(cls_(ind_l('v_t_i'), **para_['v_t']), meth)
-        var_.ve = getattr(cls_(ind_l('ve'), **para_['ve']), meth)
-        var_.rsbi = getattr(cls_(ind_l('rsbi'), **para_['rsbi']), meth)
-        var_.mp_jb_d = getattr(cls_(ind_l('mp_jb_d'), **para_['mp_jb']), meth)
-        var_.mp_jb_t = getattr(cls_(ind_l('mp_jb_t'), **para_['mp_jb']), meth)
-        var_.mp_jl_d = getattr(cls_(ind_l('mp_jl_d'), **para_['mp']), meth)
-        var_.mp_jl_t = getattr(cls_(ind_l('mp_jl_t'), **para_['mp']), meth)
-        var_.mp_jm_d = getattr(cls_(ind_l('mp_jm_d'), **para_['mp']), meth)
-        var_.mp_jm_t = getattr(cls_(ind_l('mp_jm_t'), **para_['mp']), meth)
+        var_counter = {
+            't_tot': cls_(ind_l('wid'), **para_['rr']),
+            't_i': cls_(ind_l('t_i'), **para_['rr']),
+            't_e': cls_(ind_l('t_e'), **para_['rr']),
+            'i_e': cls_(ind_l('i_e'), **para_['rr']),
+            'pip': cls_(ind_l('pip'), **para_['mp_jb']),
+            'peep': cls_(ind_l('peep'), **para_['mp_jb']),
+            'rr': cls_(ind_l('rr'), **para_['rr']),
+            'v_t': cls_(ind_l('v_t_i'), **para_['v_t']),
+            've': cls_(ind_l('ve'), **para_['ve']),
+            'rsbi': cls_(ind_l('rsbi'), **para_['rsbi']),
+            'mp_jb_d': cls_(ind_l('mp_jb_d'), **para_['mp_jb']),
+            'mp_jb_t': cls_(ind_l('mp_jb_t'), **para_['mp_jb']),
+            'mp_jl_d': cls_(ind_l('mp_jl_d'), **para_['mp']),
+            'mp_jl_t': cls_(ind_l('mp_jl_t'), **para_['mp']),
+            'mp_jm_d': cls_(ind_l('mp_jm_d'), **para_['mp']),
+            'mp_jm_t': cls_(ind_l('mp_jm_t'), **para_['mp']),
+        }
 
-        return var_
+        var_s = []
 
-    def CountAggr(self, cate_l: list):
+        for i in range(len(method_s)):
+            var_ = layer_0.Target0()
+            for k, v in var_counter.items():
+                setattr(var_, k, getattr(v, method_s[i]))
+            var_s.append(var_)
+
+        var_d = dict(zip(method_s, var_s))
+
+        return var_d
+
+    def CountAggr(self, cate_l: list, **kwargs):
         for cate in cate_l:
-            if cate == 'TD':
+            if cate == 'td':
                 self.TDAggr()
-            elif cate == 'HRA':
+            elif cate == 'hra':
                 self.HRAAggr()
-            elif cate == 'HRV':
+            elif cate == 'hrv':
                 self.HRVAggr()
-            elif cate == 'ENT':
+            elif cate == 'ent':
                 self.EntAggr()
-            elif cate == 'PRSA':
-                self.PRSAAggr()
+            elif cate == 'prsa':
+                self.PRSAAggr(**kwargs)
             else:
                 print('No match category !')
                 return
 
     def TDAggr(self) -> None:
-        # p_count = VarAnalysis().TimeSeries
-        # p_count = TD
-        self.__rec.td.ave = self.__IndStat(TD, 'ave')
-        self.__rec.td.med = self.__IndStat(TD, 'med')
-        self.__rec.td.std = self.__IndStat(TD, 'std')
-        self.__rec.td.cv = self.__IndStat(TD, 'cv')
-        self.__rec.td.qua = self.__IndStat(TD, 'qua')
-        self.__rec.td.tqua = self.__IndStat(TD, 'tqua')
+        sub_m = ['ave', 'med', 'std', 'cv', 'qua', 'tqua']
+        rs = self.__IndStat(TD, sub_m)
+        self.__rec.td.ave = rs['ave']
+        self.__rec.td.med = rs['med']
+        self.__rec.td.std = rs['std']
+        self.__rec.td.cv = rs['cv']
+        self.__rec.td.qua = rs['qua']
+        self.__rec.td.tqua = rs['tqua']
 
     def HRAAggr(self) -> None:
-        # p_count = HRA
-        self.__rec.hra.pi = self.__IndStat(HRA, 'pi')
-        self.__rec.hra.gi = self.__IndStat(HRA, 'gi')
-        self.__rec.hra.si = self.__IndStat(HRA, 'si')
+        sub_m = ['pi', 'gi', 'si']
+        rs = self.__IndStat(HRA, sub_m)
+        self.__rec.hra.pi = rs['pi']
+        self.__rec.hra.gi = rs['gi']
+        self.__rec.hra.si = rs['si']
 
     def HRVAggr(self) -> None:
-        # p_count = HRV
-        self.__rec.hrv.sd1 = self.__IndStat(HRV, 'sd1')
-        self.__rec.hrv.sd2 = self.__IndStat(HRV, 'sd2')
+        sub_m = ['sd1', 'sd2']
+        rs = self.__IndStat(HRV, sub_m)
+        self.__rec.hrv.sd1 = rs['sd1']
+        self.__rec.hrv.sd2 = rs['sd2']
 
     def EntAggr(self) -> None:
-        # p_count = ENT
-        self.__rec.ent.app = self.__IndStat(ENT, 'apen')
-        self.__rec.ent.samp = self.__IndStat(ENT, 'sampen')
-        self.__rec.ent.fuzz = self.__IndStat(ENT, 'fuzzen')
+        sub_m = ['apen', 'sampen', 'fuzzen']
+        rs = self.__IndStat(ENT, sub_m)
+        self.__rec.ent.app = rs['apen']
+        self.__rec.ent.samp = rs['sampen']
+        self.__rec.ent.fuzz = rs['fuzzen']
 
     def PRSAAggr(self, para_st: dict = {}) -> None:
-        # p_count = PRSA
-        ind_para = ind_prsa_st if not para_st else para_st
         resp_wid = [round(i.wid) for i in self.__resp_l]
+
+        ind_para = dict(
+            zip(list(ind_pasa_st.keys()), [para_st] *
+                len(ind_pasa_st))) if not para_st else ind_pasa_st
+
         for k in ind_para.keys():
             ind_para[k]['ind_s'] = resp_wid
 
-        self.__rec.prsa.dc = self.__IndStat(PRSA, 'dc', ind_para)
-        self.__rec.prsa.ac = self.__IndStat(PRSA, 'ac', ind_para)
-        self.__rec.prsa.m_l = self.__IndStat(PRSA, 'prsa_mean', ind_para)
+        sub_m = ['ac', 'mean_ac', 'dc', 'mean_dc']
+        rs = self.__IndStat(PRSA, sub_m, ind_para)
+
+        self.__rec.prsa.ac = rs['ac']
+        self.__rec.prsa.dc = rs['dc']
+        self.__prsa_dist['ac'] = rs['mean_ac']
+        self.__prsa_dist['dc'] = rs['mean_dc']

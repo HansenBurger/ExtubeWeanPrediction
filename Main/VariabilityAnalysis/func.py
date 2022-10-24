@@ -12,7 +12,7 @@ from Classes.Domain import layer_p
 from Classes.TypesInstant import RecordInfo
 from Classes.ExtractSplice import ExtractSplice
 from Classes.VarResultsGen import VarResultsGen
-from Classes.Func.KitTools import ConfigRead, FromkeysReid
+from Classes.Func.KitTools import ConfigRead, FromkeysReid, GetObjectDict
 from Classes.Func.DiagramsGen import PlotMain
 from Classes.Func.CalculatePart import SenSpecCounter, PerfomAssess
 from FlowCalibration.incators_calculate import RespValStatic, PoincareScatter
@@ -38,8 +38,6 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
     '''
     mode_i = mode_name.split('_')
     src_0 = static.cate_info[mode_i[0]][mode_i[1]]
-
-    # src_2 = static.op_basic_i
 
     def NonAgedIll(src_1: any) -> list:
         '''
@@ -84,8 +82,8 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
     df = pd.DataFrame(list(que.dicts()))
     df = df.drop('index', axis=1)
     df.e_s = np.where(df.e_s.str.contains('成功'), 0, 1)
-    gp = df.groupby('pid')
 
+    gp = df.groupby('pid')
     for pid in df.pid.unique():
         df_tmp = gp.get_group(pid)
         df_tmp = df_tmp.reset_index(drop=True)
@@ -95,33 +93,34 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
         dynamic.pid_dr_s[pid] = pid_dr
 
 
-def PidVarCount(t_set: int, pid_s: list = []):
+def DataGen(t_st: int, df: pd.DataFrame) -> layer_p.Patient:
     '''
     '''
-    def DataGen(df: pd.DataFrame) -> layer_p.Patient:
-        '''
-        '''
-        rid = df.rid.unique()[-1]
+    rid = df.rid.unique()[-1]
 
-        pid_o = layer_p.Patient()
-        pid_o.pid = df.pid[0]
-        pid_o.icu = df.icu[0]
-        pid_o.end_t = df.e_t[0]
-        pid_o.end_i = df.e_s[0]
+    pid_o = layer_p.Patient()
+    pid_o.pid = df.pid[0]
+    pid_o.icu = df.icu[0]
+    pid_o.end_t = df.e_t[0]
+    pid_o.end_i = df.e_s[0]
 
-        rid_p = RecordInfo(rid, pid_o.end_t)
-        rid_p.ParametersInit(dynamic.data_loc, df.opt[0])
-        pid_o.rid_s = rid_p.rec
+    rid_p = RecordInfo(rid, pid_o.end_t)
+    rid_p.ParametersInit(dynamic.data_loc, df.opt[0])
+    pid_o.rid_s = rid_p.rec
 
-        rec_id_s = df.zdt.tolist()
-        rec_t_s = df.rec_t.tolist()
+    rec_id_s = df.zdt.tolist()
+    rec_t_s = df.rec_t.tolist()
 
-        splice_p = ExtractSplice(pid_o.rid_s)
-        splice_p.RecBatchesExtract(rec_id_s, rec_t_s, t_set)
-        pid_o.resp_l, pid_o.validy = splice_p.RespSplicing(
-            static.psv_vms, t_set)
+    splice_p = ExtractSplice(pid_o.rid_s)
+    splice_p.RecBatchesExtract(rec_id_s, rec_t_s, t_st)
+    pid_o.resp_l, pid_o.validy = splice_p.RespSplicing(static.psv_vms, t_st)
 
-        return pid_o
+    return pid_o
+
+
+def PidVarCount(t_st: int, pid_s: list = [], var_s: list = []):
+    '''
+    '''
 
     pid_dr_s = {k: v
                 for k, v in dynamic.pid_dr_s.items()
@@ -130,7 +129,7 @@ def PidVarCount(t_set: int, pid_s: list = []):
     for pid, dr in pid_dr_s.items():
 
         t_s = datetime.now()
-        pid_obj = DataGen(dr['df_in'])
+        pid_obj = DataGen(t_st, dr['df_in'])
         dynamic.pid_dr_s[pid]['end'] = pid_obj.end_i
         dynamic.pid_dr_s[pid]['validy'] = pid_obj.validy
 
@@ -138,12 +137,45 @@ def PidVarCount(t_set: int, pid_s: list = []):
             print('{0}\' has no valid data'.format(pid))
             continue
         else:
-            resp_ind_save = dynamic.s_g_fold / 'IndInfo' / str(pid_obj.pid)
-            resp_ind_save.mkdir(parents=True, exist_ok=True)
+            # resp_ind_save = dynamic.s_g_fold / 'IndInfo' / str(pid_obj.pid)
+            # resp_ind_save.mkdir(parents=True, exist_ok=True)
             # pid_obj.resp_l = RespValStatic(pid_obj.resp_l, resp_ind_save)
             process_1 = VarResultsGen(pid_obj)
-            process_1.VarRsGen(static.methods)
+            process_1.VarRsGen(var_s)
             process_1.TensorStorage(dynamic.s_f_fold)
+            t_e = datetime.now()
+            print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
+
+
+def PRSAVarCount(t_st: int, prsa_st_s: list, pid_s: list = []):
+    pid_dr_s = {k: v
+                for k, v in dynamic.pid_dr_s.items()
+                if v in pid_s} if pid_s else dynamic.pid_dr_s
+
+    for pid, dr in pid_dr_s.items():
+
+        t_s = datetime.now()
+        pid_obj = DataGen(t_st, dr['df_in'])
+        dynamic.pid_dr_s[pid]['end'] = pid_obj.end_i
+        dynamic.pid_dr_s[pid]['validy'] = pid_obj.validy
+
+        if not pid_obj.resp_l:
+            print('{0}\' has no valid data'.format(pid))
+            continue
+        else:
+            for st in prsa_st_s:
+                st_n = 'T-' + str(st['T']) + '_s-' + str(st['s'])
+                save_loc = dynamic.s_f_fold / (st_n) / str(pid)
+                save_loc.mkdir(parents=True, exist_ok=True)
+                process_1 = VarResultsGen(pid_obj, ['prsa'])
+                prsa_arr_d = process_1.VarRsGen(para_st=st)
+                process_1.TensorStorage(save_loc.parent)
+
+                for k, v in prsa_arr_d.items():
+                    v_d = GetObjectDict(v)
+                    for k_, v_ in v_d.items():
+                        v_.to_csv(save_loc / '{0}_{1}.csv'.format(k, k_),
+                                  index=False)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
 
@@ -235,7 +267,7 @@ def VarStatistics() -> list:
                    save_n: str,
                    chart_type: any,
                    chart_kwags: dict = {}) -> None:
-        df.to_csv(s_g_fold / (save_n + '.csv'), index=False)
+        df.to_csv(s_g_fold / (save_n + '.csv'))
         chart_type(df, save_n, **chart_kwags)
 
     ChartsSave(roc_df, 'AUC_HeatMap', plot_p.HeatMapPlot, {'cmap': 'YlOrBr'})
@@ -289,3 +321,70 @@ def FalseBuild(df: pd.DataFrame, dict_: dict):
                                                       df_tn.shape[0],
                                                       df_fn.shape[0]))
     return df_fp, df_fn, df_tp, df_tn
+
+
+def PRSAStatistics(T_st: list,
+                   s_st: list,
+                   file_loc: Path = dynamic.s_f_fold,
+                   save_loc: Path = dynamic.s_g_fold) -> list:
+    '''
+    '''
+    t_s_st_kernal = np.zeros((len(T_st), len(s_st)))
+
+    t_s_st_rs = t_s_st_kernal.copy()
+    for i in range(len(T_st)):
+        for j in range(len(s_st)):
+            p_r_l, p_i_l = [], []
+            folder = file_loc / ('T-' + str(T_st[i]) + '_s-' + str(s_st[j]))
+            for file in Path(folder).iterdir():
+                if not file.is_file() or file.suffix != '.csv':
+                    pass
+                else:
+                    p_r_l.append(pd.read_csv(file, index_col='method'))
+                    p_info = file.name.split('_')
+                    p_i_d = {
+                        'pid': p_info[0],
+                        'end': int(p_info[1]),
+                        'rid': p_info[2]
+                    }
+                    p_i_l.append(p_i_d)
+            t_s_st_rs[i, j] = {'p_r': p_r_l, 'p_i': p_i_l}
+            t_s_st_kernal[i, j] = np.array([T_st[i], s_st[j]])
+
+    true_end = t_s_st_rs[0, 0]['p_i'][0].end
+
+    mets, inds = p_r_l[0].index, p_r_l[0].columns
+    tot_df = pd.DataFrame()
+
+    for i in mets:
+        for j in inds:
+            t_s_st_roc = t_s_st_kernal.copy()
+            t_s_st_p_v = t_s_st_kernal.copy()
+            for t in T_st:
+                for s in s_st:
+                    array_ = np.array(
+                        [x.loc[i, j] for x in t_s_st_rs[t, s]['p_r']])
+                    process_ = PerfomAssess(true_end, array_)
+                    auc, _, _ = process_.AucAssess()
+                    p, _, _ = process_.PValueAssess()
+                    t_s_st_roc[t, s] = auc if auc > 0.5 else (1 - auc)
+                    t_s_st_p_v[t, s] = p
+
+            df_roc = pd.DataFrame(t_s_st_roc, columns=s_st)
+            df_roc['T'] = T_st
+            df_roc = df_roc.set_index('T', drop=True)
+            df_p_v = pd.DataFrame(t_s_st_p_v, columns=s_st)
+            df_p_v['T'] = T_st
+            df_p_v = df_p_v.set_index('T', drop=True)
+            plot_p = PlotMain(save_loc)
+            ChartsSave(df_roc, 'AUC_HeatMap_{0}-{1}'.format(i, j),
+                       plot_p.HeatMapPlot, {'cmap': 'YlOrBr'})
+            ChartsSave(df_p_v, 'P_HeatMap_{0}-{1}'.format(i, j),
+                       plot_p.HeatMapPlot, {'cmap': 'YlGnBu'})
+
+    def ChartsSave(df: pd.DataFrame,
+                   save_n: str,
+                   chart_type: any,
+                   chart_kwags: dict = {}) -> None:
+        df.to_csv(save_loc / (save_n + '.csv'))
+        chart_type(df, save_n, **chart_kwags)

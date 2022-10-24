@@ -480,40 +480,43 @@ class ENT(VarCount):
 class PRSA(VarCount):
     def __init__(self, ind_t: list = [], **kwargs) -> None:
         super().__init__(ind_t, **kwargs)
-        self.__prsa_mean = None
-        self.__ac = self.__main('AC', **kwargs)
-        self.__dc = self.__main('DC', **kwargs)
+        self.__ac, self.__mean_ac = self.__prsa('AC', **kwargs)
+        self.__dc, self.__mean_dc = self.__prsa('DC', **kwargs)
 
     @property
     def ac(self):
         return self.__ac
 
     @property
+    def mean_ac(self):
+        return self.__mean_ac
+
+    @property
     def dc(self):
         return self.__dc
 
     @property
-    def prsa_mean(self):
-        return self.__prsa_mean
-
-    def __SpaceGen(self, arr, fs) -> np.ndarray:
-        ind_0, ind_1 = arr.min(), arr.max()
-        ind_num = round((ind_1 - ind_0) * fs)
-        arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
-        arr_ = np.round(arr_, decimals=2)
-        return arr_
+    def mean_dc(self):
+        return self.__mean_dc
 
     def __Resample(self, ind_s: list, resample_rate: float) -> np.ndarray:
+        def SpaceGen(arr: np.ndarray, fs: float) -> np.ndarray:
+            ind_0, ind_1 = arr.min(), arr.max()
+            ind_num = round((ind_1 - ind_0) * fs)
+            arr_ = np.linspace(ind_0, ind_1, ind_num, endpoint=False)
+            arr_ = np.round(arr_, decimals=2)
+            return arr_
+
         arr_v = self._VarCount__arr_t.copy()
         arr_t = np.array(ind_s)
         arr_t = np.array([sum(arr_t[0:i + 1]) for i in range(len(arr_t))])
 
         f = interpolate.interp1d(arr_t, arr_v)
-        arr_t_i = self.__SpaceGen(arr_t, resample_rate)
+        arr_t_i = SpaceGen(arr_t, resample_rate)
         arr_v_i = f(arr_t_i)
         return arr_v_i
 
-    def __main(self, method_sub: str, ind_s: list, L: int, F: float, T: int,
+    def __prsa(self, method_sub: str, ind_s: list, L: int, F: float, T: int,
                s: int) -> float:
         array_ = self.__Resample(ind_s, F)
 
@@ -552,17 +555,12 @@ class PRSA(VarCount):
         arr_axis = np.linspace(-L, L, 2 * L, endpoint=False)
         df_prsa = pd.DataFrame({'axis': arr_axis, 'prsa': arr_prsa})
 
-        self.__prsa_mean = df_prsa
-
         arr_axis_s = np.linspace(-s, s, 2 * s, endpoint=False)
         arr_prsa_s = df_prsa[df_prsa.axis.isin(arr_axis_s)].prsa
         arr_para_s = np.array([WtJudge(i / s) for i in arr_axis_s])
         prsa_ana = np.sum(arr_prsa_s * arr_para_s / s)
 
-        return round(prsa_ana, self.round_i_0)
-
-
-
+        return round(prsa_ana, self.round_i_0), df_prsa
 
 
 class PerfomAssess(Basic):
