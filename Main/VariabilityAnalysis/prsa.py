@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
-from func import LocInit, TableQuery, PRSAVarCount, VarStatistics, VarInfoCollect
+from func import LocInit, TableQuery, PRSAVarCount, VarStatistics, VarInfoCollect, PRSAStatistics
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
 p_name = 'PRSA_60_min'
@@ -27,6 +27,7 @@ def VarAnalysis(mode_: str, t_set: int):
     LocInit(s_f_fold, s_g_fold, mode_)
     TableQuery(mode_, (48, 2160))
     PRSAVarCount(t_set, exp_st_s)
+    PRSAStatistics(T_exp_st, s_exp_st)
 
 
 if __name__ == '__main__':

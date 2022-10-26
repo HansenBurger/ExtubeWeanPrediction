@@ -329,10 +329,9 @@ def PRSAStatistics(T_st: list,
                    save_loc: Path = dynamic.s_g_fold) -> list:
     '''
     '''
-    t_s_st_kernal = np.zeros((len(T_st), len(s_st)))
-
-    t_s_st_rs = t_s_st_kernal.copy()
+    t_s_st_result = []
     for i in range(len(T_st)):
+        s_st_result = []
         for j in range(len(s_st)):
             p_r_l, p_i_l = [], []
             folder = file_loc / ('T-' + str(T_st[i]) + '_s-' + str(s_st[j]))
@@ -348,22 +347,29 @@ def PRSAStatistics(T_st: list,
                         'rid': p_info[2]
                     }
                     p_i_l.append(p_i_d)
-            t_s_st_rs[i, j] = {'p_r': p_r_l, 'p_i': p_i_l}
-            t_s_st_kernal[i, j] = np.array([T_st[i], s_st[j]])
+            s_st_result.append({'p_r': p_r_l, 'p_i': p_i_l})
+        t_s_st_result.append(s_st_result)
 
-    true_end = t_s_st_rs[0, 0]['p_i'][0].end
+    def ChartsSave(df: pd.DataFrame,
+                   save_n: str,
+                   chart_type: any,
+                   chart_kwags: dict = {}) -> None:
+        df.to_csv(save_loc / (save_n + '.csv'))
+        chart_type(df, save_n, **chart_kwags)
+
+    true_end = [i['end'] for i in t_s_st_result[0][0]['p_i']]
 
     mets, inds = p_r_l[0].index, p_r_l[0].columns
     tot_df = pd.DataFrame()
 
     for i in mets:
         for j in inds:
-            t_s_st_roc = t_s_st_kernal.copy()
-            t_s_st_p_v = t_s_st_kernal.copy()
-            for t in T_st:
-                for s in s_st:
+            t_s_st_roc = np.zeros((len(T_st), len(s_st)))
+            t_s_st_p_v = np.zeros((len(T_st), len(s_st)))
+            for t in range(len(T_st)):
+                for s in range(len(s_st)):
                     array_ = np.array(
-                        [x.loc[i, j] for x in t_s_st_rs[t, s]['p_r']])
+                        [x.loc[i, j] for x in t_s_st_result[t][s]['p_r']])
                     process_ = PerfomAssess(true_end, array_)
                     auc, _, _ = process_.AucAssess()
                     p, _, _ = process_.PValueAssess()
@@ -376,15 +382,10 @@ def PRSAStatistics(T_st: list,
             df_p_v = pd.DataFrame(t_s_st_p_v, columns=s_st)
             df_p_v['T'] = T_st
             df_p_v = df_p_v.set_index('T', drop=True)
+            df_roc = df_roc.iloc[::-1]
+            df_p_v = df_p_v.iloc[::-1]
             plot_p = PlotMain(save_loc)
             ChartsSave(df_roc, 'AUC_HeatMap_{0}-{1}'.format(i, j),
                        plot_p.HeatMapPlot, {'cmap': 'YlOrBr'})
             ChartsSave(df_p_v, 'P_HeatMap_{0}-{1}'.format(i, j),
                        plot_p.HeatMapPlot, {'cmap': 'YlGnBu'})
-
-    def ChartsSave(df: pd.DataFrame,
-                   save_n: str,
-                   chart_type: any,
-                   chart_kwags: dict = {}) -> None:
-        df.to_csv(save_loc / (save_n + '.csv'))
-        chart_type(df, save_n, **chart_kwags)
