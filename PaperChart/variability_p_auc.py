@@ -162,8 +162,11 @@ class VarResult(Basic):
                 df_var.loc[met, ind] = self.__feat.loc[('-').join([met, ind]),
                                                        col_n]
 
-        df_var.index = list(self.__name_map['mets'].values())
-        df_var = df_var.rename(columns=self.__name_map['inds'])
+        df_var.index = list(
+            [i['Inter'] for i in self.__name_map['mets'].values()])
+        df_var = df_var.rename(columns=dict(
+            zip(list(self.__name_map['inds'].keys()),
+                [i['Inter'] for i in self.__name_map['inds'].values()])))
         df_var = df_var.astype('float')
 
         if not save_n:
@@ -221,10 +224,23 @@ class VarResult(Basic):
             index_inter = []
             for i in mets:
                 for j in inds:
-                    met = self.__name_map['mets'][i]
-                    ind = self.__name_map['inds'][j]
+                    met_inter = self.__name_map['mets'][i]['Inter']
+                    met_unit = self.__name_map['mets'][i]['Unit']
+                    ind_inter = self.__name_map['inds'][j]['Inter']
+                    ind_unit = self.__name_map['inds'][j]['Unit']
+
+                    if not met_unit:
+                        unit_st = ''
+                    elif met_unit == '-':
+                        unit_st = '(' + ind_unit + ')'
+                    elif met_unit == '%':
+                        unit_st = '(' + '\%' + ')'
+                    else:
+                        unit_st = '(' + met_unit + ')'
+
+                    rename_st = met_inter + '-' + ind_inter + unit_st
                     index_raw.append('-'.join([i, j]))
-                    index_inter.append('-'.join([met, ind]))
+                    index_inter.append(rename_st)
             df = self.__feat.loc[index_raw, :]
             df['para'] = index_inter
 
