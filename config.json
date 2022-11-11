@@ -8,7 +8,8 @@
     },
     "WaveData": {
         "Extube": "C:\\Main\\Data\\_\\WaveData\\Extube\\Records",
-        "Wean": "C:\\Main\\Data\\_\\WaveData\\Wean\\Records"
+        "Wean": "C:\\Main\\Data\\_\\WaveData\\Wean\\Records",
+        "PCV": "C:\\Main\\Data\\_\\WaveData\\PCV\\Records"
     },
     "ResultSave": {
         "Form": "C:\\Main\\Data\\_\\Result\\Form",

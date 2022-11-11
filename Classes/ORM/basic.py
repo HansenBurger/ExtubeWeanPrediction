@@ -15,6 +15,7 @@ class ZresParam(Model):
     index = AutoField()
     pid = IntegerField(column_name='patient_id')
     rid = TextField(column_name='record_id')
+    icu = TextField(column_name='icu_name')
     rec_t = DateTimeField(column_name='record_time')
     rec_i = IntegerField(column_name='data_index')
     rec_f = IntegerField(column_name='record_flag')

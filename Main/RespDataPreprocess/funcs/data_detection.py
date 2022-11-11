@@ -206,7 +206,28 @@ class RecordDetect(Basic):
         de_p = main_loc / icu / tin / rid if icu else None
         self.__dst['rot'] = str(de_p) if de_p else None  # Table insert support
 
-    def RecsDetection(self, ftp: FTP, save_loc: Path):
+    def __ZifDataFilt(self,
+                      zif_file: str,
+                      way_st: str = 'e_t') -> pd.DataFrame:
+        df_rec = pd.DataFrame(BinImport.RidData(zif_file).RecordListGet())
+
+        if df_rec.empty:
+            pass
+        else:
+            df_rec = df_rec.loc[df_rec.s_t.apply(type) == pd.Timestamp]
+            df_rec = df_rec.sort_values(by='s_t')
+
+            if not way_st == 'e_t':
+                pass
+            else:
+                ext_pre, ext_post = self.__TimeRange(self.__dst[way_st])
+                filt_0 = df_rec.s_t > ext_pre
+                filt_1 = df_rec.s_t < ext_post
+                df_rec = df_rec[filt_0 & filt_1]
+
+        return df_rec
+
+    def RecsDetection(self, ftp: FTP, save_loc: Path, **kwargs):
         '''
         Collect all records meeting requirement in RID folder
         ftp: server cursor
@@ -218,20 +239,10 @@ class RecordDetect(Basic):
 
         rot = Path(self.__dst['rot'])
         rid = self.__dst['rid']
-        ext = self.__dst['e_t']
-        ext_pre, ext_post = self.__TimeRange(ext)
         zif_file = rid + '.zif'
 
         self._Basic__FileDownload(str(rot) + '.zif', zif_file, ftp)
-        df_rec = pd.DataFrame(BinImport.RidData(zif_file).RecordListGet())
-
-        if df_rec.empty:
-            pass
-        else:
-            df_rec = df_rec.loc[df_rec.s_t.apply(type) == pd.Timestamp]
-            df_rec = df_rec.sort_values(by='s_t')
-            filt_0, filt_1 = df_rec.s_t > ext_pre, df_rec.s_t < ext_post
-            df_rec = df_rec[filt_0 & filt_1]
+        df_rec = self.__ZifDataFilt(zif_file, **kwargs)
 
         self.__dst['zdt'] = None if df_rec.empty else []
         self.__dst['zpx'] = None if df_rec.empty else []
