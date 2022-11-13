@@ -1,18 +1,20 @@
 import sys
+import time
 import pandas as pd
-from ftplib import FTP
 from pathlib import Path
 
 sys.path.append(str(Path.cwd()))
 
+from Classes.Domain import layer_p
 from Classes.ORM.basic import ZresParam, fn
-from Classes.Func.KitTools import PathVerify, ConfigRead, DLToLD, SaveGen
+from Classes.ExtractSplice import ExtractSplice
+from Classes.TypesInstant import RecordInfo
+from Classes.Func.KitTools import PathVerify, ConfigRead, DLToLD, SaveGen, GetObjectDict
 from Classes.Func.DiagramsGen import PlotMain
 from Main.RespDataPreprocess.funcs import data_detection
 
 pids = [6913426, 3837466, 6640624, 6003532]
 s_main_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), 'pcv_var')
-s_form_p, s_graph_p = s_main_p / 'form', s_main_p / 'graph'
 '''
 Process workflow
 1. Copy data from server
@@ -83,29 +85,77 @@ class RecordDetect(data_detection.RecordDetect):
         self.__dst['tail_t'] = end_t
 
 
-def main(mode_: str = 'PCV'):
-    Ftp = __FtpGen()
+class main():
+    def __init__(self, mode_n: str = "PCV") -> None:
+        self.__m_n = mode_n
+        self.__data_src_p = Path(ConfigRead('ServerData'))
+        self.__data_dst_p = Path(ConfigRead('WaveData', mode_n))
+        self.__save_table = s_main_p / 'Table'
+        self.__save_table.mkdir(parents=True, exist_ok=True)
+        self.__save_graph = s_main_p / 'Graph'
+        self.__save_graph.mkdir(parents=True, exist_ok=True)
+        self.__pcv_cond = [
+            "VC", "PC", "IPPV", "BIPAP", "APRV", "SIMV", "MMV", "AC",
+            "BILEVEL", "PRVC", "BIVENT"
+        ]
+        self.__que_r_list = []
 
-    data_src_p = Path(ConfigRead('ServerData'))
-    data_dst_p = Path(ConfigRead('WaveData', mode_))
+    def DownloadData(self):
+        Ftp = __FtpGen()
 
-    Ftp.FtpLogin()
+        Ftp.FtpLogin()
+        que_l = RidQuery()
+        que_dst = []
+        for que_i in que_l:
+            que_p = RecordDetect(que_i, {}, self.__m_n)
+            que_p.InfoDetection_n(ZresParam, fn.MAX)
+            que_p.RidDetection(Ftp.ftp, self.__data_src_p)
+            que_p.RecsDetection(Ftp.ftp, self.__data_dst_p, way_st='')
+            self.__que_r_list.append(que_p.dst)
+            que_dst_ld = DLToLD(que_p.dst)
+            que_dst.extend(que_dst_ld)
 
-    que_l = RidQuery()
-    que_dst = []
-    for que_i in que_l:
-        que_p = RecordDetect(que_i, {}, mode_)
-        que_p.InfoDetection_n(ZresParam, fn.MAX)
-        que_p.RidDetection(Ftp.ftp, data_src_p)
-        que_p.RecsDetection(Ftp.ftp, data_dst_p, way_st='')
-        que_dst_ld = DLToLD(que_p.dst)
-        que_dst.extend(que_dst_ld)
-    que_df = pd.DataFrame(que_dst)
+        Ftp.FtpLogout()
+        que_df = pd.DataFrame(que_dst)
+        que_df.to_csv(s_main_p / 'pcv.csv', index=False)
 
-    que_df.to_csv(s_main_p / 'pcv.csv', index=False)
+    def CaculateParam(self):
+        for que_d in self.__que_r_list:
+            rec_i_p = RecordInfo(que_d["rid"], que_d["tail_t"])
+            rec_i_p.ParametersInit(self.__data_dst_p, False)
 
-    Ftp.FtpLogout()
+            pid_o = layer_p.Patient()
+            pid_o.pid = que_d["pid"]
+            pid_o.icu = rec_i_p.rec.vm_n
+            pid_o.end_i = 0
+            pid_o.rid_s = rec_i_p.rec
+
+            resp_i_p = ExtractSplice(pid_o.rid_s)
+            resp_i_p.RecBatchesExtract(que_d["rid"], que_d["tail_t"])
+            pid_o.resp_l, _ = resp_i_p.RespSplicing(self.__pcv_cond)
+            resp_para_l = [GetObjectDict(i) for i in pid_o.resp_l]
+            resp_para_df = pd.DataFrame(resp_para_l)
+            resp_para_df.to_csv(self.__save_table / (str(pid_o.pid) + ".csv"),
+                                index=False)
+            wid_l = resp_para_df["wid"].tolist()
+            resp_para_df["t_ind"] = [
+                sum(wid_l[0:i]) for i in range(len(wid_l))
+            ]
+
+            pid_g_save = self.__save_graph / str(pid_o.pid)
+            pid_g_save.mkdir(parents=True, exist_ok=True)
+
+            for col in resp_para_df.columns:
+                if col == "t_ind":
+                    continue
+                else:
+                    plot_p = PlotMain(pid_g_save)
+                    plot_p.lineplot(col, "t_ind", resp_para_df, (col + ".png"))
+
+            del pid_o
 
 
 if __name__ == "__main__":
-    main()
+    p = main()
+    p.DownloadData()
+    p.CaculateParam()
