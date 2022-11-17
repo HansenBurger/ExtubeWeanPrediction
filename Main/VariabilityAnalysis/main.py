@@ -7,6 +7,7 @@ from func import LocInit, TableQuery, PidVarCount, VarStatistics, VarInfoCollect
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
 p_name = sys.argv[2]
+# p_name = "VarAnalysis_60_min"
 mode_s = ['Extube_SumP12_Nad']
 s_f_fold = SaveGen(Path(ConfigRead('ResultSave', 'Form')), p_name)
 s_g_fold = SaveGen(Path(ConfigRead('ResultSave', 'Graph')), p_name)
@@ -23,4 +24,4 @@ def VarAnalysis(mode_: str, t_set: int):
 
 if __name__ == '__main__':
     for mode_ in mode_s:
-        VarAnalysis(mode_, int(sys.argv[1]))
+        VarAnalysis(mode_, int(sys.argv[1]))  #sys.argv[1]

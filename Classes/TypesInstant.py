@@ -347,7 +347,7 @@ class ResultStatistical(Basic):
 
         ind_para = dict(
             zip(list(ind_pasa_st.keys()), [para_st] *
-                len(ind_pasa_st))) if not para_st else ind_pasa_st
+                len(ind_pasa_st.keys()))) if para_st else ind_pasa_st
 
         for k in ind_para.keys():
             ind_para[k]['ind_s'] = resp_wid

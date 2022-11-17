@@ -58,7 +58,7 @@ class StaticData(Basic):
         }
 
         self.__condfilt_st = {
-            'para_t_scale': 1800,  # paras observation scale
+            'para_t_scale': 3600,  # paras observation scale
             'psv_vm_names': ['SPONT', 'CPAP', 'APNEA VENTILATION']
         }
 

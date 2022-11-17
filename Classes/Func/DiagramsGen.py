@@ -93,14 +93,14 @@ class PlotMain():
         plt.close()
 
     def lineplot(self, x_label, y_label, df, fig_name):
-        # save_loc = Path(self.__safe_loc) / (fig_name + '.png')
+        save_loc = Path(self.__safe_loc) / (fig_name + '.png')
         sns.set_theme(style='whitegrid')
         # sns.set(rc={'figure.figsize': (18, 4)})
-        plt.figure(figsize=(18, 4))
+        plt.figure(figsize=(18, 6))
         sns.lineplot(x=x_label, y=y_label, data=df, markers=True)
         plt.title(fig_name, fontsize=12)
-        plt.show()
-        # plt.savefig(save_loc)
+        # plt.show()
+        plt.savefig(save_loc)
         plt.close()
 
     def RocMultiPlot(self, x_labels: list, y_label: str, df: pd.DataFrame,

@@ -13,7 +13,8 @@ from Classes.Func.KitTools import PathVerify, ConfigRead, DLToLD, SaveGen, GetOb
 from Classes.Func.DiagramsGen import PlotMain
 from Main.RespDataPreprocess.funcs import data_detection
 
-pids = [6913426, 3837466, 6640624, 6003532]
+# pids = [6913426, 6003532]
+pids = [5937038]
 s_main_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), 'pcv_var')
 '''
 Process workflow
@@ -48,20 +49,10 @@ def RidQuery(que_src: any = ZresParam, pid_in_s: list = pids) -> list:
 
         if len(que_pid.group_by(gp_set)) < 1:
             continue
-        elif len(que_pid.group_by(gp_set)) > 1:
-            continue
         else:
             que_tot.append(que_pid[0])
 
     return que_tot
-
-
-def __FtpGen() -> data_detection.MYFTP:
-    '''
-    Generate server cursor by server info
-    '''
-    ftp = data_detection.MYFTP(**ConfigRead('Server'))
-    return ftp
 
 
 class RecordDetect(data_detection.RecordDetect):
@@ -100,8 +91,15 @@ class main():
         ]
         self.__que_r_list = []
 
+    def __FtpGen(self) -> data_detection.MYFTP:
+        '''
+        Generate server cursor by server info
+        '''
+        ftp = data_detection.MYFTP(**ConfigRead('Server'))
+        return ftp
+
     def DownloadData(self):
-        Ftp = __FtpGen()
+        Ftp = self.__FtpGen()
 
         Ftp.FtpLogin()
         que_l = RidQuery()
@@ -131,26 +129,31 @@ class main():
             pid_o.rid_s = rec_i_p.rec
 
             resp_i_p = ExtractSplice(pid_o.rid_s)
-            resp_i_p.RecBatchesExtract(que_d["rid"], que_d["tail_t"])
-            pid_o.resp_l, _ = resp_i_p.RespSplicing(self.__pcv_cond)
+            resp_i_p.RecBatchesExtract(que_d["zdt"], que_d["rec_t"])
+            pid_o.resp_l, _ = resp_i_p.RespSplicing(self.__pcv_cond, 82800)
             resp_para_l = [GetObjectDict(i) for i in pid_o.resp_l]
             resp_para_df = pd.DataFrame(resp_para_l)
-            resp_para_df.to_csv(self.__save_table / (str(pid_o.pid) + ".csv"),
-                                index=False)
+            if resp_para_df.empty:
+                continue
             wid_l = resp_para_df["wid"].tolist()
             resp_para_df["t_ind"] = [
-                sum(wid_l[0:i]) for i in range(len(wid_l))
+                sum(wid_l[0:i]) / 3600 for i in range(len(wid_l))
             ]
 
-            pid_g_save = self.__save_graph / str(pid_o.pid)
+            save_name = '_'.join(
+                [str(pid_o.pid), pid_o.icu, pid_o.rid_s.zif.stem])
+            pid_g_save = self.__save_graph / save_name
             pid_g_save.mkdir(parents=True, exist_ok=True)
 
+            resp_para_df.to_csv(self.__save_table / (save_name + '.csv'),
+                                index=False)
+
             for col in resp_para_df.columns:
-                if col == "t_ind":
+                if col in ["t_ind", "val", "mpaw"]:
                     continue
                 else:
                     plot_p = PlotMain(pid_g_save)
-                    plot_p.lineplot(col, "t_ind", resp_para_df, (col + ".png"))
+                    plot_p.lineplot("t_ind", col, resp_para_df, (col + ".png"))
 
             del pid_o
 

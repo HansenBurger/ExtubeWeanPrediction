@@ -432,9 +432,11 @@ class HRV(VarCount):
         self.__sd1 = self.__SD1()
         self.__sd2 = self.__SD2()
 
+    @property
     def sd1(self):
         return self.__sd1
 
+    @property
     def sd2(self):
         return self.__sd2
 
@@ -463,18 +465,22 @@ class ENT(VarCount):
 
     def __init__(self, ind_t: list = []) -> None:
         super().__init__(ind_t)
-        self.__apen = eh.ApEn(self._VarCount__arr_t, m=1)
-        self.__sampen = eh.SampEn(self._VarCount__arr_t, m=1)
-        self.__fuzzen = eh.FuzzEn(self._VarCount__arr_t, m=1)
+        self.__arr_t_1D = self._VarCount__arr_t.reshape(len(ind_t), 1)
+        self.__apen, _ = eh.ApEn(self.__arr_t_1D, m=1)
+        self.__sampen, _, _ = eh.SampEn(self.__arr_t_1D, m=1)
+        self.__fuzzen, _, _ = eh.FuzzEn(self.__arr_t_1D, m=1)
 
+    @property
     def apen(self):
-        return self.__apen
+        return self.__apen[-1]
 
+    @property
     def sampen(self):
-        return self.__sampen
+        return self.__sampen[-1]
 
+    @property
     def fuzzen(self):
-        return self.__fuzzen
+        return self.__fuzzen[-1]
 
 
 class PRSA(VarCount):
