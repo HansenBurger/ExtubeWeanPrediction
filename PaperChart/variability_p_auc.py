@@ -79,8 +79,8 @@ col_map_s = {
     'para': 'Variability-Respiratory',
     'rs_0': 'Successful N = ',
     'rs_1': 'Failed N = ',
-    'P': 'P-value',
-    'AUC': 'ROC-AUC'
+    'P': 'p-value',
+    'AUC': 'AUC'
 }
 
 json_loc = Path.cwd() / 'PaperChart' / '_source.json'
@@ -148,7 +148,7 @@ class VarResult(Basic):
                     annot_kws={'size': 14},
                     ax=ax)
         ax.set_yticklabels(ax.get_ymajorticklabels(), fontsize=15)
-        ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=13)
+        ax.set_xticklabels(ax.get_xmajorticklabels(), fontsize=12)
         return ax
 
     def __GetPerformance(self, col_n: str, save_n: str = ''):
@@ -188,6 +188,7 @@ class VarResult(Basic):
             df_s.append(df)
 
         fig_dims = tuple(reversed(df_s[0].shape))
+        fig_dims = tuple([fig_dims[0] * 1.2, fig_dims[1]])
         fig_dims = (fig_dims[0] * len(df_s) + 1, fig_dims[1])
         fig, ax_s = plt.subplots(1, len(df_s), figsize=fig_dims, dpi=300)
         for i in range(len(col_n)):
@@ -195,7 +196,7 @@ class VarResult(Basic):
                 name_l = ['(a)', '(b)']
                 title_st = dict(family='Arial', style='normal', size=30)
                 ax_s[i] = self.__HeatmapPlot(df_s[i], color[i], ax_s[i])
-                ax_s[i].set_title(name_l[i] + ' ' + col_n[i],
+                ax_s[i].set_title(name_l[i] + ' ' + col_map_s[col_n[i]],
                                   fontdict=title_st,
                                   y=-0.05)
             except:

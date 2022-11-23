@@ -87,7 +87,8 @@ class AblationExpSummary(Basic):
             else:
                 unit_st = '(' + met_unit + ')'
 
-            rename_st = '$' + met_inter + '-' + ind_inter + unit_st + '$'
+            rename_st = '$' + met_inter + '-' + ind_inter + '$'
+            # rename_st = '$' + met_inter + '-' + ind_inter + unit_st + '$'
             list_rename.append(rename_st)
 
         new_name_map = dict(zip(list_raw, list_rename))
