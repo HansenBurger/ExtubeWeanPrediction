@@ -1,4 +1,5 @@
 import sys
+from numpy import mean
 from pathlib import Path
 from datetime import datetime
 
@@ -8,26 +9,26 @@ from operator import add, mul
 from WaveDataProcess import BinImport
 from Classes.Domain import layer_0, layer_1, layer_2
 from Classes.Func.KitTools import PathVerify, LocatSimiTerms
-from Classes.Func.CalculatePart import IndCalculation, VarCount, TD, HRA, HRV, ENT, PRSA
+from Classes.Func.CalculatePart import IndCalculation, TSByScale, VarCount, TD, HRA, HRV, ENT, PRSA
 
 ind_pasa_st = {
     'rr': {
         'L': 120,
         'F': 2.0,
         'T': 1,
-        's': 6
+        's': 2  # 6
     },
     'v_t': {
         'L': 120,
         'F': 2.0,
-        'T': 5,
+        'T': 1,  # 5
         's': 6
     },
     've': {
         'L': 120,
         'F': 2.0,
-        'T': 45,
-        's': 14
+        'T': 1,  # 45
+        's': 6  # 14
     },
     'mp_jb': {
         'L': 120,
@@ -39,13 +40,13 @@ ind_pasa_st = {
         'L': 120,
         'F': 2.0,
         'T': 1,
-        's': 14
+        's': 6  # 14
     },
     'mp': {
         'L': 120,
         'F': 2.0,
-        'T': 45,
-        's': 14
+        'T': 1,  # 45
+        's': 6  # 14
     }
 }
 
@@ -239,9 +240,10 @@ class RecordPara(Basic):
 
 
 class ResultStatistical(Basic):
-    def __init__(self, resp_list: list) -> None:
+    def __init__(self, resp_list: list, scale_st: float) -> None:
         super().__init__()
         self.__resp_l = resp_list
+        self.__scal_st = scale_st
         self.__rec = layer_2.Result()
         self.__rec.td = layer_1.DomainTS()
         self.__rec.fd = layer_1.DomainFS()
@@ -260,28 +262,68 @@ class ResultStatistical(Basic):
     def prsa_dist(self):
         return self.__prsa_dist
 
+    # def __IndStat(self, cls_: any, method_s: list, para_: dict = {}) -> dict:
+    #     ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
+    #     para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
+    #     ind_l = lambda n: [getattr(i, n) for i in self.__resp_l]
+
+    #     var_counter = {
+    #         't_tot': cls_(ind_l('wid'), **para_['rr']),
+    #         't_i': cls_(ind_l('t_i'), **para_['rr']),
+    #         't_e': cls_(ind_l('t_e'), **para_['rr']),
+    #         'i_e': cls_(ind_l('i_e'), **para_['rr']),
+    #         'pip': cls_(ind_l('pip'), **para_['mp_jb']),
+    #         'peep': cls_(ind_l('peep'), **para_['mp_jb']),
+    #         'rr': cls_(ind_l('rr'), **para_['rr']),
+    #         'v_t': cls_(ind_l('v_t_i'), **para_['v_t']),
+    #         've': cls_(ind_l('ve'), **para_['ve']),
+    #         'rsbi': cls_(ind_l('rsbi'), **para_['rsbi']),
+    #         'mp_jb_d': cls_(ind_l('mp_jb_d'), **para_['mp_jb']),
+    #         'mp_jb_t': cls_(ind_l('mp_jb_t'), **para_['mp_jb']),
+    #         'mp_jl_d': cls_(ind_l('mp_jl_d'), **para_['mp']),
+    #         'mp_jl_t': cls_(ind_l('mp_jl_t'), **para_['mp']),
+    #         'mp_jm_d': cls_(ind_l('mp_jm_d'), **para_['mp']),
+    #         'mp_jm_t': cls_(ind_l('mp_jm_t'), **para_['mp']),
+    #     }
+
+    #     var_s = []
+
+    #     for i in range(len(method_s)):
+    #         var_ = layer_0.Target0()
+    #         for k, v in var_counter.items():
+    #             setattr(var_, k, getattr(v, method_s[i]))
+    #         var_s.append(var_)
+
+    #     var_d = dict(zip(method_s, var_s))
+
+    #     return var_d
+
     def __IndStat(self, cls_: any, method_s: list, para_: dict = {}) -> dict:
+
         ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
         para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
+
         ind_l = lambda n: [getattr(i, n) for i in self.__resp_l]
+        ind_s, _ = TSByScale(self.__scal_st).split(ind_l('wid'))
+        sta = lambda n, m, f: f([cls_(i, **para_[m]) for i in ind_s(ind_l(n))])
 
         var_counter = {
-            't_tot': cls_(ind_l('wid'), **para_['rr']),
-            't_i': cls_(ind_l('t_i'), **para_['rr']),
-            't_e': cls_(ind_l('t_e'), **para_['rr']),
-            'i_e': cls_(ind_l('i_e'), **para_['rr']),
-            'pip': cls_(ind_l('pip'), **para_['mp_jb']),
-            'peep': cls_(ind_l('peep'), **para_['mp_jb']),
-            'rr': cls_(ind_l('rr'), **para_['rr']),
-            'v_t': cls_(ind_l('v_t_i'), **para_['v_t']),
-            've': cls_(ind_l('ve'), **para_['ve']),
-            'rsbi': cls_(ind_l('rsbi'), **para_['rsbi']),
-            'mp_jb_d': cls_(ind_l('mp_jb_d'), **para_['mp_jb']),
-            'mp_jb_t': cls_(ind_l('mp_jb_t'), **para_['mp_jb']),
-            'mp_jl_d': cls_(ind_l('mp_jl_d'), **para_['mp']),
-            'mp_jl_t': cls_(ind_l('mp_jl_t'), **para_['mp']),
-            'mp_jm_d': cls_(ind_l('mp_jm_d'), **para_['mp']),
-            'mp_jm_t': cls_(ind_l('mp_jm_t'), **para_['mp']),
+            't_tot': sta('wid', 'rr', mean),
+            't_i': sta('t_i', 'rr', mean),
+            't_e': sta('t_e', 'rr', mean),
+            'i_e': sta('i_e', 'rr', mean),
+            'pip': sta('pip', 'mp_jb', mean),
+            'peep': sta('peep', 'mp_jb', mean),
+            'rr': sta('rr', 'rr', mean),
+            'v_t': sta('v_t_i', 'v_t', mean),
+            've': sta('ve', 've', mean),
+            'rsbi': sta('rsbi', 'rsbi', mean),
+            'mp_jb_d': sta('mp_jb_d', 'mp_jb', mean),
+            'mp_jb_t': sta('mp_jb_t', 'mp_jb', mean),
+            'mp_jl_d': sta('mp_jl_d', 'mp', mean),
+            'mp_jl_t': sta('mp_jl_t', 'mp', mean),
+            'mp_jm_d': sta('mp_jm_d', 'mp', mean),
+            'mp_jm_t': sta('mp_jm_t', 'mp', mean),
         }
 
         var_s = []

@@ -311,6 +311,33 @@ class IndCalculation(Basic):
         return mp_area, mp_val
 
 
+class TSByScale(Basic):
+    def __init__(self, s_st: float, **kwargs) -> None:
+        super().__init__()
+        self.__s = s_st
+
+    def split(self, x: list):
+        if self.__s >= np.sum(x):
+            x_s_i = np.array([0, -1])
+        elif self.__s <= np.min(x):
+            x_s_i = np.linspace(0, len(x), len(x),
+                                endpoint=False).astype(np.int16)
+        else:
+            x_s_i = [0]
+            for i in range(len(x)):
+                if sum(x[x_s_i[-1]:i]) < self.__s:
+                    continue
+                else:
+                    x_s_i.append(i)
+            x_s_i = np.array(x_s_i)
+
+        gets_s = lambda n: [
+            n[x_s_i[i]:x_s_i[i + 1]] for i in range(len(x_s_i) - 1)
+        ]
+
+        return gets_s, x_s_i
+
+
 class VarCount(Basic):
     def __init__(self, ind_t: list = [], **kwargs) -> None:
         super().__init__()
@@ -462,9 +489,6 @@ class HRV(VarCount):
 class ENT(VarCount):
     def __init__(self, ind_t: list = [], **kwargs) -> None:
         super().__init__(ind_t, **kwargs)
-
-    def __init__(self, ind_t: list = []) -> None:
-        super().__init__(ind_t)
         self.__arr_t_1D = self._VarCount__arr_t.reshape(len(ind_t), 1)
         self.__apen, _ = eh.ApEn(self.__arr_t_1D, m=1)
         self.__sampen, _, _ = eh.SampEn(self.__arr_t_1D, m=1)
@@ -481,6 +505,34 @@ class ENT(VarCount):
     @property
     def fuzzen(self):
         return self.__fuzzen[-1]
+
+
+class MSE(VarCount):
+    def __init__(self, ind_t: list = [], **kwargs) -> None:
+        super().__init__(ind_t, **kwargs)
+        self.__arr_t_1D = self._VarCount__arr_t.reshape(len(ind_t), 1)
+        self.__apen, _ = self.__mse_main('ApEn', **kwargs)
+        self.__sampen, _ = self.__mse_main('SampEn', **kwargs)
+        self.__fuzzen, _ = self.__mse_main('FuzzEn', **kwargs)
+
+    @property
+    def apen(self):
+        return self.__apen
+
+    @property
+    def sampen(self):
+        return self.__sampen
+
+    @property
+    def fuzzen(self):
+        return self.__fuzzen
+
+    def __mse_main(self, en_type: str, scale: int = 2, **kwargs):
+        assert self.__arr_t_1D.shape[
+            0] / scale > 10, "Not meet scales min samples(10)"
+        mse_obj = eh.MSobject(en_type)
+        ms_x, ci = eh.MSEn(self.__arr_t_1D, mse_obj, Scales=scale, **kwargs)
+        return ms_x, ci
 
 
 class PRSA(VarCount):
