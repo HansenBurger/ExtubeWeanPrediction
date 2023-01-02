@@ -36,6 +36,9 @@ def LocInit(s_f: Path, s_g: Path, mode_name: str):
 
 def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
     '''
+    Query the datebase get the prepared data
+    :param: mode_name: vent mode name
+    :param: mv_t_ran: machincal ventlation still time
     '''
     mode_i = mode_name.split('_')
     src_0 = static.cate_info[mode_i[0]][mode_i[1]]
@@ -52,6 +55,8 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
 
     def NonAgedIll(src_1: any) -> list:
         '''
+        Filt the patient id which not aged or had brain-nerv illness
+        :param: src_1: source class for patient info table
         '''
         join_info = {
             'dest': src_1,
@@ -71,6 +76,8 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
 
     def MVRange(src_1: any) -> list:
         '''
+        Filt the patient id which in the specific MV range
+        :param: src_1: source class for mv operation table
         '''
         join_info = {
             'dest': src_1,
@@ -82,40 +89,44 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
         pid_l = [que.pid for que in que_l.group_by(src_0.pid)]
         return pid_l
 
-    c_pid_test = src_0.pid > 0
-    c_Nad = src_0.pid.in_(NonAgedIll(
-        static.p_basic_i)) if len(mode_i) > 2 else src_0.pid > 0
-    c_Nrid = ~src_0.pid.in_(static.cate_info[mode_i[0]]['multirid'])
-    c_mv_t = src_0.pid.in_(MVRange(static.op_basic_i))
+    # All name must be strictly followed Supplement info in static_data.cate_info['Supp']
 
-    all_conds = [c_mv_t, c_Nad, c_Nrid, c_pid_test]
+    cond_map = {
+        'ALL': src_0.pid > 0,
+        'Reached mv time': src_0.pid.in_(MVRange(static.op_basic_i)),
+        'No Aged or illness': src_0.pid.in_(NonAgedIll(static.p_basic_i)),
+        'Aged or illness': src_0.pid.not_in(NonAgedIll(static.p_basic_i)),
+        'Single RID': ~src_0.pid.in_(static.cate_info[mode_i[0]]['multirid'])
+    }
 
-    que = src_0.select()
-    que_stp_0 = QueOnConds(que, all_conds[:1])
-    que_stp_1 = QueOnConds(que, all_conds[:2])
-    que_stp_2 = QueOnConds(que, all_conds[:3])
-    que_final = QueOnConds(que, all_conds)
+    supp_demends = static.cate_info['Supp'][mode_i[2]]
+    all_conds = [cond_map['ALL']] + [cond_map[i] for i in supp_demends]
+    que_stps = [
+        QueOnConds(src_0.select(), all_conds[:(i + 1)])
+        for i in range(len(all_conds))
+    ]
+    getlen = lambda x, y: len(x.group_by(y)) if y else len(x)
+    que_lens = [getlen(i, src_0.pid) for i in que_stps]
 
     save_fold = dynamic.s_f_fold / "query_info"
     save_fold.mkdir(parents=True, exist_ok=True)
 
-    getlen = lambda x, y: len(x.group_by(y)) if y else len(x)
     with open(save_fold / "query_process.txt", "w") as f:
-        all_len = getlen(que, src_0.pid)
-        mv_t_len = getlen(que_stp_0, src_0.pid)
-        nad_len = getlen(que_stp_1, src_0.pid)
-        s_rid_len = getlen(que_stp_2, src_0.pid)
-        final_len = getlen(que_final, src_0.pid)
-        f.write("Tot_len: {0}\n".format(all_len))
-        f.write("Val_len: {0}\n".format(final_len))
-        f.write("Not reach mv_t: {0}\n".format(all_len - mv_t_len))
-        f.write("Not Nad: {0}\n".format(mv_t_len - nad_len))
-        f.write("Not single rid: {0}\n".format(nad_len - s_rid_len))
+        f.write("Tot size: {0}\n".format(que_lens[0]))
+        f.write("Val size: {0}\n".format(que_lens[-1]))
+        for i in range(len(all_conds) - 1):
+            f.write("Not {0}: {1}\n".format(supp_demends[i],
+                                            (que_lens[i] - que_lens[i + 1])))
 
-    df = pd.DataFrame(list(que_final.dicts()))
+    df = pd.DataFrame(list(que_stps[-1].dicts()))
     df = df.drop('index', axis=1)
     df.e_s = np.where(df.e_s.str.contains('成功'), 0, 1)
     df.to_csv(save_fold / "query_results.csv")
+
+    df_que = pd.DataFrame(
+        list(static.p_basic_i.select().where(
+            static.p_basic_i.pid.in_(df.pid.unique().tolist())).dicts()))
+    df_que.to_csv(save_fold / "query_pid_before.csv", index=False)
 
     gp = df.groupby('pid')
     for pid in df.pid.unique():
@@ -129,6 +140,10 @@ def TableQuery(mode_name: str, mv_t_ran: tuple = (48, 2160)):
 
 def DataGen(t_st: int, df: pd.DataFrame) -> layer_p.Patient:
     '''
+    Total process of the breathing variability count
+    :param: t_st: breathing variability time range setting (seconds)
+    :param: df: partial records info of the patient
+    :return: pid_o: the patient object
     '''
     rid = df.rid.unique()[-1]
 
@@ -152,8 +167,15 @@ def DataGen(t_st: int, df: pd.DataFrame) -> layer_p.Patient:
     return pid_o
 
 
-def PidVarCount(t_st: int, pid_s: list = [], var_s: list = []):
+def PidVarCount(t_st: int,
+                s_st: float,
+                pid_s: list = [],
+                var_s: list = []) -> None:
     '''
+    :param: t_st: breathing variability time range setting (seconds)
+    :param: s_st: breathing variability scale setting (seconds)
+    :param: pid_s: specific pid list (n)
+    :param: var_s: breathing variability types (n)
     '''
 
     pid_dr_s = {k: v
@@ -182,7 +204,7 @@ def PidVarCount(t_st: int, pid_s: list = [], var_s: list = []):
             # resp_ind_save.mkdir(parents=True, exist_ok=True)
             # pid_obj.resp_l = RespValStatic(pid_obj.resp_l, resp_ind_save)
             process_1 = VarResultsGen(pid_obj)
-            process_1.VarRsGen()
+            process_1.VarRsGen(s_st)
             process_1.TensorStorage(dynamic.s_f_fold)
             t_e = datetime.now()
             print('{0}\'s data consume {1}'.format(pid, (t_e - t_s)))
@@ -276,6 +298,12 @@ def VarStatistics() -> list:
             p_i_l.append(p_i_d)
 
     p_i_df = pd.DataFrame(p_i_l)
+
+    s_f_fold = dynamic.s_f_fold / "query_info"
+    df_que = pd.DataFrame(
+        list(static.p_basic_i.select().where(
+            static.p_basic_i.pid.in_(p_i_df.pid.unique().tolist())).dicts()))
+    df_que.to_csv(s_f_fold / "query_pid_processed.csv", index=False)
 
     methods = p_r_l[0].index
     indicat = p_r_l[0].columns
@@ -402,7 +430,6 @@ def PRSAStatistics(T_st: list,
     true_end = [i['end'] for i in t_s_st_result[0][0]['p_i']]
 
     mets, inds = p_r_l[0].index, p_r_l[0].columns
-    tot_df = pd.DataFrame()
 
     for i in mets:
         for j in inds:

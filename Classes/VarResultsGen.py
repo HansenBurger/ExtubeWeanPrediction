@@ -18,9 +18,9 @@ class basic():
 class VarResultsGen(basic):
     def __init__(self, patient: any, methods: list = []):
         '''
-        :attr __pid: layer_p Patient classs
-        :attr __ind_s: resp parameters for outlier detection
-        :attr __met_s: layer_2 Reuslt class
+        :para: patient: layer_p Patient classs
+        :para: inds: resp parameters requested for outlierwip
+        :para: mets: var methods requested
         '''
         super().__init__()
         self.__pid = patient
@@ -49,11 +49,25 @@ class VarResultsGen(basic):
         df_val = df[df[[ind + '_val' for ind in self.__ind_s]].all(axis=1)]
         self.__pid.resp_l = [resp_l[i] for i in df_val.index]
 
-    def VarRsGen(self, scale_st:float, **kwargs) -> None:
+    def VarRsGen(self, scale_st: float, **kwargs) -> None:
         self.__OutliersWipe()
         resp_l = self.__pid.resp_l
         res_p = ResultStatistical(resp_l, scale_st)
         res_p.CountAggr(self.__met_s, **kwargs)
+
+        #TODO empty verify
+        # for met in self.__met_s:
+        #     met_var = getattr(res_p.rec, met)
+        #     for sub in list(GetObjectDict(met_var).keys()):
+        #         met_sub_var = getattr(met_var, sub)
+        #         for ind in list(GetObjectDict(met_sub_var).keys()):
+        #             met_sub_ind_var = getattr(met_sub_var, ind)
+        #             if met_sub_ind_var and not np.isnan(met_sub_ind_var):
+        #                 continue
+        #             else:
+        #                 self.__pid.result = None
+        #                 return
+
         self.__pid.result = res_p.rec
         return res_p.prsa_dist
 

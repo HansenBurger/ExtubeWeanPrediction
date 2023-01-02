@@ -262,81 +262,69 @@ class ResultStatistical(Basic):
     def prsa_dist(self):
         return self.__prsa_dist
 
-    # def __IndStat(self, cls_: any, method_s: list, para_: dict = {}) -> dict:
-    #     ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
-    #     para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
-    #     ind_l = lambda n: [getattr(i, n) for i in self.__resp_l]
-
-    #     var_counter = {
-    #         't_tot': cls_(ind_l('wid'), **para_['rr']),
-    #         't_i': cls_(ind_l('t_i'), **para_['rr']),
-    #         't_e': cls_(ind_l('t_e'), **para_['rr']),
-    #         'i_e': cls_(ind_l('i_e'), **para_['rr']),
-    #         'pip': cls_(ind_l('pip'), **para_['mp_jb']),
-    #         'peep': cls_(ind_l('peep'), **para_['mp_jb']),
-    #         'rr': cls_(ind_l('rr'), **para_['rr']),
-    #         'v_t': cls_(ind_l('v_t_i'), **para_['v_t']),
-    #         've': cls_(ind_l('ve'), **para_['ve']),
-    #         'rsbi': cls_(ind_l('rsbi'), **para_['rsbi']),
-    #         'mp_jb_d': cls_(ind_l('mp_jb_d'), **para_['mp_jb']),
-    #         'mp_jb_t': cls_(ind_l('mp_jb_t'), **para_['mp_jb']),
-    #         'mp_jl_d': cls_(ind_l('mp_jl_d'), **para_['mp']),
-    #         'mp_jl_t': cls_(ind_l('mp_jl_t'), **para_['mp']),
-    #         'mp_jm_d': cls_(ind_l('mp_jm_d'), **para_['mp']),
-    #         'mp_jm_t': cls_(ind_l('mp_jm_t'), **para_['mp']),
-    #     }
-
-    #     var_s = []
-
-    #     for i in range(len(method_s)):
-    #         var_ = layer_0.Target0()
-    #         for k, v in var_counter.items():
-    #             setattr(var_, k, getattr(v, method_s[i]))
-    #         var_s.append(var_)
-
-    #     var_d = dict(zip(method_s, var_s))
-
-    #     return var_d
-
-    def __IndStat(self, cls_: any, method_s: list, para_: dict = {}) -> dict:
-
-        ind_sel = ['rr', 'v_t', 've', 'mp_jb', 'rsbi', 'mp']
-        para_ = dict.fromkeys(ind_sel, {}) if not para_ else para_
-
-        ind_l = lambda n: [getattr(i, n) for i in self.__resp_l]
-        ind_s, _ = TSByScale(self.__scal_st).split(ind_l('wid'))
-        sta = lambda n, m, f: f([cls_(i, **para_[m]) for i in ind_s(ind_l(n))])
-
-        var_counter = {
-            't_tot': sta('wid', 'rr', mean),
-            't_i': sta('t_i', 'rr', mean),
-            't_e': sta('t_e', 'rr', mean),
-            'i_e': sta('i_e', 'rr', mean),
-            'pip': sta('pip', 'mp_jb', mean),
-            'peep': sta('peep', 'mp_jb', mean),
-            'rr': sta('rr', 'rr', mean),
-            'v_t': sta('v_t_i', 'v_t', mean),
-            've': sta('ve', 've', mean),
-            'rsbi': sta('rsbi', 'rsbi', mean),
-            'mp_jb_d': sta('mp_jb_d', 'mp_jb', mean),
-            'mp_jb_t': sta('mp_jb_t', 'mp_jb', mean),
-            'mp_jl_d': sta('mp_jl_d', 'mp', mean),
-            'mp_jl_t': sta('mp_jl_t', 'mp', mean),
-            'mp_jm_d': sta('mp_jm_d', 'mp', mean),
-            'mp_jm_t': sta('mp_jm_t', 'mp', mean),
+    def __VarTrans(self, static_func: any, methods: list) -> dict:
+        var_rs_map = {
+            't_tot': ['wid', 'rr'],
+            't_i': ['t_i', 'rr'],
+            't_e': ['t_e', 'rr'],
+            'i_e': ['i_e', 'rr'],
+            'pip': ['pip', 'mp_jb'],
+            'peep': ['peep', 'mp_jb'],
+            'rr': ['rr', 'rr'],
+            'v_t': ['v_t_i', 'v_t'],
+            've': ['ve', 've'],
+            'rsbi': ['rsbi', 'rsbi'],
+            'mp_jb_d': ['mp_jb_d', 'mp_jb'],
+            'mp_jb_t': ['mp_jb_t', 'mp_jb'],
+            'mp_jl_d': ['mp_jl_d', 'mp'],
+            'mp_jl_t': ['mp_jl_t', 'mp'],
+            'mp_jm_d': ['mp_jm_d', 'mp'],
+            'mp_jm_t': ['mp_jm_t', 'mp'],
         }
 
         var_s = []
 
-        for i in range(len(method_s)):
+        for i in range(len(methods)):
             var_ = layer_0.Target0()
-            for k, v in var_counter.items():
-                setattr(var_, k, getattr(v, method_s[i]))
+            for k, v in var_rs_map.items():
+                arg_num = static_func.__code__.co_argcount
+                var_rs = static_func(*v[0:arg_num])
+                met_rs = [getattr(j, methods[i]) for j in var_rs]
+                setattr(var_, k, mean(met_rs))
             var_s.append(var_)
 
-        var_d = dict(zip(method_s, var_s))
-
+        var_d = dict(zip(methods, var_s))
         return var_d
+
+    def __IndStatic_basic(self, cls_: any, method_s: list) -> dict:
+
+        pose_inds = lambda n: [getattr(i, n) for i in self.__resp_l]
+        scal_inds, _ = TSByScale(self.__scal_st).Split(pose_inds('wid'))
+        static_func = lambda n: [cls_(i) for i in scal_inds(pose_inds(n))]
+        var_rd = self.__VarTrans(static_func, method_s)
+        return var_rd
+
+    def __IndStatic_paras(self, cls_: any, method_s: list,
+                          para_: dict) -> dict:
+
+        pose_inds = lambda n: [getattr(i, n) for i in self.__resp_l]
+        scal_inds, _ = TSByScale(self.__scal_st).Split(pose_inds('wid'))
+        wid_scal = scal_inds(pose_inds('wid'))
+        wid_scal = [[round(j) for j in i] for i in wid_scal]
+
+        def static_func(n: str, m: str):
+            rs = []
+            ind_scal = scal_inds(pose_inds(n))
+            for i in range(len(ind_scal)):
+                try:
+                    rs_i = cls_(ind_scal[i], wid_scal[i], **para_[m])
+                    rs.append(rs_i)
+                except:
+                    continue
+            return rs
+
+        var_rd = self.__VarTrans(static_func, method_s)
+        return var_rd
 
     def CountAggr(self, cate_l: list, **kwargs):
         for cate in cate_l:
@@ -356,7 +344,7 @@ class ResultStatistical(Basic):
 
     def TDAggr(self) -> None:
         sub_m = ['ave', 'med', 'std', 'cv', 'qua', 'tqua']
-        rs = self.__IndStat(TD, sub_m)
+        rs = self.__IndStatic_basic(TD, sub_m)
         self.__rec.td.ave = rs['ave']
         self.__rec.td.med = rs['med']
         self.__rec.td.std = rs['std']
@@ -366,36 +354,31 @@ class ResultStatistical(Basic):
 
     def HRAAggr(self) -> None:
         sub_m = ['pi', 'gi', 'si']
-        rs = self.__IndStat(HRA, sub_m)
+        rs = self.__IndStatic_basic(HRA, sub_m)
         self.__rec.hra.pi = rs['pi']
         self.__rec.hra.gi = rs['gi']
         self.__rec.hra.si = rs['si']
 
     def HRVAggr(self) -> None:
         sub_m = ['sd1', 'sd2']
-        rs = self.__IndStat(HRV, sub_m)
+        rs = self.__IndStatic_basic(HRV, sub_m)
         self.__rec.hrv.sd1 = rs['sd1']
         self.__rec.hrv.sd2 = rs['sd2']
 
     def EntAggr(self) -> None:
         sub_m = ['apen', 'sampen', 'fuzzen']
-        rs = self.__IndStat(ENT, sub_m)
+        rs = self.__IndStatic_basic(ENT, sub_m)
         self.__rec.ent.app = rs['apen']
         self.__rec.ent.samp = rs['sampen']
         self.__rec.ent.fuzz = rs['fuzzen']
 
     def PRSAAggr(self, para_st: dict = {}) -> None:
-        resp_wid = [round(i.wid) for i in self.__resp_l]
-
         ind_para = dict(
             zip(list(ind_pasa_st.keys()), [para_st] *
                 len(ind_pasa_st.keys()))) if para_st else ind_pasa_st
 
-        for k in ind_para.keys():
-            ind_para[k]['ind_s'] = resp_wid
-
         sub_m = ['ac', 'mean_ac', 'dc', 'mean_dc']
-        rs = self.__IndStat(PRSA, sub_m, ind_para)
+        rs = self.__IndStatic_paras(PRSA, sub_m, ind_para)
 
         self.__rec.prsa.ac = rs['ac']
         self.__rec.prsa.dc = rs['dc']

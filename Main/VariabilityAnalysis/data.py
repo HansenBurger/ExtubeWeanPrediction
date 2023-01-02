@@ -28,6 +28,11 @@ class StaticData(Basic):
                 'PSV': WeanPSV,
                 'SumP12': WeanSumP12,
                 'multirid': []
+            },
+            'Supp': {
+                'All': ['Reached mv time', 'Single RID'],
+                'Nad': ['Reached mv time', 'No Aged or illness', 'Single RID'],
+                'AorD': ['Reached mv time', 'Aged or illness', 'Single RID']
             }
         }
         self.__ind_range = {

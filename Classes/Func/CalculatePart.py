@@ -316,9 +316,9 @@ class TSByScale(Basic):
         super().__init__()
         self.__s = s_st
 
-    def split(self, x: list):
+    def Split(self, x: list):
         if self.__s >= np.sum(x):
-            x_s_i = np.array([0, -1])
+            x_s_i = np.array([0, len(x)])
         elif self.__s <= np.min(x):
             x_s_i = np.linspace(0, len(x), len(x),
                                 endpoint=False).astype(np.int16)
@@ -331,9 +331,7 @@ class TSByScale(Basic):
                     x_s_i.append(i)
             x_s_i = np.array(x_s_i)
 
-        gets_s = lambda n: [
-            n[x_s_i[i]:x_s_i[i + 1]] for i in range(len(x_s_i) - 1)
-        ]
+        gets_s = lambda n: np.split(n, x_s_i[1:-1])
 
         return gets_s, x_s_i
 
@@ -414,7 +412,11 @@ class HRA(VarCount):
             num_upper += num_judge(a_0[i], a_1[i])
             num_lower += num_judge(a_1[i], a_0[i])
 
-        pi = 100 * num_lower / (num_upper + num_lower)
+        if num_lower == 0 and num_upper == 0:
+            pi = 100 * 0.5
+        else:
+            pi = 100 * num_lower / (num_upper + num_lower)
+
         return round(pi, self.round_i_0)
 
     def __GI(self) -> float:
@@ -430,7 +432,12 @@ class HRA(VarCount):
         for i in range(len(a_0)):
             dis_above_sum += dis_count(a_0[i], a_1[i])
             dis_below_sum += dis_count(a_1[i], a_0[i])
-        gi = 100 * dis_above_sum / (dis_above_sum + dis_below_sum)
+
+        if dis_above_sum == 0 and dis_below_sum == 0:
+            gi = 100 * 0.5
+        else:
+            gi = 100 * dis_above_sum / (dis_above_sum + dis_below_sum)
+
         return round(gi, self.round_i_0)
 
     def __SI(self) -> float:
@@ -449,7 +456,11 @@ class HRA(VarCount):
             theta_above_sum += theta_count(a_0[i], a_1[i])
             theta_below_sum += theta_count(a_1[i], a_0[i])
 
-        si = 100 * theta_above_sum / (theta_above_sum + theta_below_sum)
+        if theta_above_sum == 0 and theta_below_sum == 0:
+            si = 100 * 0.5
+        else:
+            si = 100 * theta_above_sum / (theta_above_sum + theta_below_sum)
+
         return round(si, self.round_i_0)
 
 
@@ -536,10 +547,10 @@ class MSE(VarCount):
 
 
 class PRSA(VarCount):
-    def __init__(self, ind_t: list = [], **kwargs) -> None:
+    def __init__(self, ind_t: list = [], ind_s: list = [], **kwargs) -> None:
         super().__init__(ind_t, **kwargs)
-        self.__ac, self.__mean_ac = self.__prsa('AC', **kwargs)
-        self.__dc, self.__mean_dc = self.__prsa('DC', **kwargs)
+        self.__ac, self.__mean_ac = self.__prsa('AC', ind_s, **kwargs)
+        self.__dc, self.__mean_dc = self.__prsa('DC', ind_s, **kwargs)
 
     @property
     def ac(self):
@@ -567,6 +578,7 @@ class PRSA(VarCount):
 
         arr_v = self._VarCount__arr_t.copy()
         arr_t = np.array(ind_s)
+        assert len(arr_v) == len(arr_t), "arr index and value length not match"
         arr_t = np.array([sum(arr_t[0:i + 1]) for i in range(len(arr_t))])
 
         f = interpolate.interp1d(arr_t, arr_v)
@@ -608,6 +620,8 @@ class PRSA(VarCount):
             else:
                 clip = slice(i - L, i + L)
                 anchor_s.append(array_[clip].tolist())
+
+        assert len(anchor_s) > 1, "Dont have any anchors"
 
         arr_prsa = np.array([np.mean(i) for i in np.array(anchor_s).T])
         arr_axis = np.linspace(-L, L, 2 * L, endpoint=False)
