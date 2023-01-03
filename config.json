@@ -20,7 +20,9 @@
         "Extube_PSV_Nad-30": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_30min\\Extube_PSV_Nad",
         "Extube_SumP12_Nad-30": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_30min\\Extube_SumP12_Nad",
         "Extube_PSV_Nad-60": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_60min\\Extube_PSV_Nad",
-        "Extube_SumP12_Nad-60": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_60min\\Extube_SumP12_Nad"
+        "Extube_SumP12_Nad-60": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_60min\\Extube_SumP12_Nad",
+        "Extube_SumP12_AorD-60": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_60min\\Extube_SumP12_AorD",
+        "Extube_SumP12_All-60": "C:\\Main\\Data\\_\\Form\\VarResult\\VarAnalysis_60min\\Extube_SumP12_All"
     },
     "Server": {
         "host_s": "172.16.31.40",

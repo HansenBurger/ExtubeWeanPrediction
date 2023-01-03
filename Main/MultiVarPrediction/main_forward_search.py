@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from pandas import DataFrame
+from pandas import DataFrame, concat
 from data import StaticData
 from func import MultiModelPredict, ResultsSummary
 
@@ -18,13 +18,14 @@ Forward Search Experiment
 sys_args = sys.argv
 arg_suffix = sys_args[1] if len(sys_args) > 1 else 'Default'
 arg_st_n = sys_args[2] if len(sys_args) > 2 else 'default'
-arg_stop = sys_args[3] if len(sys_args) > 3 else 0.95
+arg_way = sys_args[3] if len(sys_args) > 3 else 'var'
+arg_stop = sys_args[4] if len(sys_args) > 4 else 0.95
 
 p_name = 'ForwardSearch' + '_' + arg_suffix
 pred_way = 'KFold'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
-mode_s = ['Extube_SumP12_Nad-60']
+mode_s = ['Extube_SumP12_AorD-60', 'Extube_SumP12_All-60']
 
 
 class ForwardSearch():
@@ -42,16 +43,32 @@ class ForwardSearch():
         s_g_folder.mkdir(parents=True, exist_ok=True)
         return s_f_folder, s_g_folder
 
-    def __FeatDataLoad(self, **FeatSelect):
+    def __FeatDataLoad(self, way: str, **FeatSelect):
         data_rot = Path(ConfigRead('VarData', self.__mode_n))
         load_p = FeatureLoader(data_rot, self.__s_f_p)
         data_var, feat_var = load_p.VarFeatsLoad(**static.var_set[arg_st_n],
                                                  save_n='VarFeats')
-        _ = load_p.LabFeatsLoad(PatientInfo, LabExtube, 'LabFeats')
+        data_lab, feat_lab = load_p.LabFeatsLoad(PatientInfo, LabExtube,
+                                                 'LabFeats')
+        if way == 'var':
+            data_p = DatasetGeneration(data_var, feat_var, self.__s_f_p)
+            data_p.FeatsSelect(**FeatSelect)
+            data_p.DataSelect()
+        elif way == 'lab':
+            data_p = DatasetGeneration(data_lab, feat_lab, self.__s_f_p)
+            data_p.FeatsSelect(p_max=0.9)
+            data_p.DataSelect()
+        elif way == 'all':
+            p_0 = DatasetGeneration(data_var, feat_var)
+            p_1 = DatasetGeneration(data_lab, feat_lab)
+            p_0.FeatsSelect(**FeatSelect)
+            p_1.FeatsSelect(p_max=0.9)
+            data_in = concat([p_0.data, p_1.data], axis=1)
+            feat_in = concat([p_0.feat, p_1.feat], axis=0)
+            data_in = data_in.loc[:, ~data_in.columns.duplicated()].copy()
+            data_p = DatasetGeneration(data_in, feat_in, self.__s_f_p)
+            data_p.DataSelect()
 
-        data_p = DatasetGeneration(data_var, feat_var, self.__s_f_p)
-        data_p.FeatsSelect(**FeatSelect)
-        data_p.DataSelect()
         return data_p.data, data_p.feat
 
     def __ForwardSearch(self, stop_k: str = 's_auc', stop_v: float = 1.0):
@@ -101,7 +118,7 @@ class ForwardSearch():
 
     def Main(self):
         self.__s_f_p, self.__s_g_p = self.__SaveGen()
-        self.__data_, self.__feat_ = self.__FeatDataLoad()
+        self.__data_, self.__feat_ = self.__FeatDataLoad(arg_way)
         self.__ForwardSearch()
         self.__ResultsCollect()
 

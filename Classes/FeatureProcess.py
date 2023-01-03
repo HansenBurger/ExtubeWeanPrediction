@@ -196,6 +196,8 @@ class DatasetGeneration(Basic):
             p_v_filt = self.__feat.P < p_max
             feats_all = self.__feat[p_v_filt].index
         self.__feat = self.__feat.loc[feats_all, :]
+        self.__data = self.__data[[self._Basic__label_col] +
+                                  self.__feat.index.to_list()]
 
     def DataSelect(self,
                    feat_lack_max: float = 0.4,
