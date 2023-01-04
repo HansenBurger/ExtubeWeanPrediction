@@ -85,7 +85,7 @@ class ResultsSummary(Basic):
         self.__load_p = load_path
         self.__models = pred_models
         self.__table_ = 'pred_result.csv'
-        self.__cols_s = ['var', 'ind', 'sen', 'spe', 'acc', 'auc', 'f_1']
+        self.__cols_s = ['feat', 'sen', 'spe', 'acc', 'auc', 'f_1']
 
     def __LoadPerformance(self) -> dict:
         model_perform = {}
@@ -97,7 +97,7 @@ class ResultsSummary(Basic):
                     continue
                 else:
                     p_ave = read_csv(folder / model / self.__table_).iloc[-1]
-                    vals_0 = folder.stem.split('-')
+                    vals_0 = folder.stem.split('-', 1)
                     vals_1 = p_ave.loc[[
                         's_sen', 's_spe', 's_acc', 's_auc', 's_f_1'
                     ]].tolist()
@@ -150,7 +150,7 @@ class ResultsSummary(Basic):
             df_sort = perform_d[model].sort_values(by=[d_col_n],
                                                    ascending=False)
             df_sort = df_sort.reset_index()
-            df_best = df_sort.loc[0, ['ord', 'var', 'ind']]
+            df_best = df_sort.loc[0, ['ord', 'feat']]
             load_n = '-'.join(df_best.tolist())
             load_p = self.__load_p / load_n / model
             df_rs = read_csv(load_p / self.__table_)
