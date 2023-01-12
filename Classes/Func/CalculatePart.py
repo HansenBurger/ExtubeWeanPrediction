@@ -312,28 +312,37 @@ class IndCalculation(Basic):
 
 
 class TSByScale(Basic):
-    def __init__(self, s_st: float, **kwargs) -> None:
+    def __init__(self, range_st: float, stride_st: float, **kwargs) -> None:
         super().__init__()
-        self.__s = s_st
+        self.__r = range_st
+        self.__s = stride_st
 
-    def Split(self, x: list):
-        if self.__s >= np.sum(x):
-            x_s_i = np.array([0, len(x)])
-        elif self.__s <= np.min(x):
-            x_s_i = np.linspace(0, len(x), len(x),
-                                endpoint=False).astype(np.int16)
+    def Split(self, x: list, x_type: str = 'Sequence'):
+        '''
+        :param: x: the time series corresponding to the value series
+        :param: x_type: ['Interval', 'Sequence'], default Interval
+        '''
+        if x_type == 'Sequence':
+            x = np.array([i - x[0] for i in x])
+        elif x_type == 'Interval':
+            x = np.array([np.sum(x[:i + 1]) for i in range(len(x))])
+
+        if self.__r >= x[-1]:
+            sta_i, end_i = [0], [len(x)]
+        elif (self.__s + self.__r) >= x[-1]:
+            sta_i, end_i = [0], [np.where(x >= self.__r)[0][0]]
         else:
-            x_s_i = [0]
-            for i in range(len(x)):
-                if sum(x[x_s_i[-1]:i]) < self.__s:
-                    continue
-                else:
-                    x_s_i.append(i)
-            x_s_i = np.array(x_s_i)
+            sta_i, end_i = [0], [np.where(x >= self.__r)[0][0]]
+            tmp_arr = x
+            while (tmp_arr[-1] >= self.__r + self.__s):
+                tmp_sta = np.where(tmp_arr >= self.__s)[0][0]
+                tmp_end = np.where((x - x[tmp_sta]) >= self.__r)[0][0]
+                sta_i.append(tmp_sta)
+                end_i.append(tmp_end)
+                tmp_arr = x - x[sta_i[-1]]
 
-        gets_s = lambda n: np.split(n, x_s_i[1:-1])
-
-        return gets_s, x_s_i
+        gets_s = lambda n: [n[sta_i[i]:end_i[i]] for i in range(len(sta_i))]
+        return gets_s, sta_i, end_i
 
 
 class VarCount(Basic):

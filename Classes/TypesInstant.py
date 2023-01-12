@@ -240,10 +240,14 @@ class RecordPara(Basic):
 
 
 class ResultStatistical(Basic):
-    def __init__(self, resp_list: list, scale_st: float) -> None:
+    def __init__(self, resp_list: list, ind_stride: float, ind_range: float,
+                 var_stride: float, var_range: float) -> None:
         super().__init__()
         self.__resp_l = resp_list
-        self.__scal_st = scale_st
+        self.__ind_s = ind_stride
+        self.__ind_r = ind_range
+        self.__var_s = var_stride
+        self.__var_r = var_range
         self.__rec = layer_2.Result()
         self.__rec.td = layer_1.DomainTS()
         self.__rec.fd = layer_1.DomainFS()
@@ -297,10 +301,21 @@ class ResultStatistical(Basic):
         return var_d
 
     def __IndStatic_basic(self, cls_: any, method_s: list) -> dict:
-
         pose_inds = lambda n: [getattr(i, n) for i in self.__resp_l]
-        scal_inds, _ = TSByScale(self.__scal_st).Split(pose_inds('wid'))
-        static_func = lambda n: [cls_(i) for i in scal_inds(pose_inds(n))]
+        scal_ind_p = TSByScale(self.__ind_r, self.__ind_s)
+        scal_var_p = TSByScale(self.__var_r, self.__var_s)
+
+        wid_posed = pose_inds('wid')
+        scal_ind, _, _ = scal_ind_p.Split(wid_posed, 'Interval')
+        wid_regen = [self.__ind_s] * len(scal_ind(wid_posed))
+        scal_var, _, _ = scal_var_p.Split(wid_regen, 'Interval')
+
+        def static_func(n: str):
+            ind_posed = pose_inds(n)
+            ind_scaled = [mean(inds) for inds in scal_ind(ind_posed)]
+            rs = [cls_(i) for i in scal_var(ind_scaled)]
+            return rs
+
         var_rd = self.__VarTrans(static_func, method_s)
         return var_rd
 
@@ -308,16 +323,24 @@ class ResultStatistical(Basic):
                           para_: dict) -> dict:
 
         pose_inds = lambda n: [getattr(i, n) for i in self.__resp_l]
-        scal_inds, _ = TSByScale(self.__scal_st).Split(pose_inds('wid'))
-        wid_scal = scal_inds(pose_inds('wid'))
-        wid_scal = [[round(j) for j in i] for i in wid_scal]
+        scal_ind_p = TSByScale(self.__ind_r, self.__ind_s)
+        scal_var_p = TSByScale(self.__var_r, self.__var_s)
+
+        wid_posed = pose_inds('wid')
+        scal_ind, _, _ = scal_ind_p.Split(wid_posed, 'Interval')
+        wid_regen = [self.__ind_s] * len(scal_ind(wid_posed))
+        scal_var, _, _ = scal_var_p.Split(wid_regen, 'Interval')
 
         def static_func(n: str, m: str):
             rs = []
-            ind_scal = scal_inds(pose_inds(n))
-            for i in range(len(ind_scal)):
+            ind_posed = pose_inds(n)
+            ind_scaled = [mean(inds) for inds in scal_ind(ind_posed)]
+            var_ind_scaled = scal_var(ind_scaled)
+            var_wid_scaled = scal_var(wid_regen)
+            for i in range(len(var_ind_scaled)):
                 try:
-                    rs_i = cls_(ind_scal[i], wid_scal[i], **para_[m])
+                    rs_i = cls_(var_ind_scaled[i], var_wid_scaled[i],
+                                **para_[m])
                     rs.append(rs_i)
                 except:
                     continue

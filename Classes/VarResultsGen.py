@@ -49,10 +49,10 @@ class VarResultsGen(basic):
         df_val = df[df[[ind + '_val' for ind in self.__ind_s]].all(axis=1)]
         self.__pid.resp_l = [resp_l[i] for i in df_val.index]
 
-    def VarRsGen(self, scale_st: float, **kwargs) -> None:
+    def VarRsGen(self, scale_st:dict, **kwargs) -> None:
         self.__OutliersWipe()
         resp_l = self.__pid.resp_l
-        res_p = ResultStatistical(resp_l, scale_st)
+        res_p = ResultStatistical(resp_l, **scale_st)
         res_p.CountAggr(self.__met_s, **kwargs)
 
         #TODO empty verify

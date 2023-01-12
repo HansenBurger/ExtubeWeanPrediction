@@ -8,8 +8,18 @@ from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
 p_set = sys.argv[2]
 t_set = int(sys.argv[1])
-s_set = float(sys.argv[3]) if len(sys.argv) > 3 else t_set
-# p_set, t_set, s_set = "Test", 3600, 300
+s_set = {
+    'ind_stride': 60,
+    'ind_range': float(sys.argv[3]),
+    'var_stride': 0,
+    'var_range': 3600
+}
+# p_set, t_set, s_set = "Test", 3600, {
+#     'ind_stride': 60,
+#     'ind_range': 60,
+#     'var_stride': 0,
+#     'var_range': 3600
+# }
 
 mode_s = ['Extube_SumP12_Nad']
 s_fold = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_set)

@@ -168,7 +168,7 @@ def DataGen(t_st: int, df: pd.DataFrame) -> layer_p.Patient:
 
 
 def PidVarCount(t_st: int,
-                s_st: float,
+                s_st: dict,
                 pid_s: list = [],
                 var_s: list = []) -> None:
     '''
