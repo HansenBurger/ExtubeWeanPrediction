@@ -331,12 +331,20 @@ class TSByScale(Basic):
             sta_i, end_i = [0], [len(x)]
         elif (self.__s + self.__r) >= x[-1]:
             sta_i, end_i = [0], [np.where(x >= self.__r)[0][0]]
+        elif (self.__s == 0) and (self.__r == 0):
+            sta_i = np.linspace(0, len(x) - 1, len(x) - 1,
+                                endpoint=False).astype(np.int32)
+            end_i = np.linspace(1, len(x) - 1, len(x),
+                                endpoint=False).astype(np.int32)
         else:
             sta_i, end_i = [0], [np.where(x >= self.__r)[0][0]]
             tmp_arr = x
             while (tmp_arr[-1] >= self.__r + self.__s):
-                tmp_sta = np.where(tmp_arr >= self.__s)[0][0]
-                tmp_end = np.where((x - x[tmp_sta]) >= self.__r)[0][0]
+                try:
+                    tmp_sta = np.where(tmp_arr >= self.__s)[0][0]
+                    tmp_end = np.where((x - x[tmp_sta]) >= self.__r)[0][0]
+                except:
+                    break
                 sta_i.append(tmp_sta)
                 end_i.append(tmp_end)
                 tmp_arr = x - x[sta_i[-1]]

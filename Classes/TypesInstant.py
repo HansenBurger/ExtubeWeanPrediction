@@ -313,7 +313,10 @@ class ResultStatistical(Basic):
         def static_func(n: str):
             ind_posed = pose_inds(n)
             ind_scaled = [mean(inds) for inds in scal_ind(ind_posed)]
-            rs = [cls_(i) for i in scal_var(ind_scaled)]
+            try:
+                rs = [cls_(i) for i in scal_var(ind_scaled)]
+            except:
+                rs = []
             return rs
 
         var_rd = self.__VarTrans(static_func, method_s)

@@ -10,20 +10,20 @@ set t_st=3600
 @REM set s_st_s[1]=180
 @REM set n_st_s[1]=VarAnalysis_60m_3m
 
-set s_st_s[0]=60
-set n_st_s[0]=VarAnalysis_60m_1m
+set s_st_s[0]=5
+set n_st_s[0]=VarAnalysis_60m_5s
 
-set s_st_s[1]=180
-set n_st_s[1]=VarAnalysis_60m_3m
+set s_st_s[1]=10
+set n_st_s[1]=VarAnalysis_60m_10s
 
-set s_st_s[2]=300
-set n_st_s[2]=VarAnalysis_60m_5m
+set s_st_s[2]=15
+set n_st_s[2]=VarAnalysis_60m_15s
 
-set s_st_s[3]=600
-set n_st_s[3]=VarAnalysis_60m_10m
+set s_st_s[3]=30
+set n_st_s[3]=VarAnalysis_60m_30s
 
-set s_st_s[4]=900
-set n_st_s[4]=VarAnalysis_60m_15m
+set s_st_s[4]=45
+set n_st_s[4]=VarAnalysis_60m_45s
 
 set s_st_s[5]=1800
 set n_st_s[5]=VarAnalysis_60m_30m
@@ -43,7 +43,7 @@ cd C:\Main\Project\ExtubeWeanPrediction
 
 set py_file=Main\VariabilityAnalysis\main.py
 
-FOR /L %%i IN (0,1,6) DO (
+FOR /L %%i IN (0,1,4) DO (
     CALL ECHO Start of %%n_st_s[%%i]%%
     :: main program running
     python %py_file% !t_st! !n_st_s[%%i]! !s_st_s[%%i]!

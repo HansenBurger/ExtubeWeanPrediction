@@ -21,6 +21,13 @@ from FlowCalibration.incators_calculate import RespValStatic, PoincareScatter
 static = StaticData()
 dynamic = DynamicData()
 
+# dynamic.s_f_fold = Path(
+#     r'C:\Main\Data\_\Result\Mix\20230115_11_VarAnalysis_60m_45m\Form\Extube_SumP12_Nad'
+# )
+# dynamic.s_g_fold = Path(
+#     r'C:\Main\Data\_\Result\Mix\20230115_11_VarAnalysis_60m_45m\Chart\Extube_SumP12_Nad'
+# )
+
 
 def LocInit(s_f: Path, s_g: Path, mode_name: str):
     '''
@@ -314,15 +321,20 @@ def VarStatistics() -> list:
 
     for i in methods:
         for j in indicat:
-            array_ = np.array([x.loc[i, j] for x in p_r_l])
-            process_ = PerfomAssess(p_i_df.end, array_)
-            auc, _, _ = process_.AucAssess()
-            p, _, _ = process_.PValueAssess()
+            true_arr = p_i_df.end
+            pred_arr = np.array([x.loc[i, j] for x in p_r_l])
+            nnan_ind = np.argwhere(~np.isnan(pred_arr)
+                                   & ~np.isinf(pred_arr)).T[0]
+            process_ = PerfomAssess(true_arr[nnan_ind], pred_arr[nnan_ind])
+            try:
+                auc, _, _ = process_.AucAssess()
+                p, _, _ = process_.PValueAssess()
+            except:
+                auc, p = 0.5, 1
             roc_df.loc[i, j] = auc if auc > 0.5 else (1 - auc)
             p_v_df.loc[i, j] = p
-            tot_df['-'.join([i, j])] = array_
-
-            p_r_d[i][j] = array_
+            tot_df['-'.join([i, j])] = pred_arr
+            p_r_d[i][j] = pred_arr
 
     df_pos, df_neg = NegPosGet(p_i_df, p_r_d)
     df_fp, df_fn, _, _ = FalseBuild(p_i_df, p_r_d)
