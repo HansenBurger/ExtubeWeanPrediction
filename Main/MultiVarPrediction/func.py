@@ -4,7 +4,7 @@ import seaborn as sns
 from pathlib import Path
 from collections import Counter
 from matplotlib import pyplot as plt
-from pandas import DataFrame, read_csv, concat
+from pandas import DataFrame, Series, read_csv, concat
 
 sys.path.append(str(Path.cwd()))
 
@@ -143,6 +143,13 @@ class ResultsSummary(Basic):
         :param: imp_min: imp min shape ratio
         '''
         perform_d = self.__LoadPerformance()
+        best_total = []
+
+        def combine_with_sepatator(x, y, separator: str):
+            return f"{x}{separator}{y}"
+
+        def format_decimal(number, decimal_places=3):
+            return "{:.{}f}".format(number, decimal_places)
 
         for model in self.__models:
             save_p = self.__load_p / '_Best' / model
@@ -157,6 +164,15 @@ class ResultsSummary(Basic):
             df_rs = df_rs.round(3)
             df_rs_n = '_'.join([load_n, 'Performance'])
             df_rs.to_csv(save_p / (df_rs_n + '.csv'), index=False)
+            df_fold = df_rs.iloc[:-1].set_index('mode', drop=True)
+            model_ave = df_fold.mean().round(3).apply(
+                lambda x: format_decimal(x))
+            model_std = df_fold.std().round(3).apply(
+                lambda x: format_decimal(x))
+            model_per = model_ave.apply(lambda x: combine_with_sepatator(
+                x, model_std[model_ave[model_ave == x].index[0]], ' \u00B1 '))
+            model_per = concat([Series({'model': model}), model_per])
+            best_total.append(model_per)
 
             min_feat = int(df_best['ord']) * imp_min
             imp_df_s = []
@@ -212,14 +228,18 @@ class ResultsSummary(Basic):
             plt.tight_layout()
             fig.savefig(save_p / (imp_df_n + '.png'), dpi=300)
 
+        df_total = DataFrame(best_total)
+        df_total.to_csv(self.__load_p / '_Best' / 'total.csv',
+                        encoding='utf-8',
+                        index=False)
 
-# p_l = [
-#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_09_ForwardSearch_gp_0_basic_Nvar\\Extube_SumP12_Nad-60\\Graph',
-#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_10_ForwardSearch_gp_3_inds_Nvar\\Extube_SumP12_Nad-60\\Graph',
-#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_11_ForwardSearch_gp_6_mets_Nvar\\Extube_SumP12_Nad-60\\Graph',
-#     'C:\\Main\\Data\\_\\Result\\Mix\\20220807_14_ForwardSearch_gp_8_all_Nvar\\Extube_SumP12_Nad-60\\Graph'
-# ]
-# models = ['LR', 'RF', 'SVM', 'XGB']
-# for p in p_l:
-#     main_p = ResultsSummary(Path(p), models)
-#     main_p.BestDisplay()
+
+p_l = [
+    # 'C:\\Main\\Data\\_\\Result\\Mix\\20230315_23_ForwardSearch_GP_NVar\\Extube_SumP12_All-60\\Graph',
+    # 'C:\\Main\\Data\\_\\Result\\Mix\\20230316_01_ForwardSearch_GP_Lab\\Extube_SumP12_All-60\\Graph',
+    'C:\\Main\\Data\\_\\Result\\Mix\\20230316_08_ForwardSearch_GP_all\\Extube_SumP12_All-60\\Graph'
+]
+models = ['LR', 'RF', 'SVM', 'XGB']
+for p in p_l:
+    main_p = ResultsSummary(Path(p), models)
+    main_p.BestDisplay()

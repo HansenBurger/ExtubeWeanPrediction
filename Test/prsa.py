@@ -37,7 +37,7 @@ def main():
 
 def Preprocess(form_n):
     df_main = pd.read_csv(form_n)
-    df_main.endo_end = np.where(df_main.endo_end.str.contains('成功'), 0, 1)
+    df_main.endo_end = (df_main.endo_end.str.contains('成功'), 0, 1)
     TimeShift(df_main, ['endo_t', 'END_t', 'Resp_t'])
     gp_main = df_main.groupby('PID')
     pid_list = df_main.PID.unique()

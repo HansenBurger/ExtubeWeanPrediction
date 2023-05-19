@@ -170,6 +170,13 @@ class StaticData(Basic):
                     'mp_jl_d', 'mp_jm_d', 'mp_jl_t', 'mp_jm_t'
                 ]
             },
+            'exp_best': {
+                # MP dynamic + All Methods (Not only variability)
+                'met_s': [],
+                'ind_s': [
+                    'pip', 'rr', 'v_t', 've', 'rsbi', 'mp_jb_d', 'mp_jl_d', 'mp_jm_d'
+                ]
+            },
             'default': {
                 'met_s': [],
                 'ind_s': []

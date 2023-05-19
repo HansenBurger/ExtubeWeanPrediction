@@ -25,7 +25,11 @@ p_name = 'ForwardSearch' + '_' + arg_suffix
 pred_way = 'KFold'  # KFold | Norm
 static = StaticData()
 save_p = SaveGen(Path(ConfigRead('ResultSave', 'Mix')), p_name)
-mode_s = ['Extube_SumP12_Nad-60']
+mode_s = [
+    'Extube_SumP12_Nad-60',
+    # 'Extube_SumP12_AorD-60',
+    # 'Extube_SumP12_All-60',
+]
 
 
 class ForwardSearch():

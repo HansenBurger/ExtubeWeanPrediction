@@ -6,8 +6,8 @@ sys.path.append(str(Path.cwd()))
 from func import LocInit, TableQuery, PidVarCount, VarStatistics, VarInfoCollect
 from Classes.Func.KitTools import ConfigRead, SaveGen, measure
 
-p_set = sys.argv[2]
-t_set = int(sys.argv[1])
+p_set = sys.argv[2] if len(sys.argv) > 2 else "Test"
+t_set = int(sys.argv[1]) if len(sys.argv) > 2 else 3600
 s_set = {
     'ind_stride': float(sys.argv[3]),
     'ind_range': float(sys.argv[3]),
@@ -15,8 +15,8 @@ s_set = {
     'var_range': 3600
 }
 # p_set, t_set, s_set = "Test", 3600, {
-#     'ind_stride': 60,
-#     'ind_range': 2700,
+#     'ind_stride': 4,
+#     'ind_range': 4,
 #     'var_stride': 0,
 #     'var_range': 3600
 # }

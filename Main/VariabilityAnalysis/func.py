@@ -22,10 +22,10 @@ static = StaticData()
 dynamic = DynamicData()
 
 # dynamic.s_f_fold = Path(
-#     r'C:\Main\Data\_\Result\Mix\20230115_11_VarAnalysis_60m_45m\Form\Extube_SumP12_Nad'
+#     r'C:\Main\Data\_\Result\Mix\20220904_16_VarAnalysis_60m_2s\Form\Extube_SumP12_Nad'
 # )
 # dynamic.s_g_fold = Path(
-#     r'C:\Main\Data\_\Result\Mix\20230115_11_VarAnalysis_60m_45m\Chart\Extube_SumP12_Nad'
+#     r'C:\Main\Data\_\Result\Mix\20220904_16_VarAnalysis_60m_2s\Chart\Extube_SumP12_Nad'
 # )
 
 
